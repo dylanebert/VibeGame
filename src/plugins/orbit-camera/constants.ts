@@ -1,0 +1,33 @@
+export const ORBIT_CAMERA_DEFAULTS = {
+  target: 0,
+  currentDistance: 4,
+  targetDistance: 4,
+  currentYaw: 0,
+  targetYaw: 0,
+  currentPitch: Math.PI / 6,
+  targetPitch: Math.PI / 6,
+  minDistance: 1,
+  maxDistance: 25,
+  minPitch: 0,
+  maxPitch: Math.PI / 2,
+  smoothness: 0.5,
+  offsetX: 0,
+  offsetY: 1.25,
+  offsetZ: 0,
+} as const;
+
+export const CAMERA_TRANSFORM_DEFAULTS = {
+  posX: 0,
+  posY: 8,
+  posZ: 10,
+  rotX: 0,
+  rotY: 0,
+  rotZ: 0,
+  rotW: 1,
+  eulerX: 0,
+  eulerY: 180,
+  eulerZ: 0,
+  scaleX: 1,
+  scaleY: 1,
+  scaleZ: 1,
+} as const;

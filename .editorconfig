@@ -1,0 +1,46 @@
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs
+# https://editorconfig.org
+
+root = true
+
+[*]
+# Use Unix-style line endings for all files
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# TypeScript/JavaScript files
+[*.{ts,tsx,js,jsx}]
+indent_style = space
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# YAML files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# HTML/CSS files
+[*.{html,css,scss}]
+indent_style = space
+indent_size = 2
+
+# Package files
+[package.json]
+indent_style = space
+indent_size = 2
+
+# Shell scripts
+[*.sh]
+end_of_line = lf

@@ -1,0 +1,34 @@
+# Source files
+src/
+example/
+tests/
+
+# Config files
+vite.config.ts
+tsconfig.json
+eslint.config.js
+.prettierrc
+.prettierignore
+
+# Development files
+*.md
+!README.md
+
+# IDE
+.claude/
+.cursor/
+.playwright*
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Dependencies
+node_modules/
+bun.lockb
+
+# Build artifacts
+*.log
+*.tmp
+.DS_Store

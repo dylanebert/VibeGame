@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VibeGame Example</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #000;
+        font-family: Arial, sans-serif;
+      }
+    </style>
+  </head>
+
+  <body>
+    <world canvas="#game-canvas" sky="#87ceeb">
+      <!-- Ground -->
+      <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
+
+      <!-- Ball -->
+      <dynamic-part pos="-2 4 -3" shape="sphere" size="1" color="#ff4500"></dynamic-part>
+    </world>
+
+    <canvas id="game-canvas"></canvas>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

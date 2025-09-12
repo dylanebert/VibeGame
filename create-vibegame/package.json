@@ -1,0 +1,36 @@
+{
+  "name": "create-vibegame",
+  "version": "0.1.0",
+  "description": "Create a new VibeGame game project",
+  "type": "module",
+  "bin": {
+    "create-vibegame": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "template"
+  ],
+  "scripts": {
+    "test": "node index.js test-project"
+  },
+  "keywords": [
+    "vibegame",
+    "game-engine",
+    "create",
+    "scaffold",
+    "template"
+  ],
+  "author": "dylanebert",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dylanebert/vibegame.git"
+  },
+  "homepage": "https://github.com/dylanebert/vibegame#readme",
+  "bugs": {
+    "url": "https://github.com/dylanebert/vibegame/issues"
+  },
+  "dependencies": {
+    "kolorist": "^1.8.0"
+  }
+}

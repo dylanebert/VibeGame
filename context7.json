@@ -1,0 +1,29 @@
+{
+  "excludeFolders": [
+    "src",
+    "example",
+    "tests",
+    "dist",
+    "node_modules",
+    "layers",
+    "scripts",
+    "docs",
+    ".git",
+    ".github"
+  ],
+  "excludeFiles": [
+    "CHANGELOG.md",
+    "LICENSE",
+    "package-lock.json",
+    "package.json",
+    "tsconfig.json",
+    "vite.config.ts",
+    "eslint.config.js",
+    "README.md",
+    "CLAUDE.md",
+    ".prettierrc",
+    ".prettierignore",
+    ".gitignore",
+    "bun.lockb"
+  ]
+}
