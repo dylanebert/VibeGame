@@ -6,7 +6,6 @@ import { Transform } from '../transforms';
 import { Player } from './components';
 import { handleJump, processInput, updateRotation } from './utils';
 
-// Query definitions
 const playerMovementQuery = defineQuery([
   Player,
   CharacterMovement,

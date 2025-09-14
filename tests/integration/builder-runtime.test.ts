@@ -117,25 +117,21 @@ describe('Builder-Runtime Integration', () => {
 
   describe('Custom Plugin Example', () => {
     it('should create and use custom plugin', async () => {
-      const MyPlugin: GAME.Plugin = {
-        components: {
-          MyComponent: GAME.defineComponent({
-            value: GAME.Types.f32,
-          }),
+      let MyComponent: GAME.Component | undefined = GAME.defineComponent({
+        value: GAME.Types.f32,
+      });
+      const myComponentQuery = GAME.defineQuery([MyComponent]);
+      const MySystem: GAME.System = {
+        update: (state) => {
+          const entities = myComponentQuery(state.world);
+          for (const eid of entities) {
+            (MyComponent as any).value[eid] += state.time.deltaTime;
+          }
         },
-        systems: [
-          {
-            update: (state) => {
-              const MyComponent = state.getComponent('MyComponent');
-              if (!MyComponent) return;
-
-              const entities = GAME.defineQuery([MyComponent])(state.world);
-              for (const eid of entities) {
-                (MyComponent as any).value[eid] += state.time.deltaTime;
-              }
-            },
-          },
-        ],
+      };
+      const MyPlugin: GAME.Plugin = {
+        components: { MyComponent },
+        systems: [MySystem],
         config: {
           defaults: {
             MyComponent: { value: 0 },
@@ -148,7 +144,7 @@ describe('Builder-Runtime Integration', () => {
         .run();
 
       const state = runtime.getState();
-      const MyComponent = state.getComponent('MyComponent');
+      MyComponent = state.getComponent('MyComponent');
 
       expect(MyComponent).toBeDefined();
       if (!MyComponent) throw new Error('MyComponent not found');

@@ -137,9 +137,9 @@ Smooth rotation towards movement
 ```typescript
 import * as GAME from 'vibegame';
 
+const playerQuery = GAME.defineQuery([GAME.Player]);
 const MySystem: GAME.System = {
   update: (state) => {
-    const playerQuery = GAME.defineQuery([GAME.Player]);
     const players = playerQuery(state.world);
     for (const entity of players) {
       // Check if player is jumping

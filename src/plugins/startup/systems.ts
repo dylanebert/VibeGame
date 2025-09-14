@@ -31,7 +31,6 @@ import { Respawn } from '../respawn';
 import { Transform } from '../transforms';
 import { HasAnimator } from '../animation/components';
 
-// Query definitions
 const ambientQuery = defineQuery([Ambient]);
 const directionalQuery = defineQuery([Directional]);
 const playersQuery = defineQuery([Player]);

@@ -137,9 +137,9 @@ orbit-camera/
 ```typescript
 import * as GAME from 'vibegame';
 
+const cameraQuery = GAME.defineQuery([GAME.OrbitCamera]);
 const CameraControlSystem = {
   update: (state) => {
-    const cameraQuery = GAME.defineQuery([GAME.OrbitCamera]);
     const cameras = cameraQuery(state.world);
     
     for (const camera of cameras) {

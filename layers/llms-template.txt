@@ -101,9 +101,10 @@ const Health = GAME.defineComponent({
 });
 
 // System = Logic only
+const healthQuery = GAME.defineQuery([Health]);
 const DamageSystem: GAME.System = {
   update: (state) => {
-    const entities = GAME.defineQuery([Health])(state.world);
+    const entities = healthQuery(state.world);
     for (const entity of entities) {
       Health.current[entity] -= 1 * state.time.delta;
       if (Health.current[entity] <= 0) {

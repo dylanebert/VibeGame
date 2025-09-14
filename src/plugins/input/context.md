@@ -131,9 +131,9 @@ GAME
 ```typescript
 import * as GAME from 'vibegame';
 
+const playerQuery = GAME.defineQuery([GAME.Player, GAME.InputState]);
 const PlayerControlSystem: GAME.System = {
   update: (state) => {
-    const playerQuery = GAME.defineQuery([GAME.Player, GAME.InputState]);
     const players = playerQuery(state.world);
     
     for (const player of players) {

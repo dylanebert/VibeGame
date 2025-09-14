@@ -218,27 +218,26 @@ export default defineConfig({
 ```typescript
 import * as GAME from 'vibegame';
 
+const MyComponent = GAME.defineComponent({
+  value: GAME.Types.f32
+});
+
+const myComponentQuery = GAME.defineQuery([MyComponent]);
+
+const MySystem: GAME.System = {
+  update: (state) => {
+    const entities = myComponentQuery(state.world);
+    for (const eid of entities) {
+      MyComponent.value[eid] += state.time.delta;
+    }
+  }
+};
+
 const MyPlugin: GAME.Plugin = {
-  components: {
-    MyComponent: GAME.defineComponent({
-      value: GAME.Types.f32
-    })
-  },
-  systems: [
-    {
-      update: (state) => {
-        const myComponentQuery = GAME.defineQuery([MyComponent]);
-        const entities = myComponentQuery(state.world);
-        for (const eid of entities) {
-          MyComponent.value[eid] += state.time.delta;
-        }
-      }
-    }
-  ],
+  components: { MyComponent },
+  systems: [MySystem],
   config: {
-    defaults: {
-      'my-component': { value: 0 }
-    }
+    defaults: { MyComponent: { value: 0 } }
   }
 };
 ```

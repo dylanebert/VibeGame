@@ -93,9 +93,9 @@ state.addComponent(player, GAME.Transform);
 ```typescript
 import * as GAME from 'vibegame';
 
+const characterQuery = GAME.defineQuery([GAME.AnimatedCharacter]);
 const MySystem: GAME.System = {
   update: (state) => {
-    const characterQuery = GAME.defineQuery([GAME.AnimatedCharacter]);
     const characters = characterQuery(state.world);
     for (const entity of characters) {
       const animState = GAME.AnimatedCharacter.animationState[entity];

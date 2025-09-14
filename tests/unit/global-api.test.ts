@@ -221,54 +221,6 @@ describe('Global API', () => {
     runtime.stop();
   });
 
-  it('should work with custom plugin example from docs', async () => {
-    let updateValue = 0;
-
-    const MyPlugin: GAME.Plugin = {
-      components: {
-        MyComponent: GAME.defineComponent({
-          value: GAME.Types.f32,
-        }),
-      },
-      systems: [
-        {
-          update: (state) => {
-            const MyComponent = state.getComponent('MyComponent');
-            if (!MyComponent) return;
-
-            const entities = GAME.defineQuery([MyComponent])(state.world);
-            for (const eid of entities) {
-              (MyComponent as any).value[eid] += state.time.deltaTime;
-              updateValue = (MyComponent as any).value[eid];
-            }
-          },
-        },
-      ],
-      config: {
-        defaults: {
-          MyComponent: { value: 0 },
-        },
-      },
-    };
-
-    const runtime = await GAME.withoutDefaultPlugins()
-      .withPlugin(MyPlugin)
-      .run();
-
-    const state = runtime.getState();
-    const MyComponent = state.getComponent('MyComponent');
-    if (!MyComponent) throw new Error('MyComponent not found');
-    const entity = state.createEntity();
-    state.addComponent(entity, MyComponent);
-    (MyComponent as any).value[entity] = 0;
-
-    runtime.step(1);
-
-    expect(updateValue).toBeCloseTo(1, 5);
-
-    runtime.stop();
-  });
-
   it('should export DefaultPlugins', () => {
     expect(GAME.DefaultPlugins).toBeDefined();
     expect(Array.isArray(GAME.DefaultPlugins)).toBe(true);

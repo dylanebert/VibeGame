@@ -27,7 +27,6 @@ import {
 
 export const DEFAULT_GRAVITY = -60;
 
-// Query definitions
 const interpolatedTransformQuery = defineQuery([InterpolatedTransform]);
 
 export function createRigidbodyDescriptor(

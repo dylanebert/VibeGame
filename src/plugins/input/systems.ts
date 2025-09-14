@@ -8,7 +8,6 @@ import {
   updateInputState,
 } from './utils';
 
-// Query definitions
 const inputStateQuery = defineQuery([InputState]);
 
 export const InputSystem: System = {

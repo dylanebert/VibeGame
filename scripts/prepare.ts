@@ -9,10 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 
-// GitHub repository URL for GitHub Pages
 const GITHUB_PAGES_BASE = 'https://dylanebert.github.io/vibegame';
-
-// Extract content between LLM tags
 function extractSection(content, tag) {
   const startTag = `<!-- LLM:${tag} -->`;
   const endTag = `<!-- /LLM:${tag} -->`;
@@ -27,7 +24,6 @@ function extractSection(content, tag) {
   return content.substring(startIndex + startTag.length, endIndex).trim();
 }
 
-// Get module name from file path
 function getModuleName(filePath) {
   const relativePath = path.relative(ROOT_DIR, filePath);
   const parts = relativePath.split(path.sep);
@@ -43,7 +39,6 @@ function getModuleName(filePath) {
   return null;
 }
 
-// Format module name for display
 function formatModuleName(name) {
   return name
     .split('-')
@@ -52,12 +47,10 @@ function formatModuleName(name) {
 }
 
 async function syncVersions() {
-  // Read main package.json
   const mainPackagePath = path.join(ROOT_DIR, 'package.json');
   const mainPackage = JSON.parse(await fs.readFile(mainPackagePath, 'utf-8'));
   const version = mainPackage.version;
 
-  // Update create-vibegame package.json
   const createPackagePath = path.join(
     ROOT_DIR,
     'create-vibegame',
@@ -82,7 +75,6 @@ async function syncVersions() {
 async function buildLLMDocs() {
   console.log('Building LLM documentation...');
 
-  // Find all context.md files
   const contextFiles = await glob('**/context.md', {
     cwd: ROOT_DIR,
     ignore: ['node_modules/**', 'dist/**', 'example/**', 'layers/**'],
@@ -92,7 +84,6 @@ async function buildLLMDocs() {
   const references = new Map();
   const examples = new Map();
 
-  // Process each context.md file
   for (const file of contextFiles) {
     const filePath = path.join(ROOT_DIR, file);
     const content = await fs.readFile(filePath, 'utf-8');
@@ -120,14 +111,11 @@ async function buildLLMDocs() {
     }
   }
 
-  // Read template
   const templatePath = path.join(ROOT_DIR, 'layers', 'llms-template.txt');
   let template = await fs.readFile(templatePath, 'utf-8');
 
-  // Generate modules section
   const modulesSection = Array.from(modules.entries())
     .sort(([a], [b]) => {
-      // Core first, then alphabetical
       if (a === 'core') return -1;
       if (b === 'core') return 1;
       return a.localeCompare(b);
@@ -137,7 +125,6 @@ async function buildLLMDocs() {
     })
     .join('\n\n');
 
-  // Generate reference links
   const referenceLinks = Array.from(references.keys())
     .sort((a, b) => {
       if (a === 'core') return -1;
@@ -151,7 +138,6 @@ async function buildLLMDocs() {
     })
     .join('\n');
 
-  // Generate examples links
   const examplesLinks = Array.from(examples.keys())
     .sort((a, b) => {
       if (a === 'core') return -1;
@@ -165,7 +151,6 @@ async function buildLLMDocs() {
     })
     .join('\n');
 
-  // Generate embedded references section for llms.txt
   const embeddedReferences = Array.from(references.entries())
     .sort(([a], [b]) => {
       if (a === 'core') return -1;
@@ -178,7 +163,6 @@ async function buildLLMDocs() {
     })
     .join('\n\n');
 
-  // Replace placeholders
   template = template.replace('{{MODULES}}', modulesSection);
   template = template.replace(
     '{{REFERENCE_LINKS}}',
@@ -189,19 +173,25 @@ async function buildLLMDocs() {
     examplesLinks || '- Examples coming soon'
   );
 
-  // Add embedded references if they exist
   if (embeddedReferences) {
     template = template.replace('{{EMBEDDED_REFERENCES}}', embeddedReferences);
   }
 
-  // Write llms.txt
   const outputPath = path.join(ROOT_DIR, 'llms.txt');
   await fs.writeFile(outputPath, template);
   console.log(
     `✓ Generated llms.txt with ${references.size} embedded references`
   );
 
-  // Create docs directories
+  const createLlmPath = path.join(
+    ROOT_DIR,
+    'create-vibegame',
+    'template',
+    'llms.txt'
+  );
+  await fs.copyFile(outputPath, createLlmPath);
+  console.log(`✓ Copied llms.txt to create-vibegame/template`);
+
   const docsDir = path.join(ROOT_DIR, 'docs');
   const refDir = path.join(docsDir, 'reference');
   const examplesDir = path.join(docsDir, 'examples');
@@ -209,7 +199,6 @@ async function buildLLMDocs() {
   await fs.mkdir(refDir, { recursive: true });
   await fs.mkdir(examplesDir, { recursive: true });
 
-  // Write reference files
   for (const [key, content] of references.entries()) {
     const filePath = path.join(refDir, `${key}.md`);
     const fullContent = `# ${formatModuleName(key)} Reference\n\n${content}`;
@@ -217,7 +206,6 @@ async function buildLLMDocs() {
     console.log(`✓ Generated reference/${key}.md`);
   }
 
-  // Write examples files
   for (const [key, content] of examples.entries()) {
     const filePath = path.join(examplesDir, `${key}.md`);
     const fullContent = `# ${formatModuleName(key)} Examples\n\n${content}`;
@@ -225,22 +213,19 @@ async function buildLLMDocs() {
     console.log(`✓ Generated examples/${key}.md`);
   }
 
-  // Create reference index
   if (references.size > 0) {
     const refIndex = `# VibeGame API Reference\n\n## Modules\n\n${referenceLinks}`;
     await fs.writeFile(path.join(refDir, 'index.md'), refIndex);
     console.log(`✓ Generated reference/index.md`);
   }
 
-  // Create examples index
   if (examples.size > 0) {
     const examplesIndex = `# VibeGame Examples\n\n## Modules\n\n${examplesLinks}`;
     await fs.writeFile(path.join(examplesDir, 'index.md'), examplesIndex);
     console.log(`✓ Generated examples/index.md`);
   }
 
-  // Create root docs index.md with full llms.txt content
-  const docsIndex = template; // Use the full llms.txt template content
+  const docsIndex = template;
 
   await fs.writeFile(path.join(docsDir, 'index.md'), docsIndex);
   console.log(`✓ Generated docs/index.md (includes full llms.txt content)`);
@@ -255,13 +240,10 @@ async function prepare() {
   console.log('Preparing release...');
   console.log('');
 
-  // Sync versions first
   await syncVersions();
   console.log('');
 
-  // Then build docs
   await buildLLMDocs();
 }
 
-// Run the prepare process
 prepare().catch(console.error);

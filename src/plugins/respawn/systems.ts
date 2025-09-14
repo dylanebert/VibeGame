@@ -3,7 +3,6 @@ import { WorldTransform } from '../transforms';
 import { Respawn } from './components';
 import { respawnEntity } from './utils';
 
-// Query definitions
 const respawnQuery = defineQuery([Respawn, WorldTransform]);
 
 export const RespawnSystem: System = {

@@ -8,7 +8,6 @@ import {
   updateCameraTransform,
 } from './operations';
 
-// Query definitions
 const orbitCameraQuery = defineQuery([OrbitCamera, Transform]);
 
 export const OrbitCameraSystem: System = {

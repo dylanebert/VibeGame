@@ -63,10 +63,10 @@ const MySystem = {
 ```typescript
 import * as GAME from 'vibegame';
 
+const transformQuery = GAME.defineQuery([GAME.Transform, GAME.WorldTransform]);
 const WorldTransformSystem = {
   update: (state) => {
     // Query entities with both transforms
-    const transformQuery = GAME.defineQuery([GAME.Transform, GAME.WorldTransform]);
     const entities = transformQuery(state.world);
     
     for (const entity of entities) {

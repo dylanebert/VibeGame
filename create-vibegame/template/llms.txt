@@ -1,6 +1,6 @@
 # VibeGame
 
-A Roblox-like 3D game engine with declarative XML syntax and ECS architecture. Start playing immediately with automatic player, camera, and lighting - just add a ground to prevent falling.
+A 3D game engine with declarative XML syntax and ECS architecture. Start playing immediately with automatic player, camera, and lighting - just add a ground to prevent falling.
 
 ## Instant Playable Game
 
@@ -34,10 +34,20 @@ cd my-game
 bun dev    # Start dev server with hot reload
 ```
 
+### Project Structure
+- **TypeScript** - Full TypeScript support with strict type checking
+- **src/main.ts** - Entry point for your game
+- **index.html** - HTML template with canvas element
+- **vite.config.ts** - Build configuration
+
 ### Commands
 - `bun dev` - Development server with hot reload
 - `bun run build` - Production build
 - `bun run preview` - Preview production build
+- `bun run check` - TypeScript type checking
+- `bun run lint` - Lint code with ESLint
+- `bun run format` - Format code with Prettier
+- `bun run update` - Update llms.txt after upgrading vibegame
 
 ## Physics Objects
 
@@ -91,9 +101,10 @@ const Health = GAME.defineComponent({
 });
 
 // System = Logic only
+const healthQuery = GAME.defineQuery([Health]);
 const DamageSystem: GAME.System = {
   update: (state) => {
-    const entities = GAME.defineQuery([Health])(state.world);
+    const entities = healthQuery(state.world);
     for (const entity of entities) {
       Health.current[entity] -= 1 * state.time.delta;
       if (Health.current[entity] <= 0) {
@@ -104,7 +115,7 @@ const DamageSystem: GAME.System = {
 };
 ```
 
-## What's Auto-Created (Roblox-like Defaults)
+## What's Auto-Created (Game Engine Defaults)
 
 The engine automatically creates these if missing:
 1. **Player** - Character with physics, controls, and respawn (at 0, 1, 0)
@@ -477,7 +488,7 @@ Available in all systems via the `state` parameter:
 ### Time
 - `time.delta: number` - Frame time in seconds
 - `time.elapsed: number` - Total time in seconds
-- `time.fixed: number` - Fixed timestep (1/60)
+- `time.fixed: number` - Fixed timestep (1/50)
 
 ### Physics Helpers
 - `addComponent(entity, ApplyImpulse, {x, y, z})` - One-time push
@@ -520,7 +531,7 @@ Math utilities for interpolation and 3D transformations.
 Procedural character animation with body parts that respond to movement states.
 
 ### Input
-Unified input handling for mouse, keyboard, and gamepad with buffered actions.
+Focus-aware input handling for mouse, keyboard, and gamepad with buffered actions. Keyboard input only responds when canvas has focus.
 
 ### Orbit Camera
 Orbital camera controller for third-person views and smooth target following.
@@ -619,6 +630,9 @@ Tag component (no properties)
 - Updates InputState components with current input data
 
 ### Functions
+
+#### setTargetCanvas(canvas: HTMLCanvasElement | null): void
+Registers canvas for focus-based keyboard input
 
 #### consumeJump(): boolean
 Consumes buffered jump input

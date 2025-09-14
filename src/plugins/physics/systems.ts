@@ -52,7 +52,6 @@ interface PhysicsContext {
   colliderToEntity: Map<number, number>;
 }
 
-// Query definitions
 const physicsWorldQuery = defineQuery([PhysicsWorld]);
 const bodyQuery = defineQuery([Body]);
 const colliderQuery = defineQuery([Collider]);

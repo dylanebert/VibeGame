@@ -141,10 +141,10 @@ state.addComponent(entity, GAME.SetLinearVelocity, {
 ```typescript
 import * as GAME from 'vibegame';
 
+const touchedQuery = GAME.defineQuery([GAME.TouchedEvent]);
 const CollisionSystem: GAME.System = {
   update: (state) => {
     // Query entities with collision events
-    const touchedQuery = GAME.defineQuery([GAME.TouchedEvent]);
     for (const entity of touchedQuery(state.world)) {
       const otherEntity = GAME.TouchedEvent.other[entity];
       console.log(`Entity ${entity} collided with ${otherEntity}`);

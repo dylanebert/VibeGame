@@ -10,7 +10,6 @@ import {
 
 const easingKeys = Object.values(EasingNames);
 
-// Query definitions
 const tweenQuery = defineQuery([Tween]);
 const tweenValueQuery = defineQuery([TweenValue]);
 

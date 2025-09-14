@@ -13,7 +13,6 @@ import {
   resetBodyPartTransforms,
 } from './utils';
 
-// Query definitions
 const animatedCharacterQuery = defineQuery([AnimatedCharacter]);
 
 export const AnimatedCharacterInitializationSystem: System = {
