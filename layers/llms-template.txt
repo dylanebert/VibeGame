@@ -106,7 +106,7 @@ const DamageSystem: GAME.System = {
   update: (state) => {
     const entities = healthQuery(state.world);
     for (const entity of entities) {
-      Health.current[entity] -= 1 * state.time.delta;
+      Health.current[entity] -= 1 * state.time.deltaTime;
       if (Health.current[entity] <= 0) {
         state.destroyEntity(entity);
       }
@@ -440,7 +440,7 @@ const HealthSystem: GAME.System = {
     for (const entity of entities) {
       // Regenerate health over time
       if (Health.current[entity] < Health.max[entity]) {
-        Health.current[entity] += 5 * state.time.delta;
+        Health.current[entity] += 5 * state.time.deltaTime;
       }
     }
   }
