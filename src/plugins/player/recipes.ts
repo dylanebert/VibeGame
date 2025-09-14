@@ -11,7 +11,6 @@ export const playerRecipe: Recipe = {
     'player',
     'character-movement',
     'transform',
-    'world-transform',
     'body',
     'collider',
     'character-controller',

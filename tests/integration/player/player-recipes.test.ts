@@ -18,7 +18,7 @@ import {
   initializePhysics,
   PhysicsPlugin,
 } from 'vibegame';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame';
+import { Transform, TransformsPlugin } from 'vibegame';
 import { Respawn, RespawnPlugin } from 'vibegame';
 
 describe('Player Recipes and XML', () => {
@@ -51,7 +51,6 @@ describe('Player Recipes and XML', () => {
       expect(state.hasComponent(player, Player)).toBe(true);
       expect(state.hasComponent(player, CharacterMovement)).toBe(true);
       expect(state.hasComponent(player, Transform)).toBe(true);
-      expect(state.hasComponent(player, WorldTransform)).toBe(true);
       expect(state.hasComponent(player, Body)).toBe(true);
       expect(state.hasComponent(player, Collider)).toBe(true);
       expect(state.hasComponent(player, CharacterController)).toBe(true);

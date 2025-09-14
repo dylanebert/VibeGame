@@ -5,7 +5,7 @@ import {
   parseXMLToEntities,
   RecipePlugin,
 } from 'vibegame';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame';
+import { Transform, TransformsPlugin } from 'vibegame';
 import { PlayerPlugin } from 'vibegame';
 import { RenderingPlugin } from 'vibegame';
 import { beforeEach, describe, expect, it } from 'bun:test';
@@ -78,7 +78,6 @@ describe('OrbitCamera Recipe Integration', () => {
     expect(recipe).toBeDefined();
     expect(recipe?.components).toContain('orbit-camera');
     expect(recipe?.components).toContain('transform');
-    expect(recipe?.components).toContain('world-transform');
   });
 
   describe('XML Declarative Approach', () => {
@@ -92,7 +91,6 @@ describe('OrbitCamera Recipe Integration', () => {
 
       expect(state.hasComponent(cameraEntity, OrbitCamera)).toBe(true);
       expect(state.hasComponent(cameraEntity, Transform)).toBe(true);
-      expect(state.hasComponent(cameraEntity, WorldTransform)).toBe(true);
       expect(state.hasComponent(cameraEntity, MainCamera)).toBe(true);
 
       expect(OrbitCamera.currentDistance[cameraEntity]).toBe(4);
