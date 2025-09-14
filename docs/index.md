@@ -487,7 +487,7 @@ Available in all systems via the `state` parameter:
 ### Time
 - `time.delta: number` - Frame time in seconds
 - `time.elapsed: number` - Total time in seconds
-- `time.fixed: number` - Fixed timestep (1/60)
+- `time.fixed: number` - Fixed timestep (1/50)
 
 ### Physics Helpers
 - `addComponent(entity, ApplyImpulse, {x, y, z})` - One-time push

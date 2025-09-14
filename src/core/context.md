@@ -78,7 +78,7 @@ core/
 The engine uses a semi-fixed timestep model with three execution phases:
 
 1. **SetupBatch**: Runs once per frame for input and frame setup
-2. **FixedBatch**: Runs at 60Hz fixed intervals (may run 0-N times per frame)
+2. **FixedBatch**: Runs at 50Hz fixed intervals (may run 0-N times per frame)
    - Catches up if behind: multiple steps on slow frames
    - Waits if ahead: skips steps on fast frames
 3. **DrawBatch**: Runs once per frame for rendering with interpolation
@@ -145,7 +145,7 @@ The engine uses a semi-fixed timestep model with three execution phases:
 
 #### GameTime
 - deltaTime: number
-- fixedDeltaTime: number (1/60)
+- fixedDeltaTime: number (1/50)
 - elapsed: number
 
 ### Functions
@@ -168,7 +168,7 @@ Quaternion interpolation
 ### Constants
 
 - NULL_ENTITY: 4294967295
-- FIXED_TIMESTEP: 1/60
+- FIXED_TIMESTEP: 1/50
 - DEFAULT_DELTA: 1/144
 
 ### bitECS Exports
@@ -224,8 +224,8 @@ import * as GAME from 'vibegame';
 const PhysicsSystem = {
   group: 'fixed',
   update: (state) => {
-    // Runs at 60Hz regardless of framerate
-    // Use state.time.fixedDeltaTime (always 1/60)
+    // Runs at 50Hz regardless of framerate
+    // Use state.time.fixedDeltaTime (always 1/50)
     velocity += gravity * state.time.fixedDeltaTime;
   }
 };

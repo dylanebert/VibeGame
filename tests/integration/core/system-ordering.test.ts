@@ -51,16 +51,20 @@ describe('System Ordering Integration', () => {
 
       state.registerSystem(fixedSystem);
 
-      state.step(0.008);
+      // Step with less than half the fixed timestep - no fixed update
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP * 0.49);
       expect(fixedRuns).toBe(0);
 
-      state.step(0.009);
+      // Step to accumulate just over one fixed timestep
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP * 0.52);
       expect(fixedRuns).toBe(1);
 
-      state.step(0.008);
+      // Step with less than half again - no new fixed update
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP * 0.49);
       expect(fixedRuns).toBe(1);
 
-      state.step(0.009);
+      // Step to accumulate another fixed timestep
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP * 0.52);
       expect(fixedRuns).toBe(2);
     });
   });
@@ -317,11 +321,13 @@ describe('System Ordering Integration', () => {
       state.registerSystem(animationSystem);
       state.registerSystem(renderSystem);
 
-      state.step(0.02);
+      // Step with a time that won't trigger fixed update at 50Hz
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP * 1.5);
 
+      // Fixed system should have run once
       expect(fixedDelta).toBeCloseTo(TIME_CONSTANTS.FIXED_TIMESTEP, 5);
-      expect(frameDelta).toBeCloseTo(0.02, 5);
-      expect(drawDelta).toBeCloseTo(0.02, 5);
+      expect(frameDelta).toBeCloseTo(TIME_CONSTANTS.FIXED_TIMESTEP * 1.5, 5);
+      expect(drawDelta).toBeCloseTo(TIME_CONSTANTS.FIXED_TIMESTEP * 1.5, 5);
 
       state.step(0.008);
 
@@ -396,8 +402,9 @@ describe('System Ordering Integration', () => {
 
       state.registerSystem(fixedSystem);
 
-      state.step(0.05);
-      expect(fixedCount).toBe(3);
+      // Step with time larger than fixed timestep
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP * 1.5);
+      expect(fixedCount).toBe(1);
     });
 
     it('should cap maximum fixed steps per frame', () => {

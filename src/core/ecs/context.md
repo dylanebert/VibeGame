@@ -55,7 +55,7 @@ Each frame executes systems in three distinct phases:
    - Physics simulation step
    - Gameplay logic requiring deterministic timing
    - Accumulates time and catches up if behind
-   - Example: At 30 FPS runs 2x per frame, at 144 FPS runs ~0.4x per frame
+   - Example: At 25 FPS runs 2x per frame, at 144 FPS runs ~0.4x per frame
    - Always uses `fixedDeltaTime` (1/60 second)
 
 3. **DrawBatch** (Once per frame)

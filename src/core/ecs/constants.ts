@@ -1,5 +1,5 @@
 export const TIME_CONSTANTS = {
-  FIXED_TIMESTEP: 1 / 60,
+  FIXED_TIMESTEP: 1 / 50,
   DEFAULT_DELTA: 1 / 144,
 } as const;
 

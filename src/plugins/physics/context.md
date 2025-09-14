@@ -12,7 +12,7 @@
 - **Initialization delay**: Rapier bodies aren't created until the next fixed update after entity creation
 
 ### Fixed Timestep Execution
-- **Fixed update rate**: Physics runs at 60Hz (1/60 second intervals), not every frame
+- **Fixed update rate**: Physics runs at 50Hz (1/50 second intervals), not every frame
 - **Variable execution**: May run 0-N times per frame depending on performance
   - High FPS (144Hz): Multiple frames between physics updates
   - Low FPS (30Hz): Multiple physics updates per frame
@@ -21,7 +21,7 @@
 ### Example Timing
 ```
 144 FPS: Frame--Frame--[Physics]--Frame--Frame--[Physics]
- 30 FPS: Frame--[Physics][Physics]--Frame--[Physics][Physics]
+ 50 FPS: Frame--[Physics][Physics]--Frame--[Physics][Physics]
 ```
 
 ## Layout

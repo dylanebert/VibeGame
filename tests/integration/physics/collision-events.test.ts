@@ -221,13 +221,14 @@ describe('Collision Events Integration', () => {
     Body.rotW[box1] = 1;
     Body.mass[box1] = 1;
     Body.gravityScale[box1] = 0;
-    Body.velX[box1] = 5;
+    Body.velX[box1] = 10;
 
     Collider.shape[box1] = ColliderShape.Box;
     Collider.sizeX[box1] = 1;
     Collider.sizeY[box1] = 1;
     Collider.sizeZ[box1] = 1;
     Collider.density[box1] = 1;
+    Collider.restitution[box1] = 0.8;
 
     const box2 = state.createEntity();
     state.addComponent(box2, Body);
@@ -242,18 +243,21 @@ describe('Collision Events Integration', () => {
     Body.rotW[box2] = 1;
     Body.mass[box2] = 1;
     Body.gravityScale[box2] = 0;
-    Body.velX[box2] = -5;
+    Body.velX[box2] = -10;
 
     Collider.shape[box2] = ColliderShape.Box;
     Collider.sizeX[box2] = 1;
     Collider.sizeY[box2] = 1;
     Collider.sizeZ[box2] = 1;
     Collider.density[box2] = 1;
+    Collider.restitution[box2] = 0.8;
 
     let touchStarted = false;
     let touchEnded = false;
 
-    for (let i = 0; i < 120; i++) {
+    // Run for up to 3 seconds of simulation time to ensure collision and separation
+    const maxSteps = Math.ceil(3.0 / TIME_CONSTANTS.FIXED_TIMESTEP);
+    for (let i = 0; i < maxSteps; i++) {
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       const touchedEvents = defineQuery([TouchedEvent])(state.world);

@@ -355,8 +355,10 @@ describe('Character Controller Integration', () => {
     CharacterMovement.desiredVelZ[character] = 0;
     CharacterMovement.velocityY[character] = 0;
 
-    // Let character fall
-    for (let i = 0; i < 10; i++) {
+    // Let character fall for a short time
+    // Need enough steps for gravity to take effect but not reach ground
+    const fallSteps = Math.ceil(0.2 / TIME_CONSTANTS.FIXED_TIMESTEP);
+    for (let i = 0; i < fallSteps; i++) {
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
     }
 
@@ -364,9 +366,11 @@ describe('Character Controller Integration', () => {
     expect(CharacterMovement.velocityY[character]).toBeLessThan(0);
     expect(CharacterController.grounded[character]).toBe(0);
 
-    // Continue until grounded
-    for (let i = 0; i < 50; i++) {
+    // Continue until grounded (up to 2 seconds)
+    const maxGroundSteps = Math.ceil(2.0 / TIME_CONSTANTS.FIXED_TIMESTEP);
+    for (let i = 0; i < maxGroundSteps; i++) {
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+      if (CharacterController.grounded[character] === 1) break;
     }
 
     // Should be grounded with velocity reset
