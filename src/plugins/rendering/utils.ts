@@ -121,7 +121,7 @@ export function initializeContext(): RenderingContext {
     geometries: createGeometries(),
     material: new THREE.MeshStandardMaterial({
       metalness: 0.0,
-      roughness: 0.8,
+      roughness: 1.0,
     }),
     entityInstances: new Map(),
     lights: {
