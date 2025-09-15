@@ -1,5 +1,7 @@
 import type { State } from '../../core';
 import * as THREE from 'three';
+import type { EffectComposer } from 'postprocessing';
+import type { Effect } from 'postprocessing';
 
 const MAX_INSTANCES = 1000;
 const DEFAULT_COLOR = 0xffffff;
@@ -82,6 +84,8 @@ export interface RenderingContext {
   };
   renderer?: THREE.WebGLRenderer;
   canvas?: HTMLCanvasElement;
+  composers: Map<number, EffectComposer>;
+  effects: Map<number, Map<string, Effect>>;
 }
 
 const stateToRenderingContext = new WeakMap<State, RenderingContext>();
@@ -124,6 +128,8 @@ export function initializeContext(): RenderingContext {
       ambient: ambient,
       directional: directional,
     },
+    composers: new Map(),
+    effects: new Map(),
   };
 }
 

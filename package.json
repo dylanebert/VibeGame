@@ -1,6 +1,6 @@
 {
   "name": "vibegame",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "a vibe coding game engine",
   "type": "module",
   "module": "./dist/index.js",
@@ -137,6 +137,7 @@
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.18.2",
     "gsap": "^3.13.0",
+    "postprocessing": "^6.37.8",
     "zod": "^4.1.5"
   }
 }

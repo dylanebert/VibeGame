@@ -148,6 +148,22 @@ While auto-creation is recommended, you can manually create these for customizat
 
 **Best Practice**: Use auto-creation unless you specifically need custom positions, properties, or multiple instances. The defaults are well-tuned for most games.
 
+## Post-Processing Effects
+
+```xml
+<!-- Bloom effect for glow -->
+<camera bloom="intensity: 2; luminance-threshold: 0.8"></camera>
+
+<!-- Retro dithering (reduces color palette) -->
+<camera dithering="color-bits: 3; scale: 2; noise: 1"></camera>
+
+<!-- Tonemapping for HDR-like visuals -->
+<camera tonemapping="mode: aces-filmic"></camera>
+
+<!-- Combined cinematic style -->
+<camera bloom="intensity: 1.5" tonemapping="mode: aces-filmic"></camera>
+```
+
 ## Common Game Patterns
 
 ### Basic Platformer
@@ -341,6 +357,7 @@ Recipes are registered component bundles with defaults:
 - **Third-person character control** - WASD + mouse camera
 - **Gamepad support** - Xbox/PlayStation controllers
 - **Visual effects** - Tweening colors, positions, rotations
+- **Post-processing** - Bloom, dithering, and tonemapping effects for visual styling
 
 ### Example Prompts That Work
 - "Create a platformer with moving platforms and collectible coins"
@@ -546,7 +563,7 @@ Complete player character controller with physics movement and jumping.
 Foundation for declarative XML entity creation with parent-child hierarchies and attribute shorthands.
 
 ### Rendering
-Three.js rendering pipeline with meshes, lights, and cameras.
+Three.js rendering pipeline with meshes, lights, cameras, and post-processing effects.
 
 ### Respawn
 Automatic respawn system that resets entities when falling below Y=-100.
@@ -939,6 +956,21 @@ Tag component (no properties)
 - directionZ: f32 (-1)
 - distance: f32 (30)
 
+#### Bloom
+- intensity: f32 (1.0) - Bloom intensity
+- luminanceThreshold: f32 (1.0) - Luminance threshold for bloom
+- luminanceSmoothing: f32 (0.03) - Smoothness of luminance threshold
+- mipmapBlur: ui8 (1) - Enable mipmap blur
+- radius: f32 (0.85) - Blur radius for mipmap blur
+- levels: ui8 (8) - Number of MIP levels for mipmap blur
+
+#### Dithering
+- colorBits: ui8 (4) - Bits per color channel (1-8)
+- intensity: f32 (1.0) - Effect intensity (0-1)
+- grayscale: ui8 (0) - Enable grayscale mode (0/1)
+- scale: f32 (1.0) - Pattern scale (higher = coarser dithering)
+- noise: f32 (1.0) - Noise threshold intensity
+
 ### Systems
 
 #### MeshInstanceSystem
@@ -951,11 +983,11 @@ Tag component (no properties)
 
 #### CameraSyncSystem
 - Group: draw
-- Updates Three.js camera
+- Updates Three.js camera and manages post-processing effects
 
 #### WebGLRenderSystem
 - Group: draw (last)
-- Renders scene to canvas
+- Renders scene through EffectComposer
 
 ### Functions
 

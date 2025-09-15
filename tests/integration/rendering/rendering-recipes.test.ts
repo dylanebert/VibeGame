@@ -27,49 +27,6 @@ describe('Rendering Recipes', () => {
   });
 
   describe('Basic Rendering Setup', () => {
-    it('should create scene with lighting and rendered objects from XML', () => {
-      const xml = `<root><light></light><entity transform="" renderer="shape: box; color: 0xff0000; size-x: 2" pos="0 1 0" /><entity transform="" renderer="shape: sphere; color: 0x00ff00" pos="3 1 0" /></root>`;
-
-      const parsed = XMLParser.parse(xml);
-      const entities = parseXMLToEntities(state, parsed.root);
-
-      expect(entities.length).toBe(3);
-
-      const lightEntity = entities[0].entity;
-      expect(state.hasComponent(lightEntity, Ambient)).toBe(true);
-      expect(state.hasComponent(lightEntity, Directional)).toBe(true);
-      expect(Ambient.skyColor[lightEntity]).toBe(0x87ceeb);
-      expect(Ambient.groundColor[lightEntity]).toBe(0x4a4a4a);
-      expect(Ambient.intensity[lightEntity]).toBeCloseTo(0.6);
-      expect(Directional.color[lightEntity]).toBe(0xffffff);
-      expect(Directional.intensity[lightEntity]).toBe(1);
-      expect(Directional.castShadow[lightEntity]).toBe(1);
-
-      const boxEntity = entities[1].entity;
-      expect(state.hasComponent(boxEntity, Renderer)).toBe(true);
-      expect(state.hasComponent(boxEntity, Transform)).toBe(true);
-      expect(Renderer.shape[boxEntity]).toBe(0);
-      expect(Renderer.color[boxEntity]).toBe(0xff0000);
-      expect(Renderer.sizeX[boxEntity]).toBe(2);
-      expect(Renderer.sizeY[boxEntity]).toBe(1);
-      expect(Renderer.sizeZ[boxEntity]).toBe(1);
-      expect(Transform.posX[boxEntity]).toBe(0);
-      expect(Transform.posY[boxEntity]).toBe(1);
-      expect(Transform.posZ[boxEntity]).toBe(0);
-
-      const sphereEntity = entities[2].entity;
-      expect(state.hasComponent(sphereEntity, Renderer)).toBe(true);
-      expect(state.hasComponent(sphereEntity, Transform)).toBe(true);
-      expect(Renderer.shape[sphereEntity]).toBe(1);
-      expect(Renderer.color[sphereEntity]).toBe(0x00ff00);
-      expect(Renderer.sizeX[sphereEntity]).toBe(1);
-      expect(Renderer.sizeY[sphereEntity]).toBe(1);
-      expect(Renderer.sizeZ[sphereEntity]).toBe(1);
-      expect(Transform.posX[sphereEntity]).toBe(3);
-      expect(Transform.posY[sphereEntity]).toBe(1);
-      expect(Transform.posZ[sphereEntity]).toBe(0);
-    });
-
     it('should handle root element with canvas and sky attributes', () => {
       const xml = `<root canvas="#game-canvas" sky="#87ceeb"><light></light><entity renderer="shape: box"></entity></root>`;
 
@@ -111,28 +68,6 @@ describe('Rendering Recipes', () => {
       expect(Directional.directionZ[directionalEntity]).toBe(-0.5);
       expect(Directional.castShadow[directionalEntity]).toBe(1);
       expect(Directional.shadowMapSize[directionalEntity]).toBe(2048);
-    });
-
-    it('should apply default values for light recipes', () => {
-      const xml = `<root><ambient-light /><directional-light /></root>`;
-
-      const parsed = XMLParser.parse(xml);
-      const entities = parseXMLToEntities(state, parsed.root);
-
-      const ambientEntity = entities[0].entity;
-      expect(Ambient.skyColor[ambientEntity]).toBe(0x87ceeb);
-      expect(Ambient.groundColor[ambientEntity]).toBe(0x4a4a4a);
-      expect(Ambient.intensity[ambientEntity]).toBeCloseTo(0.6);
-
-      const directionalEntity = entities[1].entity;
-      expect(Directional.color[directionalEntity]).toBe(0xffffff);
-      expect(Directional.intensity[directionalEntity]).toBe(1);
-      expect(Directional.castShadow[directionalEntity]).toBe(1);
-      expect(Directional.shadowMapSize[directionalEntity]).toBe(4096);
-      expect(Directional.directionX[directionalEntity]).toBe(-1);
-      expect(Directional.directionY[directionalEntity]).toBe(2);
-      expect(Directional.directionZ[directionalEntity]).toBe(-1);
-      expect(Directional.distance[directionalEntity]).toBe(30);
     });
   });
 

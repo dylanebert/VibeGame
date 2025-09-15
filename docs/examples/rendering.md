@@ -109,3 +109,31 @@ GAME.Renderer.visible[entity] = 1; // Show
 // In XML
 <entity renderer="visible: 0"></entity>  <!-- Initially hidden -->
 ```
+
+### Post-Processing Effects
+
+```xml
+<!-- Camera with bloom effect (using defaults) -->
+<camera bloom></camera>
+
+<!-- Camera with custom bloom settings -->
+<camera bloom="intensity: 2; luminance-threshold: 0.8; luminance-smoothing: 0.05"></camera>
+
+<!-- Camera with mipmap blur settings -->
+<camera bloom="mipmap-blur: 1; radius: 0.9; levels: 10"></camera>
+
+<!-- Camera without effects (still uses composer internally) -->
+<camera></camera>
+
+<!-- Camera with retro dithering effect -->
+<camera dithering="color-bits: 3; intensity: 0.8; scale: 2"></camera>
+
+<!-- Combined bloom and dithering for retro aesthetic -->
+<camera bloom="intensity: 1.5" dithering="color-bits: 2; grayscale: 1; scale: 3"></camera>
+
+<!-- Subtle dithering for vintage look -->
+<camera dithering="color-bits: 5; intensity: 0.5; scale: 1"></camera>
+
+<!-- Coarse pixel-art style dithering -->
+<camera dithering="color-bits: 2; scale: 4; intensity: 1"></camera>
+```

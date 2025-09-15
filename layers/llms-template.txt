@@ -148,6 +148,22 @@ While auto-creation is recommended, you can manually create these for customizat
 
 **Best Practice**: Use auto-creation unless you specifically need custom positions, properties, or multiple instances. The defaults are well-tuned for most games.
 
+## Post-Processing Effects
+
+```xml
+<!-- Bloom effect for glow -->
+<camera bloom="intensity: 2; luminance-threshold: 0.8"></camera>
+
+<!-- Retro dithering (reduces color palette) -->
+<camera dithering="color-bits: 3; scale: 2; noise: 1"></camera>
+
+<!-- Tonemapping for HDR-like visuals -->
+<camera tonemapping="mode: aces-filmic"></camera>
+
+<!-- Combined cinematic style -->
+<camera bloom="intensity: 1.5" tonemapping="mode: aces-filmic"></camera>
+```
+
 ## Common Game Patterns
 
 ### Basic Platformer
@@ -341,6 +357,7 @@ Recipes are registered component bundles with defaults:
 - **Third-person character control** - WASD + mouse camera
 - **Gamepad support** - Xbox/PlayStation controllers
 - **Visual effects** - Tweening colors, positions, rotations
+- **Post-processing** - Bloom, dithering, and tonemapping effects for visual styling
 
 ### Example Prompts That Work
 - "Create a platformer with moving platforms and collectible coins"
