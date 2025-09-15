@@ -2,9 +2,14 @@
 
 A vibe coding 3D game engine with declarative HTML-like syntax, ECS architecture, and game-ready features including physics, rendering, and player controls out of the box.
 
-## Quick Start
+<div align="center">
 
-[**Try on JSFiddle**](https://jsfiddle.net/keLsxh5t/)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/dylanebert/VibeGame)
+[![JSFiddle](https://img.shields.io/badge/JSFiddle-Try%20It-blue)](https://jsfiddle.net/keLsxh5t/)
+
+</div>
+
+## Quick Start
 
 ### Create a new project
 
