@@ -17,7 +17,20 @@
 - to: f32
 - value: f32 - Current value
 
+#### KinematicTween
+- tweenEntity: ui32 - Associated tween entity
+- targetEntity: ui32 - Kinematic body entity
+- axis: ui8 - 0=X, 1=Y, 2=Z
+- from: f32 - Start position
+- to: f32 - End position
+- lastPosition: f32
+- targetPosition: f32
+
 ### Systems
+
+#### KinematicTweenSystem
+- Group: fixed
+- Converts position tweens to velocity for kinematic bodies
 
 #### TweenSystem
 - Group: simulation

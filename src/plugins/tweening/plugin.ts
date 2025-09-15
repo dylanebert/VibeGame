@@ -1,13 +1,14 @@
 import type { Plugin } from '../../core';
-import { Tween, TweenValue } from './components';
+import { KinematicTween, Tween, TweenValue } from './components';
 import { tweenParser } from './parser';
-import { TweenSystem } from './systems';
+import { KinematicTweenSystem, TweenSystem } from './systems';
 
 export const TweenPlugin: Plugin = {
-  systems: [TweenSystem],
+  systems: [KinematicTweenSystem, TweenSystem],
   components: {
     Tween,
     TweenValue,
+    KinematicTween,
   },
   config: {
     parsers: {

@@ -175,6 +175,7 @@ describe('Physics Components', () => {
       expect(CharacterController.snapDist[entity]).toBe(0);
       expect(CharacterController.autoStep[entity]).toBe(0);
       expect(CharacterController.grounded[entity]).toBe(0);
+      expect(CharacterController.platform[entity]).toBe(0);
     });
 
     it('should store movement configuration', () => {

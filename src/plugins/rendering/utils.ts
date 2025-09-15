@@ -6,7 +6,7 @@ import type { Effect } from 'postprocessing';
 const MAX_INSTANCES = 1000;
 const DEFAULT_COLOR = 0xffffff;
 
-const RendererShape = {
+export const RendererShape = {
   BOX: 0,
   SPHERE: 1,
   CYLINDER: 2,
@@ -93,7 +93,7 @@ const stateToRenderingContext = new WeakMap<State, RenderingContext>();
 export function createGeometries(): Map<number, THREE.BufferGeometry> {
   const geometries = new Map<number, THREE.BufferGeometry>();
   geometries.set(RendererShape.BOX, new THREE.BoxGeometry());
-  geometries.set(RendererShape.SPHERE, new THREE.SphereGeometry(0.5));
+  geometries.set(RendererShape.SPHERE, new THREE.SphereGeometry(1));
   geometries.set(
     RendererShape.CYLINDER,
     new THREE.CylinderGeometry(0.5, 0.5, 1)

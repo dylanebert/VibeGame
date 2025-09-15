@@ -12,4 +12,6 @@ export const Player = defineComponent({
   cameraSensitivity: Types.f32,
   cameraZoomSensitivity: Types.f32,
   cameraEntity: Types.eid,
+  inheritedVelX: Types.f32,
+  inheritedVelZ: Types.f32,
 });

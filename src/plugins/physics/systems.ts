@@ -424,9 +424,22 @@ export const PhysicsCleanupSystem: System = {
   },
 };
 
-export const CharacterMovementSystem: System = {
+export const PlatformDeltaSystem: System = {
   group: 'fixed',
   after: [PhysicsCleanupSystem],
+  update: (state) => {
+    const entities = bodyQuery(state.world);
+    for (const entity of entities) {
+      Body.lastPosX[entity] = Body.posX[entity];
+      Body.lastPosY[entity] = Body.posY[entity];
+      Body.lastPosZ[entity] = Body.posZ[entity];
+    }
+  },
+};
+
+export const CharacterMovementSystem: System = {
+  group: 'fixed',
+  after: [PlatformDeltaSystem],
   update: (state) => {
     const context = getPhysicsContext(state);
     if (!context.physicsWorld || context.worldEntity === null) return;
@@ -448,7 +461,9 @@ export const CharacterMovementSystem: System = {
         collider,
         rigidbody,
         state.time.fixedDeltaTime,
-        gravityY
+        gravityY,
+        context.colliderToEntity,
+        context.physicsWorld
       );
     }
   },

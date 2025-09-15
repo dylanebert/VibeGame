@@ -39,6 +39,7 @@
 - eulerX, eulerY, eulerZ: f32
 - velX, velY, velZ: f32
 - rotVelX, rotVelY, rotVelZ: f32
+- lastPosX, lastPosY, lastPosZ: f32
 
 #### Collider
 - shape: ui8 - ColliderShape enum (Box)
@@ -65,6 +66,9 @@
 - upX, upY, upZ: f32 (upY=1)
 - moveX, moveY, moveZ: f32
 - grounded: ui8
+- platform: eid - Entity the character is standing on
+- platformVelX, platformVelY, platformVelZ: f32
+- platformDeltaX, platformDeltaY, platformDeltaZ: f32
 
 #### CharacterMovement
 - desiredVelX, desiredVelY, desiredVelZ: f32
@@ -96,8 +100,9 @@
 
 - PhysicsWorldSystem - Initializes physics world
 - PhysicsInitializationSystem - Creates bodies and colliders
-- CharacterMovementSystem - Character controller movement
 - PhysicsCleanupSystem - Removes physics on entity destroy
+- PlatformDeltaSystem - Tracks platform position changes
+- CharacterMovementSystem - Character controller movement with platform sticking
 - CollisionEventCleanupSystem - Clears collision events
 - ApplyForcesSystem - Applies forces
 - ApplyTorquesSystem - Applies torques

@@ -1,13 +1,13 @@
 # Player Plugin
 
 <!-- LLM:OVERVIEW -->
-Complete player character controller with physics movement and jumping.
+Complete player character controller with physics movement, jumping, and platform momentum preservation.
 <!-- /LLM:OVERVIEW -->
 
 ## Purpose
 
 - Player character movement and physics
-- Jump, walk, run mechanics
+- Jump mechanics with momentum preservation from moving platforms
 - Input-driven character control
 - Camera target for orbit camera
 
@@ -69,16 +69,18 @@ player/
 - cameraSensitivity: f32 (0.007)
 - cameraZoomSensitivity: f32 (1.5)
 - cameraEntity: eid (0)
+- inheritedVelX: f32 (0) - Horizontal momentum inherited from platform
+- inheritedVelZ: f32 (0) - Horizontal momentum inherited from platform
 
 ### Systems
 
 #### PlayerMovementSystem
 - Group: fixed
-- Handles movement, rotation, and jumping from input
+- Handles movement, rotation, jumping with platform momentum preservation
 
 #### PlayerGroundedSystem
 - Group: fixed
-- Tracks grounded state and jump availability
+- Tracks grounded state, jump availability, and clears inherited momentum on landing
 
 #### PlayerCameraLinkingSystem
 - Group: simulation

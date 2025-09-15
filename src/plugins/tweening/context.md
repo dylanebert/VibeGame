@@ -1,7 +1,7 @@
 # Tweening Plugin
 
 <!-- LLM:OVERVIEW -->
-Animates component properties with easing functions and loop modes.
+Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -11,26 +11,26 @@ tweening/
 ├── context.md  # This file
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
-├── components.ts  # Tween components
-├── systems.ts  # TweenSystem
+├── components.ts  # Tween, TweenValue, KinematicTween
+├── systems.ts  # KinematicTweenSystem, TweenSystem
 ├── parser.ts  # Tween XML parser
-└── utils.ts  # Easing functions
+└── utils.ts  # Easing functions, tween creation
 ```
 
 ## Scope
 
-- **In-scope**: Property animations, easing functions, loop modes, XML tween definitions
+- **In-scope**: Property animations, easing functions, loop modes, velocity-based kinematic tweening
 - **Out-of-scope**: Skeletal animation, physics interpolation
 
 ## Entry Points
 
 - **plugin.ts**: TweenPlugin definition for registration
-- **systems.ts**: TweenSystem processes active tweens each frame
+- **systems.ts**: KinematicTweenSystem (fixed group), TweenSystem (simulation group)
 - **parser.ts**: Parses `<tween>` elements from XML scenes
 
 ## Dependencies
 
-- **Internal**: Core ECS, math utilities (lerp)
+- **Internal**: Core ECS, physics (Body, SetLinearVelocity)
 - **External**: gsap (for easing functions)
 
 <!-- LLM:REFERENCE -->
@@ -51,7 +51,20 @@ tweening/
 - to: f32
 - value: f32 - Current value
 
+#### KinematicTween
+- tweenEntity: ui32 - Associated tween entity
+- targetEntity: ui32 - Kinematic body entity
+- axis: ui8 - 0=X, 1=Y, 2=Z
+- from: f32 - Start position
+- to: f32 - End position
+- lastPosition: f32
+- targetPosition: f32
+
 ### Systems
+
+#### KinematicTweenSystem
+- Group: fixed
+- Converts position tweens to velocity for kinematic bodies
 
 #### TweenSystem
 - Group: simulation

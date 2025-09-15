@@ -557,7 +557,7 @@ Orbital camera controller for third-person views and smooth target following.
 3D physics simulation with Rapier including rigid bodies, collisions, and character controllers.
 
 ### Player
-Complete player character controller with physics movement and jumping.
+Complete player character controller with physics movement, jumping, and platform momentum preservation.
 
 ### Recipes
 Foundation for declarative XML entity creation with parent-child hierarchies and attribute shorthands.
@@ -575,7 +575,7 @@ Auto-creates player, camera, and lighting entities at startup if missing.
 3D transforms with position, rotation, scale, and parent-child hierarchies.
 
 ### Tweening
-Animates component properties with easing functions and loop modes.
+Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
 
 ## Plugin Reference
 
@@ -751,6 +751,7 @@ Default input mappings and sensitivity settings
 - eulerX, eulerY, eulerZ: f32
 - velX, velY, velZ: f32
 - rotVelX, rotVelY, rotVelZ: f32
+- lastPosX, lastPosY, lastPosZ: f32
 
 #### Collider
 - shape: ui8 - ColliderShape enum (Box)
@@ -777,6 +778,9 @@ Default input mappings and sensitivity settings
 - upX, upY, upZ: f32 (upY=1)
 - moveX, moveY, moveZ: f32
 - grounded: ui8
+- platform: eid - Entity the character is standing on
+- platformVelX, platformVelY, platformVelZ: f32
+- platformDeltaX, platformDeltaY, platformDeltaZ: f32
 
 #### CharacterMovement
 - desiredVelX, desiredVelY, desiredVelZ: f32
@@ -808,8 +812,9 @@ Default input mappings and sensitivity settings
 
 - PhysicsWorldSystem - Initializes physics world
 - PhysicsInitializationSystem - Creates bodies and colliders
-- CharacterMovementSystem - Character controller movement
 - PhysicsCleanupSystem - Removes physics on entity destroy
+- PlatformDeltaSystem - Tracks platform position changes
+- CharacterMovementSystem - Character controller movement with platform sticking
 - CollisionEventCleanupSystem - Clears collision events
 - ApplyForcesSystem - Applies forces
 - ApplyTorquesSystem - Applies torques
@@ -849,16 +854,18 @@ Initializes Rapier WASM physics engine
 - cameraSensitivity: f32 (0.007)
 - cameraZoomSensitivity: f32 (1.5)
 - cameraEntity: eid (0)
+- inheritedVelX: f32 (0) - Horizontal momentum inherited from platform
+- inheritedVelZ: f32 (0) - Horizontal momentum inherited from platform
 
 ### Systems
 
 #### PlayerMovementSystem
 - Group: fixed
-- Handles movement, rotation, and jumping from input
+- Handles movement, rotation, jumping with platform momentum preservation
 
 #### PlayerGroundedSystem
 - Group: fixed
-- Tracks grounded state and jump availability
+- Tracks grounded state, jump availability, and clears inherited momentum on landing
 
 #### PlayerCameraLinkingSystem
 - Group: simulation
@@ -1073,7 +1080,20 @@ Associates canvas with RenderContext
 - to: f32
 - value: f32 - Current value
 
+#### KinematicTween
+- tweenEntity: ui32 - Associated tween entity
+- targetEntity: ui32 - Kinematic body entity
+- axis: ui8 - 0=X, 1=Y, 2=Z
+- from: f32 - Start position
+- to: f32 - End position
+- lastPosition: f32
+- targetPosition: f32
+
 ### Systems
+
+#### KinematicTweenSystem
+- Group: fixed
+- Converts position tweens to velocity for kinematic bodies
 
 #### TweenSystem
 - Group: simulation

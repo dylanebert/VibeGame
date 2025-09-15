@@ -6,6 +6,7 @@ import { MainCamera, Renderer } from './components';
 import {
   findAvailableInstanceSlot,
   initializeInstancedMesh,
+  RendererShape,
   SHADOW_CONFIG,
   type RenderingContext,
 } from './utils';
@@ -69,9 +70,16 @@ export function updateInstance(
       WorldTransform.scaleZ[entity]
     );
 
-    scale.x *= Renderer.sizeX[entity];
-    scale.y *= Renderer.sizeY[entity];
-    scale.z *= Renderer.sizeZ[entity];
+    if (instanceInfo.poolId === RendererShape.SPHERE) {
+      const sphereScale = Renderer.sizeX[entity] / 2;
+      scale.x *= sphereScale;
+      scale.y *= sphereScale;
+      scale.z *= sphereScale;
+    } else {
+      scale.x *= Renderer.sizeX[entity];
+      scale.y *= Renderer.sizeY[entity];
+      scale.z *= Renderer.sizeZ[entity];
+    }
 
     matrix.compose(position, rotation, scale);
     mesh.setMatrixAt(instanceInfo.instanceId, matrix);

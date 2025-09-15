@@ -2,7 +2,8 @@ import type { Component } from 'bitecs';
 import { gsap } from 'gsap';
 import type { State } from '../../core';
 import { toCamelCase } from '../../core';
-import { Tween, TweenValue } from './components';
+import { Body, BodyType } from '../physics';
+import { KinematicTween, Tween, TweenValue } from './components';
 
 export enum LoopMode {
   Once = 0,
@@ -207,18 +208,44 @@ export function createTween(
       const resolved = resolveComponentField(fieldData.field, entity, state);
       if (!resolved) continue;
 
-      const valueEntity = state.createEntity();
-      state.addComponent(valueEntity, TweenValue);
+      const isKinematicVelocityBody =
+        state.hasComponent(entity, Body) &&
+        Body.type[entity] === BodyType.KinematicVelocityBased &&
+        (resolved.array === Body.posX ||
+          resolved.array === Body.posY ||
+          resolved.array === Body.posZ);
 
-      TweenValue.source[valueEntity] = tweenEntity;
-      TweenValue.target[valueEntity] = entity;
-      TweenValue.componentId[valueEntity] = 0;
-      TweenValue.fieldIndex[valueEntity] = 0;
-      TweenValue.from[valueEntity] = fieldData.from;
-      TweenValue.to[valueEntity] = fieldData.to;
-      TweenValue.value[valueEntity] = fieldData.from;
+      if (isKinematicVelocityBody) {
+        const kinematicEntity = state.createEntity();
+        state.addComponent(kinematicEntity, KinematicTween);
 
-      tweenFieldRegistry.set(valueEntity, resolved.array);
+        let axis = 0;
+        if (resolved.array === Body.posY) axis = 1;
+        else if (resolved.array === Body.posZ) axis = 2;
+
+        const currentValue = resolved.array[entity];
+
+        KinematicTween.tweenEntity[kinematicEntity] = tweenEntity;
+        KinematicTween.targetEntity[kinematicEntity] = entity;
+        KinematicTween.axis[kinematicEntity] = axis;
+        KinematicTween.from[kinematicEntity] = fieldData.from;
+        KinematicTween.to[kinematicEntity] = fieldData.to;
+        KinematicTween.lastPosition[kinematicEntity] = currentValue;
+        KinematicTween.targetPosition[kinematicEntity] = fieldData.from;
+      } else {
+        const valueEntity = state.createEntity();
+        state.addComponent(valueEntity, TweenValue);
+
+        TweenValue.source[valueEntity] = tweenEntity;
+        TweenValue.target[valueEntity] = entity;
+        TweenValue.componentId[valueEntity] = 0;
+        TweenValue.fieldIndex[valueEntity] = 0;
+        TweenValue.from[valueEntity] = fieldData.from;
+        TweenValue.to[valueEntity] = fieldData.to;
+        TweenValue.value[valueEntity] = fieldData.from;
+
+        tweenFieldRegistry.set(valueEntity, resolved.array);
+      }
     }
   } else {
     const resolved = resolveComponentField(target, entity, state);
@@ -231,18 +258,42 @@ export function createTween(
         : (options.from?.[0] ?? currentValue);
     const toValue = typeof options.to === 'number' ? options.to : options.to[0];
 
-    const valueEntity = state.createEntity();
-    state.addComponent(valueEntity, TweenValue);
+    const isKinematicVelocityBody =
+      state.hasComponent(entity, Body) &&
+      Body.type[entity] === BodyType.KinematicVelocityBased &&
+      (resolved.array === Body.posX ||
+        resolved.array === Body.posY ||
+        resolved.array === Body.posZ);
 
-    TweenValue.source[valueEntity] = tweenEntity;
-    TweenValue.target[valueEntity] = entity;
-    TweenValue.componentId[valueEntity] = 0;
-    TweenValue.fieldIndex[valueEntity] = 0;
-    TweenValue.from[valueEntity] = fromValue;
-    TweenValue.to[valueEntity] = toValue;
-    TweenValue.value[valueEntity] = fromValue;
+    if (isKinematicVelocityBody) {
+      const kinematicEntity = state.createEntity();
+      state.addComponent(kinematicEntity, KinematicTween);
 
-    tweenFieldRegistry.set(valueEntity, resolved.array);
+      let axis = 0;
+      if (resolved.array === Body.posY) axis = 1;
+      else if (resolved.array === Body.posZ) axis = 2;
+
+      KinematicTween.tweenEntity[kinematicEntity] = tweenEntity;
+      KinematicTween.targetEntity[kinematicEntity] = entity;
+      KinematicTween.axis[kinematicEntity] = axis;
+      KinematicTween.from[kinematicEntity] = fromValue;
+      KinematicTween.to[kinematicEntity] = toValue;
+      KinematicTween.lastPosition[kinematicEntity] = currentValue;
+      KinematicTween.targetPosition[kinematicEntity] = fromValue;
+    } else {
+      const valueEntity = state.createEntity();
+      state.addComponent(valueEntity, TweenValue);
+
+      TweenValue.source[valueEntity] = tweenEntity;
+      TweenValue.target[valueEntity] = entity;
+      TweenValue.componentId[valueEntity] = 0;
+      TweenValue.fieldIndex[valueEntity] = 0;
+      TweenValue.from[valueEntity] = fromValue;
+      TweenValue.to[valueEntity] = toValue;
+      TweenValue.value[valueEntity] = fromValue;
+
+      tweenFieldRegistry.set(valueEntity, resolved.array);
+    }
   }
 
   return tweenEntity;

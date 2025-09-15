@@ -1,6 +1,6 @@
+import * as THREE from 'three';
 import { System, defineQuery } from '../../core';
 import { Parent } from '../recipes';
-import * as THREE from 'three';
 import { Transform, WorldTransform } from './components';
 import {
   composeTransformMatrix,

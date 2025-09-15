@@ -1,6 +1,11 @@
 import { defineQuery, type System } from '../../core';
 import { NULL_ENTITY } from '../../core';
-import { CharacterController, InterpolatedTransform } from '../physics';
+import {
+  CharacterController,
+  CharacterMovement,
+  InterpolatedTransform,
+} from '../physics';
+import { InputState } from '../input';
 import { Parent } from '../recipes';
 import { AnimatedCharacter } from './components';
 import { ANIMATION_CONFIG, ANIMATION_STATES } from './constants';
@@ -71,19 +76,25 @@ export const AnimatedCharacterUpdateSystem: System = {
       if (Parent.entity[character] === NULL_ENTITY) continue;
       const player = Parent.entity[character];
 
-      const posX = InterpolatedTransform.posX[player];
       const posY = InterpolatedTransform.posY[player];
-      const posZ = InterpolatedTransform.posZ[player];
-      const prevPosX = InterpolatedTransform.prevPosX[player];
       const prevPosY = InterpolatedTransform.prevPosY[player];
-      const prevPosZ = InterpolatedTransform.prevPosZ[player];
       const isGrounded = CharacterController.grounded[player] === 1;
 
-      const moveX = posX - prevPosX;
-      const moveZ = posZ - prevPosZ;
+      let isMoving = false;
+      if (state.hasComponent(player, InputState)) {
+        const inputX = InputState.moveX[player];
+        const inputY = InputState.moveY[player];
+        isMoving = Math.abs(inputX) > 0.1 || Math.abs(inputY) > 0.1;
+      }
+
       const verticalVelocity = (posY - prevPosY) / fixedDeltaTime;
-      const speed = Math.sqrt(moveX * moveX + moveZ * moveZ) / fixedDeltaTime;
-      const isMoving = speed > 0.5;
+
+      let speed = 1.0;
+      if (state.hasComponent(player, CharacterMovement) && isMoving) {
+        const moveX = CharacterMovement.actualMoveX[player];
+        const moveZ = CharacterMovement.actualMoveZ[player];
+        speed = Math.sqrt(moveX * moveX + moveZ * moveZ) / fixedDeltaTime;
+      }
 
       const prevState = AnimatedCharacter.animationState[character];
       let currentState = prevState;

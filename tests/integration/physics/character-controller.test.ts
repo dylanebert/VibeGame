@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
+import { NULL_ENTITY, State, TIME_CONSTANTS, defineQuery } from 'vibegame';
 import {
   Body,
   BodyType,
@@ -206,6 +206,162 @@ describe('Character Controller Integration', () => {
     }
 
     expect(Body.posX[character]).toBeGreaterThan(initialX);
+  });
+
+  it('should detect platform entity when standing on static body', () => {
+    const floor = state.createEntity();
+    state.addComponent(floor, Body);
+    state.addComponent(floor, Collider);
+    state.addComponent(floor, Transform);
+
+    Body.type[floor] = BodyType.Fixed;
+    Body.posY[floor] = 0;
+    Body.rotW[floor] = 1;
+
+    Collider.shape[floor] = ColliderShape.Box;
+    Collider.sizeX[floor] = 10;
+    Collider.sizeY[floor] = 1;
+    Collider.sizeZ[floor] = 10;
+
+    const character = state.createEntity();
+    state.addComponent(character, Body);
+    state.addComponent(character, Collider);
+    state.addComponent(character, CharacterController);
+    state.addComponent(character, CharacterMovement);
+    state.addComponent(character, Transform);
+
+    Body.type[character] = BodyType.KinematicPositionBased;
+    Body.posX[character] = 0;
+    Body.posY[character] = 5;
+    Body.posZ[character] = 0;
+    Body.rotW[character] = 1;
+    Body.gravityScale[character] = 1;
+
+    Collider.shape[character] = ColliderShape.Capsule;
+    Collider.radius[character] = 0.5;
+    Collider.height[character] = 1;
+
+    CharacterController.offset[character] = 0.01;
+    CharacterController.upY[character] = 1;
+
+    // Let character fall and land on floor
+    for (let i = 0; i < 50; i++) {
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+    }
+
+    // Character should be grounded
+    expect(CharacterController.grounded[character]).toBe(1);
+
+    // Platform should be the floor entity
+    expect(CharacterController.platform[character]).toBe(floor);
+  });
+
+  it('should detect platform entity when standing on kinematic body', () => {
+    const platform = state.createEntity();
+    state.addComponent(platform, Body);
+    state.addComponent(platform, Collider);
+    state.addComponent(platform, Transform);
+
+    Body.type[platform] = BodyType.KinematicPositionBased;
+    Body.posY[platform] = 2;
+    Body.rotW[platform] = 1;
+
+    Collider.shape[platform] = ColliderShape.Box;
+    Collider.sizeX[platform] = 5;
+    Collider.sizeY[platform] = 0.5;
+    Collider.sizeZ[platform] = 5;
+
+    const character = state.createEntity();
+    state.addComponent(character, Body);
+    state.addComponent(character, Collider);
+    state.addComponent(character, CharacterController);
+    state.addComponent(character, CharacterMovement);
+    state.addComponent(character, Transform);
+
+    Body.type[character] = BodyType.KinematicPositionBased;
+    Body.posX[character] = 0;
+    Body.posY[character] = 4;
+    Body.posZ[character] = 0;
+    Body.rotW[character] = 1;
+    Body.gravityScale[character] = 1;
+
+    Collider.shape[character] = ColliderShape.Capsule;
+    Collider.radius[character] = 0.5;
+    Collider.height[character] = 1;
+
+    CharacterController.offset[character] = 0.01;
+    CharacterController.upY[character] = 1;
+
+    // Let character fall and land on platform
+    for (let i = 0; i < 50; i++) {
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+    }
+
+    // Character should be grounded
+    expect(CharacterController.grounded[character]).toBe(1);
+
+    // Platform should be the kinematic platform entity
+    expect(CharacterController.platform[character]).toBe(platform);
+  });
+
+  it('should clear platform entity when character jumps off', () => {
+    const floor = state.createEntity();
+    state.addComponent(floor, Body);
+    state.addComponent(floor, Collider);
+    state.addComponent(floor, Transform);
+
+    Body.type[floor] = BodyType.Fixed;
+    Body.posY[floor] = 0;
+    Body.rotW[floor] = 1;
+
+    Collider.shape[floor] = ColliderShape.Box;
+    Collider.sizeX[floor] = 10;
+    Collider.sizeY[floor] = 1;
+    Collider.sizeZ[floor] = 10;
+
+    const character = state.createEntity();
+    state.addComponent(character, Body);
+    state.addComponent(character, Collider);
+    state.addComponent(character, CharacterController);
+    state.addComponent(character, CharacterMovement);
+    state.addComponent(character, Transform);
+
+    Body.type[character] = BodyType.KinematicPositionBased;
+    Body.posX[character] = 0;
+    Body.posY[character] = 2;
+    Body.posZ[character] = 0;
+    Body.rotW[character] = 1;
+    Body.gravityScale[character] = 1;
+
+    Collider.shape[character] = ColliderShape.Capsule;
+    Collider.radius[character] = 0.5;
+    Collider.height[character] = 1;
+
+    CharacterController.offset[character] = 0.01;
+    CharacterController.upY[character] = 1;
+
+    // Let character land on floor
+    for (let i = 0; i < 30; i++) {
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+    }
+
+    // Character should be grounded on floor
+    expect(CharacterController.grounded[character]).toBe(1);
+    expect(CharacterController.platform[character]).toBe(floor);
+
+    // Make character jump
+    CharacterMovement.velocityY[character] = 10;
+
+    // Step a few times
+    for (let i = 0; i < 5; i++) {
+      state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+    }
+
+    // Character should not be grounded
+    expect(CharacterController.grounded[character]).toBe(0);
+
+    // Platform should be cleared (NULL_ENTITY)
+    expect(CharacterController.platform[character]).toBe(NULL_ENTITY);
   });
 
   it('should handle auto-stepping', () => {

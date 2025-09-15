@@ -47,6 +47,10 @@ export const Body = defineComponent({
   rotVelX: Types.f32,
   rotVelY: Types.f32,
   rotVelZ: Types.f32,
+
+  lastPosX: Types.f32,
+  lastPosY: Types.f32,
+  lastPosZ: Types.f32,
 });
 
 export const Collider = defineComponent({
@@ -86,6 +90,13 @@ export const CharacterController = defineComponent({
   moveY: Types.f32,
   moveZ: Types.f32,
   grounded: Types.ui8,
+  platform: Types.eid,
+  platformVelX: Types.f32,
+  platformVelY: Types.f32,
+  platformVelZ: Types.f32,
+  platformDeltaX: Types.f32,
+  platformDeltaY: Types.f32,
+  platformDeltaZ: Types.f32,
 });
 
 export const CharacterMovement = defineComponent({

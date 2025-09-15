@@ -16,3 +16,13 @@ export const TweenValue = defineComponent({
   to: Types.f32,
   value: Types.f32,
 });
+
+export const KinematicTween = defineComponent({
+  tweenEntity: Types.ui32,
+  targetEntity: Types.ui32,
+  axis: Types.ui8,
+  from: Types.f32,
+  to: Types.f32,
+  lastPosition: Types.f32,
+  targetPosition: Types.f32,
+});

@@ -1,6 +1,11 @@
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { ActiveCollisionTypes, ActiveEvents } from '@dimforge/rapier3d-compat';
-import { defineQuery, TIME_CONSTANTS, type State } from '../../core';
+import {
+  defineQuery,
+  NULL_ENTITY,
+  TIME_CONSTANTS,
+  type State,
+} from '../../core';
 import {
   Transform,
   WorldTransform,
@@ -114,7 +119,7 @@ export function createColliderDescriptor(
       desc = RAPIER.ColliderDesc.cuboid(sizeX / 2, sizeY / 2, sizeZ / 2);
       break;
     case ColliderShape.Sphere:
-      desc = RAPIER.ColliderDesc.ball(radius);
+      desc = RAPIER.ColliderDesc.ball(sizeX / 2);
       break;
     case ColliderShape.Capsule:
       desc = RAPIER.ColliderDesc.capsule(height / 2, radius);
@@ -407,13 +412,57 @@ export function teleportEntity(entity: number, body: RAPIER.RigidBody): void {
   }
 }
 
+export function detectPlatformContinuous(
+  entity: number,
+  collider: RAPIER.Collider,
+  physicsWorld: RAPIER.World,
+  colliderToEntity: Map<number, number>
+): number {
+  const castDistance = 0.15;
+  const shapePos = collider.translation();
+  const shapeRot = collider.rotation();
+  const shapeVel = new RAPIER.Vector3(0, -1, 0);
+  const colliderShape = collider.shape;
+
+  const hit = physicsWorld.castShape(
+    shapePos,
+    shapeRot,
+    shapeVel,
+    colliderShape,
+    castDistance,
+    castDistance,
+    true,
+    RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
+    undefined,
+    undefined,
+    undefined,
+    (otherCollider: RAPIER.Collider) => otherCollider.handle !== collider.handle
+  );
+
+  if (hit) {
+    const platformColliderHandle = hit.collider.handle;
+    const platformEntity = colliderToEntity.get(platformColliderHandle);
+
+    if (platformEntity !== undefined && platformEntity !== entity) {
+      const hitNormal = hit.normal1;
+      if (hitNormal.y > 0.7) {
+        return platformEntity;
+      }
+    }
+  }
+
+  return NULL_ENTITY;
+}
+
 export function applyCharacterMovement(
   entity: number,
   controller: RAPIER.KinematicCharacterController,
   collider: RAPIER.Collider,
   body: RAPIER.RigidBody,
   deltaTime: number,
-  gravityY: number
+  gravityY: number,
+  colliderToEntity: Map<number, number>,
+  physicsWorld: RAPIER.World
 ): void {
   const wasGrounded = CharacterController.grounded[entity] === 1;
 
@@ -431,10 +480,58 @@ export function applyCharacterMovement(
     (CharacterMovement.velocityY[entity] || 0) +
     (CharacterMovement.desiredVelY[entity] || 0);
 
+  let platformVelX = 0;
+  let platformVelY = 0;
+  let platformVelZ = 0;
+  let platformDeltaX = 0;
+  let platformDeltaY = 0;
+  let platformDeltaZ = 0;
+
+  const platform = CharacterController.platform[entity];
+  if (wasGrounded && platform !== NULL_ENTITY) {
+    const platformBodyType = Body.type[platform];
+    if (
+      platformBodyType === BodyType.KinematicPositionBased ||
+      platformBodyType === BodyType.KinematicVelocityBased
+    ) {
+      const currentPosX = Body.posX[platform] || 0;
+      const currentPosY = Body.posY[platform] || 0;
+      const currentPosZ = Body.posZ[platform] || 0;
+      const lastPosX = Body.lastPosX[platform] || currentPosX;
+      const lastPosY = Body.lastPosY[platform] || currentPosY;
+      const lastPosZ = Body.lastPosZ[platform] || currentPosZ;
+
+      platformDeltaX = currentPosX - lastPosX;
+      platformDeltaY = currentPosY - lastPosY;
+      platformDeltaZ = currentPosZ - lastPosZ;
+
+      CharacterController.platformDeltaX[entity] = platformDeltaX;
+      CharacterController.platformDeltaY[entity] = platformDeltaY;
+      CharacterController.platformDeltaZ[entity] = platformDeltaZ;
+
+      if (platformBodyType === BodyType.KinematicVelocityBased) {
+        platformVelX = Body.velX[platform] || 0;
+        platformVelY = Body.velY[platform] || 0;
+        platformVelZ = Body.velZ[platform] || 0;
+      }
+
+      CharacterController.platformVelX[entity] = platformVelX;
+      CharacterController.platformVelY[entity] = platformVelY;
+      CharacterController.platformVelZ[entity] = platformVelZ;
+    }
+  } else {
+    CharacterController.platformVelX[entity] = 0;
+    CharacterController.platformVelY[entity] = 0;
+    CharacterController.platformVelZ[entity] = 0;
+    CharacterController.platformDeltaX[entity] = 0;
+    CharacterController.platformDeltaY[entity] = 0;
+    CharacterController.platformDeltaZ[entity] = 0;
+  }
+
   const desiredTranslation = new RAPIER.Vector3(
-    CharacterMovement.desiredVelX[entity] * deltaTime,
-    totalVelY * deltaTime,
-    CharacterMovement.desiredVelZ[entity] * deltaTime
+    (CharacterMovement.desiredVelX[entity] + platformVelX) * deltaTime,
+    (totalVelY + platformVelY) * deltaTime,
+    (CharacterMovement.desiredVelZ[entity] + platformVelZ) * deltaTime
   );
 
   controller.computeColliderMovement(
@@ -475,9 +572,9 @@ export function applyCharacterMovement(
 
   const currentPos = body.translation();
   const newPos = new RAPIER.Vector3(
-    currentPos.x + finalMovement.x,
-    currentPos.y + finalMovement.y,
-    currentPos.z + finalMovement.z
+    currentPos.x + finalMovement.x + platformDeltaX,
+    currentPos.y + finalMovement.y + platformDeltaY,
+    currentPos.z + finalMovement.z + platformDeltaZ
   );
 
   body.setNextKinematicTranslation(newPos);
@@ -492,6 +589,17 @@ export function applyCharacterMovement(
 
   const grounded = controller.computedGrounded() ? 1 : 0;
   CharacterController.grounded[entity] = grounded;
+
+  if (grounded) {
+    CharacterController.platform[entity] = detectPlatformContinuous(
+      entity,
+      collider,
+      physicsWorld,
+      colliderToEntity
+    );
+  } else {
+    CharacterController.platform[entity] = NULL_ENTITY;
+  }
 
   if (grounded && !wasGrounded) {
     CharacterMovement.velocityY[entity] = 0;

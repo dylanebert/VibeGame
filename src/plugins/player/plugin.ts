@@ -34,6 +34,8 @@ export const PlayerPlugin: Plugin = {
         cameraSensitivity: PLAYER_DEFAULTS.cameraSensitivity,
         cameraZoomSensitivity: PLAYER_DEFAULTS.cameraZoomSensitivity,
         cameraEntity: PLAYER_DEFAULTS.cameraEntity,
+        inheritedVelX: PLAYER_DEFAULTS.inheritedVelX,
+        inheritedVelZ: PLAYER_DEFAULTS.inheritedVelZ,
       },
     },
   },

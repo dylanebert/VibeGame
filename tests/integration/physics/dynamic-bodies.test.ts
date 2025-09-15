@@ -200,6 +200,7 @@ describe('Dynamic Bodies Integration', () => {
     Body.gravityScale[ball] = 1;
 
     Collider.shape[ball] = ColliderShape.Sphere;
+    Collider.sizeX[ball] = 1;
     Collider.radius[ball] = 0.5;
     Collider.density[ball] = 1;
     Collider.restitution[ball] = 0.8;

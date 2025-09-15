@@ -52,8 +52,26 @@ export const PlayerMovementSystem: System = {
         state.time.elapsed * 1000
       );
 
-      CharacterMovement.desiredVelX[entity] = horizontalVelX;
-      CharacterMovement.desiredVelZ[entity] = horizontalVelZ;
+      if (jumpVelocity > 0 && state.hasComponent(entity, CharacterController)) {
+        const platform = CharacterController.platform[entity];
+        if (platform > 0) {
+          Player.inheritedVelX[entity] =
+            CharacterController.platformVelX[entity];
+          Player.inheritedVelZ[entity] =
+            CharacterController.platformVelZ[entity];
+        }
+      }
+
+      const momentumFactor = Player.isJumping[entity] === 1 ? 0.85 : 0;
+      CharacterMovement.desiredVelX[entity] =
+        horizontalVelX + Player.inheritedVelX[entity] * momentumFactor;
+      CharacterMovement.desiredVelZ[entity] =
+        horizontalVelZ + Player.inheritedVelZ[entity] * momentumFactor;
+
+      if (Player.isJumping[entity] === 1) {
+        Player.inheritedVelX[entity] *= 0.98;
+        Player.inheritedVelZ[entity] *= 0.98;
+      }
 
       if (jumpVelocity > 0) {
         CharacterMovement.velocityY[entity] = jumpVelocity;
@@ -98,6 +116,8 @@ export const PlayerGroundedSystem: System = {
 
         if (wasJumping) {
           Player.isJumping[entity] = 0;
+          Player.inheritedVelX[entity] = 0;
+          Player.inheritedVelZ[entity] = 0;
         }
 
         if (Player.canJump[entity] === 0 && Player.jumpCooldown[entity] <= 0) {

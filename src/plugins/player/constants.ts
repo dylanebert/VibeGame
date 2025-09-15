@@ -12,6 +12,8 @@ export const PLAYER_DEFAULTS = {
   cameraSensitivity: 0.007,
   cameraZoomSensitivity: 1.5,
   cameraEntity: 0,
+  inheritedVelX: 0,
+  inheritedVelZ: 0,
 } as const;
 
 export const PLAYER_BODY_DEFAULTS = {
