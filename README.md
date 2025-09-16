@@ -1,6 +1,6 @@
 # VibeGame
 
-A vibe coding 3D game engine with declarative HTML-like syntax, ECS architecture, and game-ready features including physics, rendering, and player controls out of the box.
+A 3D game engine designed for vibe coding. Declarative HTML-like syntax, ECS architecture, and game-ready features including physics, rendering, and player controls out of the box.
 
 <div align="center">
 
