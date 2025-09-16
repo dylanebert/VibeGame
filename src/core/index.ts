@@ -63,3 +63,9 @@ export type {
   ValidationResult,
   ValidationOptions,
 } from './validation';
+
+export {
+  registerRuntime,
+  unregisterRuntime,
+  disposeAllRuntimes,
+} from './runtime-manager';

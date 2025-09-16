@@ -33,6 +33,7 @@ export class State {
   public readonly config = new ConfigRegistry();
   private readonly recipes = new Map<string, Recipe>();
   private readonly components = new Map<string, Component>();
+  private isDisposed = false;
 
   constructor() {
     this.world = createWorld();
@@ -114,14 +115,17 @@ export class State {
   }
 
   step(deltaTime = TIME_CONSTANTS.DEFAULT_DELTA): void {
+    this.checkDisposed();
     this.scheduler.step(this, deltaTime);
   }
 
   createEntity(): number {
+    this.checkDisposed();
     return addEntity(this.world);
   }
 
   destroyEntity(eid: number): void {
+    this.checkDisposed();
     removeEntity(this.world, eid);
   }
 
@@ -167,9 +171,19 @@ export class State {
   }
 
   dispose(): void {
+    if (this.isDisposed) {
+      throw new Error('[VibeGame] State already disposed');
+    }
     for (const system of this.systems) {
       system.dispose?.(this);
     }
     this.systems.clear();
+    this.isDisposed = true;
+  }
+
+  private checkDisposed(): void {
+    if (this.isDisposed) {
+      throw new Error('[VibeGame] Cannot use disposed State');
+    }
   }
 }

@@ -1,6 +1,7 @@
 import type { BuilderOptions } from './builder';
 import { GameBuilder } from './builder';
 import type { Component, Plugin, System } from './core';
+import { disposeAllRuntimes } from './core/runtime-manager';
 export { DefaultPlugins } from './plugins/defaults';
 
 export * from './core';
@@ -26,6 +27,7 @@ function getBuilder(): GameBuilder {
 }
 
 export function resetBuilder(): void {
+  disposeAllRuntimes();
   globalBuilder = null;
 }
 
@@ -51,6 +53,7 @@ export function configure(options: BuilderOptions) {
 
 export function run() {
   const builder = getBuilder();
+  disposeAllRuntimes();
   globalBuilder = null;
   return builder.run();
 }

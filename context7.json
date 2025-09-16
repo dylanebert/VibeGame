@@ -24,6 +24,7 @@
     ".prettierrc",
     ".prettierignore",
     ".gitignore",
-    "bun.lockb"
+    "bun.lockb",
+    "agents.md"
   ]
 }

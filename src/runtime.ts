@@ -5,16 +5,20 @@ import { initializePhysics } from './plugins/physics';
 import { parseXMLToEntities } from './core';
 import { RenderContext, setCanvasElement } from './plugins/rendering';
 import { setTargetCanvas } from './plugins/input';
+import { registerRuntime, unregisterRuntime } from './core/runtime-manager';
 
 export class GameRuntime {
   private state: State;
   private options: BuilderOptions;
   private isRunning = false;
+  private isDestroyed = false;
   private mutationObserver?: MutationObserver;
+  private canvasElements = new Set<HTMLCanvasElement>();
 
   constructor(state: State, options: BuilderOptions = {}) {
     this.state = state;
     this.options = options;
+    registerRuntime(this);
   }
 
   async start(): Promise<void> {
@@ -42,8 +46,14 @@ export class GameRuntime {
   }
 
   destroy(): void {
+    if (this.isDestroyed) {
+      throw new Error('[VibeGame] Runtime already destroyed');
+    }
     this.stop();
     this.state.dispose();
+    this.canvasElements.clear();
+    unregisterRuntime(this);
+    this.isDestroyed = true;
   }
 
   step(deltaTime: number = TIME_CONSTANTS.DEFAULT_DELTA): void {
@@ -101,6 +111,7 @@ export class GameRuntime {
         canvasSelector
       ) as HTMLCanvasElement;
       if (canvas) {
+        this.canvasElements.add(canvas);
         const rendererEntity = this.state.createEntity();
         this.state.addComponent(rendererEntity, RenderContext);
         RenderContext.hasCanvas[rendererEntity] = 1;
@@ -256,6 +267,33 @@ export class GameRuntime {
 
             element.querySelectorAll?.('world').forEach((worldEl) => {
               this.processWorldElement(worldEl as HTMLElement);
+            });
+          }
+        });
+
+        mutation.removedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as HTMLElement;
+
+            if (
+              element.tagName.toLowerCase() === 'canvas' &&
+              this.canvasElements.has(element as HTMLCanvasElement)
+            ) {
+              console.warn(
+                '[VibeGame] Canvas removed from DOM, disposing runtime'
+              );
+              this.destroy();
+              return;
+            }
+
+            element.querySelectorAll?.('canvas').forEach((canvasEl) => {
+              if (this.canvasElements.has(canvasEl as HTMLCanvasElement)) {
+                console.warn(
+                  '[VibeGame] Canvas removed from DOM, disposing runtime'
+                );
+                this.destroy();
+                return;
+              }
             });
           }
         });

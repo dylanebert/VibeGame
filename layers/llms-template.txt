@@ -357,6 +357,7 @@ Recipes are registered component bundles with defaults:
 - **Gamepad support** - Xbox/PlayStation controllers
 - **Visual effects** - Tweening colors, positions, rotations
 - **Post-processing** - Bloom, dithering, and tonemapping effects for visual styling
+- **Game UI/HUD** - HTML/CSS overlays with GSAP animations, ECS state integration
 
 ### Example Prompts That Work
 - "Create a platformer with moving platforms and collectible coins"
@@ -364,6 +365,47 @@ Recipes are registered component bundles with defaults:
 - "Build an obstacle course with rotating platforms"
 - "Add falling crates that stack up"
 - "Create a simple parkour level"
+- "Add a score display and upgrade menu with animations"
+- "Create a game with currency system and floating text effects"
+
+### Beginner Learning Patterns
+
+#### Progressive Complexity Framework
+When helping beginners, follow the "three escalating encounters" pattern:
+
+1. **Introduction** - Working template that demonstrates the concept
+2. **Guided modification** - Change one parameter to see the effect
+3. **Independent exploration** - Combine concepts or create variations
+
+#### Multiple Learning Paths Available
+- **XML-first** (visual/declarative learners) - Start with recipe tags, then explain underlying components
+- **JavaScript-first** (code-focused learners) - Begin with TypeScript examples, then show XML equivalent
+- **Hybrid approach** - XML for basic setup + custom systems for advanced features
+
+#### Early Win-State Examples
+Always provide examples that work immediately:
+
+```xml
+<!-- ✅ INSTANT SUCCESS: Complete playable scene -->
+<world canvas="#game-canvas" sky="#87ceeb">
+  <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
+</world>
+<!-- This immediately creates: playable character + camera + lighting + ground -->
+```
+
+#### Common Failure Recovery Patterns
+When users report issues, guide them through these simplification steps:
+
+1. **Start minimal** - Just ground + player (auto-created)
+2. **Add one element** - Single physics object or platform
+3. **Verify basics work** - Movement, camera, physics
+4. **Incrementally add complexity** - One feature at a time
+
+#### Scaffolding Troubleshooting
+- **Physics not working?** → Check if ground exists, verify `<world>` tag
+- **Entity not appearing?** → Verify transform component, check position values
+- **Movement feels wrong?** → Explain physics vs transform position hierarchy
+- **Too complex?** → Break into smaller working pieces first
 
 ## Features Not Yet Built-In
 
@@ -371,22 +413,16 @@ Recipes are registered component bundles with defaults:
 - **Multiplayer/Networking** - No server sync
 - **Sound/Audio** - No audio system yet
 - **Save/Load** - No persistence system
-- **Inventory** - No item management
-- **Dialog/NPCs** - No conversation system
+- **Inventory** - No item management system built-in (but easily implementable with UI)
+- **Dialog/NPCs** - No conversation system built-in (but easily implementable with UI)
 - **AI/Pathfinding** - No enemy AI
-- **Particles** - No particle effects
+- **Particles** - No particle effects (though UI can create particle-like effects)
 - **Custom shaders** - Fixed rendering pipeline
 - **Terrain** - Use box platforms instead
 
-### ✅ Available Through Web Platform
-- **UI/HUD** - Use standard HTML/CSS overlays on the canvas
-- **Animations** - GSAP is included for advanced UI animations
-- **Score display** → HTML elements positioned over canvas
-- **Menus** → Standard web UI (divs, buttons, etc.)
-
 ### Recommended Approaches
-- **UI** → Position HTML elements over the canvas with CSS
-- **Animations** → Use GSAP for smooth UI transitions
+- **Complex UI** → HTML/CSS overlays (this is actually superior to most game engines)
+- **Animations** → GSAP for smooth transitions and effects
 - **Level progression** → Reload with different XML or hide/show worlds
 - **Enemy behavior** → Tweened movement patterns
 - **Interactions** → Collision detection in custom systems
