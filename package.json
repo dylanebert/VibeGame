@@ -70,6 +70,7 @@
   },
   "files": [
     "dist",
+    "agents.md",
     "llms.txt",
     "!dist/reference",
     "!dist/examples"

@@ -7,7 +7,6 @@ Complete conversation by updating context and applying cleanup.
 @CLAUDE.md
 @layers/structure.md
 @layers/context-template.md
-@layers/llms-template.txt
 
 User arguments: "$ARGUMENTS"
 
@@ -23,8 +22,7 @@ User arguments: "$ARGUMENTS"
 Traverse upward through context tiers (see CLAUDE.md):
 
 - **Tier 2**: Update relevant `context.md` files to reflect current code state
-- **Tier 1**: Update `layers/structure.md` if structure/commands/stack changed
-- **llms.txt**: Update `layers/llms-template.txt` if engine usage patterns changed
+- **Tier 1**: Update `layers/structure.md`, `layers/llms-template.txt`, and `agents.md` if structure/commands/stack changed
 - Follow all rules from CLAUDE.md, especially "No History" principle
 
 ### 3. Apply Cleanup

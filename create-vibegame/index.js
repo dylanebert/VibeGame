@@ -92,13 +92,12 @@ async function init() {
     await execAsync(installCmd, { cwd: targetDir });
     console.log(green('✓') + ' Dependencies installed');
     
-    // Copy llms.txt from installed vibegame package
-    const targetLlmsPath = path.join(targetDir, 'llms.txt');
-    const vibegameLlmsPath = path.join(targetDir, 'node_modules', 'vibegame', 'llms.txt');
-    
-    if (fs.existsSync(vibegameLlmsPath)) {
-      fs.copyFileSync(vibegameLlmsPath, targetLlmsPath);
-      console.log(green('✓') + ' LLM documentation included (llms.txt)');
+    const targetAgentsPath = path.join(targetDir, 'agents.md');
+    const vibegameAgentsPath = path.join(targetDir, 'node_modules', 'vibegame', 'agents.md');
+
+    if (fs.existsSync(vibegameAgentsPath)) {
+      fs.copyFileSync(vibegameAgentsPath, targetAgentsPath);
+      console.log(green('✓') + ' AI agent context included (agents.md)');
     }
   } catch (_error) {
     console.log(yellow('⚠') + ' Failed to install dependencies automatically');
@@ -122,7 +121,8 @@ async function init() {
   }
   
   console.log();
-  console.log('LLM documentation available in llms.txt');
+  console.log('AI agent context available in agents.md');
+  console.log('For comprehensive docs, use Context7 to fetch vibegame documentation');
   console.log();
 }
 

@@ -20,7 +20,7 @@ cd my-game
 bun dev
 ```
 
-This scaffolds a complete project with `llms.txt` documentation for AI-assisted development.
+This scaffolds a complete project with `agents.md` context for AI-assisted development.
 
 ### Or install directly
 
@@ -51,10 +51,17 @@ Vibe coding games works at first, but falls apart as the project grows.
 
 ## Solution
 
-### 1. Context Management
+### 1. AI Context Management
 
-Use [Shallot](https://github.com/dylanebert/shallot) to manage context across conversations:
+**System Prompt**: Include `agents.md` in your AI system prompt for essential VibeGame context.
 
+**Comprehensive Documentation**: Use Context7 to fetch detailed documentation:
+```typescript
+// Use mcp__context7__resolve-library-id to find "vibegame"
+// Then use mcp__context7__get-library-docs for full documentation
+```
+
+**Context Workflow**: Use [Shallot](https://github.com/dylanebert/shallot) to manage context across conversations:
 - Use `/peel` at conversation start to load necessary context
 - Use `/nourish` at conversation end to update context
 

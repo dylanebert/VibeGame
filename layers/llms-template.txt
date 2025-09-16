@@ -47,7 +47,6 @@ bun dev    # Start dev server with hot reload
 - `bun run check` - TypeScript type checking
 - `bun run lint` - Lint code with ESLint
 - `bun run format` - Format code with Prettier
-- `bun run update` - Update llms.txt after upgrading vibegame
 
 ## Physics Objects
 
@@ -539,18 +538,6 @@ GAME
 - **RespawnPlugin** - Fall detection and reset
 - **StartupPlugin** - Auto-create player/camera/lights
 
-## Module Documentation
-
-{{MODULES}}
-
 ## Plugin Reference
 
 {{EMBEDDED_REFERENCES}}
-
-## API Reference (External Links)
-
-{{REFERENCE_LINKS}}
-
-## Examples (External Links)
-
-{{EXAMPLES_LINKS}}

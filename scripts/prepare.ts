@@ -9,7 +9,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 
-const GITHUB_PAGES_BASE = 'https://dylanebert.github.io/vibegame';
 function extractSection(content, tag) {
   const startTag = `<!-- LLM:${tag} -->`;
   const endTag = `<!-- /LLM:${tag} -->`;
@@ -114,18 +113,12 @@ async function buildLLMDocs() {
   const templatePath = path.join(ROOT_DIR, 'layers', 'llms-template.txt');
   let template = await fs.readFile(templatePath, 'utf-8');
 
-  const modulesSection = Array.from(modules.entries())
-    .sort(([a], [b]) => {
-      if (a === 'core') return -1;
-      if (b === 'core') return 1;
-      return a.localeCompare(b);
-    })
-    .map(([_key, { name, overview }]) => {
-      return `### ${name}\n${overview}`;
-    })
-    .join('\n\n');
-
-  const referenceLinks = Array.from(references.keys())
+  const allModules = new Set([
+    ...modules.keys(),
+    ...references.keys(),
+    ...examples.keys(),
+  ]);
+  const embeddedReferences = Array.from(allModules)
     .sort((a, b) => {
       if (a === 'core') return -1;
       if (b === 'core') return 1;
@@ -133,49 +126,29 @@ async function buildLLMDocs() {
     })
     .map((key) => {
       const name = formatModuleName(key);
-      const url = `${GITHUB_PAGES_BASE}/reference/${key}`;
-      return `- [${name}](${url})`;
-    })
-    .join('\n');
+      const moduleOverview = modules.get(key);
+      const referenceContent = references.get(key);
+      const exampleContent = examples.get(key);
 
-  const examplesLinks = Array.from(examples.keys())
-    .sort((a, b) => {
-      if (a === 'core') return -1;
-      if (b === 'core') return 1;
-      return a.localeCompare(b);
-    })
-    .map((key) => {
-      const name = formatModuleName(key);
-      const url = `${GITHUB_PAGES_BASE}/examples/${key}`;
-      return `- [${name}](${url})`;
-    })
-    .join('\n');
+      let content = `### ${name}`;
 
-  const embeddedReferences = Array.from(references.entries())
-    .sort(([a], [b]) => {
-      if (a === 'core') return -1;
-      if (b === 'core') return 1;
-      return a.localeCompare(b);
-    })
-    .map(([key, content]) => {
-      const name = formatModuleName(key);
-      return `### ${name}\n\n${content}`;
+      if (moduleOverview) {
+        content += `\n\n${moduleOverview.overview}`;
+      }
+
+      if (referenceContent) {
+        content += `\n\n${referenceContent}`;
+      }
+
+      if (exampleContent) {
+        content += `\n\n#### Examples\n\n${exampleContent}`;
+      }
+
+      return content;
     })
     .join('\n\n');
 
-  template = template.replace('{{MODULES}}', modulesSection);
-  template = template.replace(
-    '{{REFERENCE_LINKS}}',
-    referenceLinks || '- Documentation coming soon'
-  );
-  template = template.replace(
-    '{{EXAMPLES_LINKS}}',
-    examplesLinks || '- Examples coming soon'
-  );
-
-  if (embeddedReferences) {
-    template = template.replace('{{EMBEDDED_REFERENCES}}', embeddedReferences);
-  }
+  template = template.replace('{{EMBEDDED_REFERENCES}}', embeddedReferences);
 
   const outputPath = path.join(ROOT_DIR, 'llms.txt');
   await fs.writeFile(outputPath, template);
@@ -183,57 +156,10 @@ async function buildLLMDocs() {
     `✓ Generated llms.txt with ${references.size} embedded references`
   );
 
-  const createLlmPath = path.join(
-    ROOT_DIR,
-    'create-vibegame',
-    'template',
-    'llms.txt'
-  );
-  await fs.copyFile(outputPath, createLlmPath);
-  console.log(`✓ Copied llms.txt to create-vibegame/template`);
-
-  const docsDir = path.join(ROOT_DIR, 'docs');
-  const refDir = path.join(docsDir, 'reference');
-  const examplesDir = path.join(docsDir, 'examples');
-
-  await fs.mkdir(refDir, { recursive: true });
-  await fs.mkdir(examplesDir, { recursive: true });
-
-  for (const [key, content] of references.entries()) {
-    const filePath = path.join(refDir, `${key}.md`);
-    const fullContent = `# ${formatModuleName(key)} Reference\n\n${content}`;
-    await fs.writeFile(filePath, fullContent);
-    console.log(`✓ Generated reference/${key}.md`);
-  }
-
-  for (const [key, content] of examples.entries()) {
-    const filePath = path.join(examplesDir, `${key}.md`);
-    const fullContent = `# ${formatModuleName(key)} Examples\n\n${content}`;
-    await fs.writeFile(filePath, fullContent);
-    console.log(`✓ Generated examples/${key}.md`);
-  }
-
-  if (references.size > 0) {
-    const refIndex = `# VibeGame API Reference\n\n## Modules\n\n${referenceLinks}`;
-    await fs.writeFile(path.join(refDir, 'index.md'), refIndex);
-    console.log(`✓ Generated reference/index.md`);
-  }
-
-  if (examples.size > 0) {
-    const examplesIndex = `# VibeGame Examples\n\n## Modules\n\n${examplesLinks}`;
-    await fs.writeFile(path.join(examplesDir, 'index.md'), examplesIndex);
-    console.log(`✓ Generated examples/index.md`);
-  }
-
-  const docsIndex = template;
-
-  await fs.writeFile(path.join(docsDir, 'index.md'), docsIndex);
-  console.log(`✓ Generated docs/index.md (includes full llms.txt content)`);
-
   console.log(`\n✅ LLM documentation build complete!`);
   console.log(`   Generated ${modules.size} module overviews`);
-  console.log(`   Generated ${references.size} reference documents`);
-  console.log(`   Generated ${examples.size} example documents`);
+  console.log(`   Embedded ${references.size} reference sections`);
+  console.log(`   Embedded ${examples.size} example sections`);
 }
 
 async function prepare() {

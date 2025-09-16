@@ -6,7 +6,6 @@ Load relevant context for the current conversation.
 
 @CLAUDE.md
 @layers/structure.md
-@llms.txt
 
 User arguments: "$ARGUMENTS"
 
@@ -20,7 +19,6 @@ User arguments: "$ARGUMENTS"
 
 ### 2. Load Targeted Context
 
-- Read `llms.txt` to understand engine usage patterns
 - Read relevant `context.md` files for identified areas
 - Skip unrelated component contexts to minimize tokens
 

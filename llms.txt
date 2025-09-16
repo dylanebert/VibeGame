@@ -47,7 +47,6 @@ bun dev    # Start dev server with hot reload
 - `bun run check` - TypeScript type checking
 - `bun run lint` - Lint code with ESLint
 - `bun run format` - Format code with Prettier
-- `bun run update` - Update llms.txt after upgrading vibegame
 
 ## Physics Objects
 
@@ -539,44 +538,11 @@ GAME
 - **RespawnPlugin** - Fall detection and reset
 - **StartupPlugin** - Auto-create player/camera/lights
 
-## Module Documentation
-
-### Core
-Math utilities for interpolation and 3D transformations.
-
-### Animation
-Procedural character animation with body parts that respond to movement states.
-
-### Input
-Focus-aware input handling for mouse, keyboard, and gamepad with buffered actions. Keyboard input only responds when canvas has focus.
-
-### Orbit Camera
-Orbital camera controller for third-person views and smooth target following.
-
-### Physics
-3D physics simulation with Rapier including rigid bodies, collisions, and character controllers.
-
-### Player
-Complete player character controller with physics movement, jumping, and platform momentum preservation.
-
-### Rendering
-Three.js rendering pipeline with meshes, lights, cameras, and post-processing effects.
-
-### Respawn
-Automatic respawn system that resets entities when falling below Y=-100.
-
-### Startup
-Auto-creates player, camera, and lighting entities at startup if missing.
-
-### Transforms
-3D transforms with position, rotation, scale, and parent-child hierarchies.
-
-### Tweening
-Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
-
 ## Plugin Reference
 
 ### Core
+
+Math utilities for interpolation and 3D transformations.
 
 ### Functions
 
@@ -586,7 +552,15 @@ Linear interpolation
 #### slerp(fromX, fromY, fromZ, fromW, toX, toY, toZ, toW, t): Quaternion
 Quaternion spherical interpolation
 
+#### Examples
+
+## Usage Note
+
+Math utilities are used internally by systems like tweening and transforms. For animating properties, use the Tween system instead of directly calling interpolation functions. For transformations, use the Transform component's euler angles which are automatically converted to quaternions by the system.
+
 ### Animation
+
+Procedural character animation with body parts that respond to movement states.
 
 ### Components
 
@@ -616,7 +590,58 @@ Tag component (no properties)
 - Group: simulation
 - Updates character animation based on movement and physics state
 
+#### Examples
+
+## Examples
+
+### Basic Usage
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Add animated character to a player entity
+const player = state.createEntity();
+state.addComponent(player, GAME.AnimatedCharacter);
+state.addComponent(player, GAME.CharacterController);
+state.addComponent(player, GAME.Transform);
+
+// The AnimatedCharacterInitializationSystem will automatically
+// create body parts in the next setup phase
+```
+
+### Accessing Animation State
+
+```typescript
+import * as GAME from 'vibegame';
+
+const characterQuery = GAME.defineQuery([GAME.AnimatedCharacter]);
+const MySystem: GAME.System = {
+  update: (state) => {
+    const characters = characterQuery(state.world);
+    for (const entity of characters) {
+      const animState = GAME.AnimatedCharacter.animationState[entity];
+      if (animState === 2) { // JUMPING
+        console.log('Character is jumping!');
+      }
+    }
+  }
+};
+```
+
+### XML Declaration
+
+```xml
+<!-- Player entity with animated character -->
+<entity 
+  animated-character
+  character-controller
+  transform="pos: 0 2 0"
+/>
+```
+
 ### Input
+
+Focus-aware input handling for mouse, keyboard, and gamepad with buffered actions. Keyboard input only responds when canvas has focus.
 
 ### Components
 
@@ -674,7 +699,97 @@ Processes mouse wheel
 #### INPUT_CONFIG
 Default input mappings and sensitivity settings
 
+#### Examples
+
+## Examples
+
+### Basic Plugin Registration
+
+```typescript
+import * as GAME from 'vibegame';
+
+GAME
+  .withPlugin(GAME.InputPlugin)
+  .run();
+```
+
+### Reading Input in a Custom System
+
+```typescript
+import * as GAME from 'vibegame';
+
+const playerQuery = GAME.defineQuery([GAME.Player, GAME.InputState]);
+const PlayerControlSystem: GAME.System = {
+  update: (state) => {
+    const players = playerQuery(state.world);
+    
+    for (const player of players) {
+      // Read movement axes
+      const moveX = GAME.InputState.moveX[player];
+      const moveY = GAME.InputState.moveY[player];
+      
+      // Check for jump
+      if (GAME.InputState.jump[player]) {
+        // Jump is available this frame
+      }
+      
+      // Check mouse buttons
+      if (GAME.InputState.leftMouse[player]) {
+        // Left mouse is held
+      }
+    }
+  }
+};
+```
+
+### Consuming Buffered Actions
+
+```typescript
+import * as GAME from 'vibegame';
+
+const CombatSystem: GAME.System = {
+  update: (state) => {
+    // Consume jump if available (prevents double consumption)
+    if (GAME.consumeJump()) {
+      // Perform jump
+      velocity.y = JUMP_FORCE;
+    }
+    
+    // Consume primary action
+    if (GAME.consumePrimary()) {
+      // Fire weapon
+      spawnProjectile();
+    }
+  }
+};
+```
+
+### Custom Input Mappings
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Modify before starting the game
+GAME.INPUT_CONFIG.mappings.jump = ['Space', 'KeyX'];
+GAME.INPUT_CONFIG.mappings.moveForward = ['KeyW', 'KeyZ', 'ArrowUp'];
+GAME.INPUT_CONFIG.mouseSensitivity.look = 0.3;
+
+GAME.run();
+```
+
+### Manual Event Handling
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Use the exported handlers directly if needed
+canvas.addEventListener('mousedown', GAME.handleMouseDown);
+canvas.addEventListener('mouseup', GAME.handleMouseUp);
+```
+
 ### Orbit Camera
+
+Orbital camera controller for third-person views and smooth target following.
 
 ### Components
 
@@ -707,7 +822,97 @@ Default input mappings and sensitivity settings
 - Creates orbital camera with default settings
 - Components: orbit-camera, transform, world-transform, main-camera
 
+#### Examples
+
+## Examples
+
+### Basic Camera
+
+```xml
+<!-- Create default orbital camera -->
+<camera />
+```
+
+### Camera Following Player
+
+```xml
+<world>
+  <!-- Player entity -->
+  <player id="player" pos="0 0 0" />
+  
+  <!-- Camera following player -->
+  <camera 
+    target="#player"
+    target-distance="10"
+    min-distance="5"
+    max-distance="20"
+    offset-y="2"
+  />
+</world>
+```
+
+### Custom Orbit Settings
+
+```xml
+<entity 
+  orbit-camera="
+    target: #boss;
+    target-distance: 15;
+    target-yaw: 0;
+    target-pitch: 0.5;
+    smoothness: 0.2;
+    offset-y: 3
+  "
+  transform
+  main-camera
+/>
+```
+
+### Programmatic Usage
+
+```typescript
+import * as GAME from 'vibegame';
+
+const cameraQuery = GAME.defineQuery([GAME.OrbitCamera]);
+const CameraControlSystem = {
+  update: (state) => {
+    const cameras = cameraQuery(state.world);
+    
+    for (const camera of cameras) {
+      // Rotate camera on input
+      if (state.input.mouse.deltaX) {
+        GAME.OrbitCamera.targetYaw[camera] += state.input.mouse.deltaX * 0.01;
+      }
+      
+      // Zoom on scroll
+      if (state.input.mouse.wheel) {
+        GAME.OrbitCamera.targetDistance[camera] = Math.max(
+          GAME.OrbitCamera.minDistance[camera],
+          Math.min(
+            GAME.OrbitCamera.maxDistance[camera],
+            GAME.OrbitCamera.targetDistance[camera] - state.input.mouse.wheel * 0.5
+          )
+        );
+      }
+    }
+  }
+};
+```
+
+### Dynamic Target Switching
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Switch camera target
+const switchTarget = (state, cameraEntity, newTargetEntity) => {
+  GAME.OrbitCamera.target[cameraEntity] = newTargetEntity;
+};
+```
+
 ### Physics
+
+3D physics simulation with Rapier including rigid bodies, collisions, and character controllers.
 
 ### Constants
 
@@ -835,7 +1040,203 @@ Initializes Rapier WASM physics engine
 - dynamic-part - Gravity-affected objects
 - kinematic-part - Script-controlled objects
 
+#### Examples
+
+## Examples
+
+### Basic Usage
+
+#### XML Recipes
+
+##### Static Floor
+```xml
+<static-part
+  pos="0 -0.5 0"
+  shape="box"
+  size="20 1 20"
+  color="#90ee90"
+/>
+```
+
+##### Dynamic Ball
+```xml
+<dynamic-part
+  pos="0 5 0"
+  shape="sphere"
+  radius="0.5"
+  color="#ff0000"
+  mass="2"
+  restitution="0.8"
+/>
+```
+
+##### Moving Platform
+```xml
+<kinematic-part
+  pos="0 2 0"
+  shape="box"
+  size="3 0.2 3"
+  color="#4169e1"
+>
+  <!-- Add movement with tweening -->
+  <tween
+    target="body.pos-y"
+    from="2"
+    to="5"
+    duration="3"
+    ease="sine-in-out"
+    loop="ping-pong"
+  />
+</kinematic-part>
+```
+
+##### Character with Controller
+```xml
+<entity
+  pos="0 1 0"
+  body="type: kinematic-position"
+  collider="shape: capsule; height: 1.8; radius: 0.4"
+  character-controller
+  character-movement
+  transform
+  renderer
+/>
+```
+
+#### JavaScript API
+
+##### Create Physics Entity
+```typescript
+import * as GAME from 'vibegame';
+
+// Create a dynamic physics box
+const entity = state.createEntity();
+
+state.addComponent(entity, GAME.Body, {
+  type: GAME.BodyType.Dynamic,
+  mass: 5,
+  posX: 0, posY: 10, posZ: 0
+});
+
+state.addComponent(entity, GAME.Collider, {
+  shape: GAME.ColliderShape.Box,
+  sizeX: 1, sizeY: 1, sizeZ: 1,
+  friction: 0.7,
+  restitution: 0.3
+});
+
+// Note: Physics body won't exist until next fixed update
+// Transform will be overwritten by Body position after initialization
+```
+
+##### Moving Physics Bodies
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Dynamic bodies - Use forces/impulses for movement
+if (GAME.Body.type[entity] === GAME.BodyType.Dynamic) {
+  // Apply force for gradual acceleration
+  state.addComponent(entity, GAME.ApplyForce, { x: 10, y: 0, z: 0 });
+  
+  // Apply impulse for instant velocity change
+  state.addComponent(entity, GAME.ApplyImpulse, { x: 0, y: 50, z: 0 });
+  
+  // Direct position setting only for teleportation
+  GAME.Body.posX[entity] = 10; // Teleport - use sparingly
+}
+
+// Kinematic bodies - Direct control via movement components
+if (GAME.Body.type[entity] === GAME.BodyType.KinematicPositionBased) {
+  state.addComponent(entity, GAME.KinematicMove, { x: 5, y: 2, z: 0 });
+}
+
+if (GAME.Body.type[entity] === GAME.BodyType.KinematicVelocityBased) {
+  state.addComponent(entity, GAME.SetLinearVelocity, { x: 3, y: 0, z: 0 });
+}
+
+// Never modify Transform directly for physics entities
+// GAME.Transform.posX[entity] = 10; // ❌ Will be overwritten by Body
+```
+
+##### Apply Forces
+```typescript
+import * as GAME from 'vibegame';
+
+// Apply upward impulse (jump)
+state.addComponent(entity, GAME.ApplyImpulse, {
+  x: 0, y: 50, z: 0
+});
+
+// Apply continuous force
+state.addComponent(entity, GAME.ApplyForce, {
+  x: 10, y: 0, z: 0
+});
+
+// Set velocity directly
+state.addComponent(entity, GAME.SetLinearVelocity, {
+  x: 0, y: 5, z: 0
+});
+```
+
+##### Handle Collisions
+```typescript
+import * as GAME from 'vibegame';
+
+const touchedQuery = GAME.defineQuery([GAME.TouchedEvent]);
+const CollisionSystem: GAME.System = {
+  update: (state) => {
+    // Query entities with collision events
+    for (const entity of touchedQuery(state.world)) {
+      const otherEntity = GAME.TouchedEvent.other[entity];
+      console.log(`Entity ${entity} collided with ${otherEntity}`);
+      
+      // React to collision
+      state.addComponent(entity, GAME.ApplyImpulse, {
+        x: 0, y: 10, z: 0
+      });
+    }
+  }
+};
+```
+
+##### Character Movement
+```typescript
+import * as GAME from 'vibegame';
+
+const PlayerMovementSystem: GAME.System = {
+  update: (state) => {
+    const movementQuery = GAME.defineQuery([GAME.CharacterMovement, GAME.CharacterController]);
+    for (const entity of movementQuery(state.world)) {
+      // Set desired movement based on input
+      GAME.CharacterMovement.desiredVelX[entity] = input.x * 5;
+      GAME.CharacterMovement.desiredVelZ[entity] = input.z * 5;
+      
+      // Jump if grounded
+      if (GAME.CharacterController.grounded[entity] && input.jump) {
+        GAME.CharacterMovement.velocityY[entity] = 10;
+      }
+    }
+  }
+};
+```
+
+##### Custom Plugin Integration
+```typescript
+import * as GAME from 'vibegame';
+
+// Initialize physics before running
+await GAME.initializePhysics();
+
+// Use with builder
+GAME
+  .withPlugin(GAME.PhysicsPlugin)
+  .run();
+```
+
 ### Player
+
+Complete player character controller with physics movement, jumping, and platform momentum preservation.
 
 ### Components
 
@@ -889,7 +1290,105 @@ Processes jump with buffering
 #### updateRotation(entity, inputVector, deltaTime, rotationData): Quaternion
 Smooth rotation towards movement
 
+#### Examples
+
+## Examples
+
+### Basic Player Usage (XML)
+
+```xml
+<world>
+  <!-- Player auto-created if not specified -->
+  <player pos="0 2 0" speed="6" jump-height="3" />
+</world>
+```
+
+### Custom Player Configuration (XML)
+
+```xml
+<world>
+  <player 
+    pos="5 1 -10"
+    speed="8"
+    jump-height="4"
+    rotation-speed="15"
+    camera-sensitivity="0.005"
+  />
+</world>
+```
+
+### Accessing Player Component (JavaScript)
+
+```typescript
+import * as GAME from 'vibegame';
+
+const playerQuery = GAME.defineQuery([GAME.Player]);
+const MySystem: GAME.System = {
+  update: (state) => {
+    const players = playerQuery(state.world);
+    for (const entity of players) {
+      // Check if player is jumping
+      if (GAME.Player.isJumping[entity]) {
+        console.log('Player is airborne!');
+      }
+      
+      // Modify player speed
+      GAME.Player.speed[entity] = 10;
+    }
+  }
+};
+```
+
+### Creating Player Programmatically
+
+```typescript
+import * as GAME from 'vibegame';
+
+const PlayerSpawnSystem: GAME.System = {
+  setup: (state) => {
+    // Create player entity
+    const player = state.createEntity();
+    
+    // Add player recipe components
+    state.addComponent(player, GAME.Player, {
+      speed: 7,
+      jumpHeight: 3.5,
+      cameraSensitivity: 0.01
+    });
+    
+    // Add required components
+    state.addComponent(player, GAME.Transform, { posY: 5 });
+    state.addComponent(player, GAME.Body, { type: GAME.BodyType.KinematicPositionBased });
+    state.addComponent(player, GAME.CharacterController);
+    state.addComponent(player, GAME.InputState);
+  }
+};
+```
+
+### Movement Controls
+
+**Keyboard:**
+- W/S or Arrow Up/Down - Move forward/backward
+- A/D or Arrow Left/Right - Move left/right 
+- Space - Jump
+
+**Mouse:**
+- Right-click + drag - Rotate camera
+- Scroll wheel - Zoom in/out
+
+### Plugin Registration
+
+```typescript
+import * as GAME from 'vibegame';
+
+GAME
+  .withPlugin(GAME.PlayerPlugin)  // Included in defaults
+  .run();
+```
+
 ### Rendering
+
+Three.js rendering pipeline with meshes, lights, cameras, and post-processing effects.
 
 ### Components
 
@@ -965,7 +1464,149 @@ Associates canvas with RenderContext
 - directional-light - Directional light with shadows
 - light - Both ambient and directional
 
+#### Examples
+
+## Examples
+
+### Basic Rendering Setup
+
+```xml
+<!-- Declarative scene with lighting and rendered objects -->
+<world canvas="#game-canvas" sky="#87ceeb">
+  <!-- Default lighting -->
+  <light></light>
+  
+  <!-- Rendered box -->
+  <entity 
+    transform
+    renderer="shape: box; color: 0xff0000; size-x: 2"
+    pos="0 1 0"
+  />
+  
+  <!-- Rendered sphere -->
+  <entity
+    transform
+    renderer="shape: sphere; color: 0x00ff00"
+    pos="3 1 0"
+  />
+</world>
+```
+
+### Custom Lighting
+
+```xml
+<!-- Separate ambient and directional lights -->
+<ambient-light 
+  sky-color="#ffd4a3"
+  ground-color="#808080"
+  intensity="0.4"
+/>
+
+<directional-light
+  color="#ffffff"
+  intensity="1.5"
+  direction-x="-1"
+  direction-y="3"
+  direction-z="-0.5"
+  cast-shadow="1"
+  shadow-map-size="2048"
+/>
+```
+
+### Imperative Usage
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Create rendered entity programmatically
+const entity = state.createEntity();
+
+// Add transform for positioning
+state.addComponent(entity, GAME.Transform, {
+  posX: 0, posY: 5, posZ: 0
+});
+
+// Add renderer component
+state.addComponent(entity, GAME.Renderer, {
+  shape: 1,        // sphere
+  sizeX: 2,
+  sizeY: 2,
+  sizeZ: 2,
+  color: 0xff00ff,
+  visible: 1
+});
+
+// Set canvas for rendering context
+const contextQuery = GAME.defineQuery([GAME.RenderContext]);
+const contextEntity = contextQuery(state.world)[0];
+const canvas = document.getElementById('game-canvas');
+GAME.setCanvasElement(contextEntity, canvas);
+```
+
+### Shape Types
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Available shape enums
+const shapes = {
+  box: 0,
+  sphere: 1,
+  cylinder: 2,
+  plane: 3
+};
+
+// Use in XML
+<entity renderer="shape: sphere"></entity>
+
+// Or with enum names
+<entity renderer="shape: 1"></entity>
+```
+
+### Visibility Control
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Hide/show entities
+GAME.Renderer.visible[entity] = 0; // Hide
+GAME.Renderer.visible[entity] = 1; // Show
+
+// In XML
+<entity renderer="visible: 0"></entity>  <!-- Initially hidden -->
+```
+
+### Post-Processing Effects
+
+```xml
+<!-- Camera with bloom effect (using defaults) -->
+<camera bloom></camera>
+
+<!-- Camera with custom bloom settings -->
+<camera bloom="intensity: 2; luminance-threshold: 0.8; luminance-smoothing: 0.05"></camera>
+
+<!-- Camera with mipmap blur settings -->
+<camera bloom="mipmap-blur: 1; radius: 0.9; levels: 10"></camera>
+
+<!-- Camera without effects (still uses composer internally) -->
+<camera></camera>
+
+<!-- Camera with retro dithering effect -->
+<camera dithering="color-bits: 3; intensity: 0.8; scale: 2"></camera>
+
+<!-- Combined bloom and dithering for retro aesthetic -->
+<camera bloom="intensity: 1.5" dithering="color-bits: 2; grayscale: 1; scale: 3"></camera>
+
+<!-- Subtle dithering for vintage look -->
+<camera dithering="color-bits: 5; intensity: 0.5; scale: 1"></camera>
+
+<!-- Coarse pixel-art style dithering -->
+<camera dithering="color-bits: 2; scale: 4; intensity: 1"></camera>
+```
+
 ### Respawn
+
+Automatic respawn system that resets entities when falling below Y=-100.
 
 ### Components
 
@@ -979,7 +1620,74 @@ Associates canvas with RenderContext
 - Group: simulation
 - Resets entities when Y < -100
 
+#### Examples
+
+## Examples
+
+### Player with Respawn (Automatic)
+
+The `<player>` recipe automatically includes respawn:
+
+```xml
+<world>
+  <!-- Player spawns at 0,5,0 and respawns there if falling -->
+  <player pos="0 5 0"></player>
+</world>
+```
+
+### Manual Respawn Component
+
+```xml
+<entity transform body collider respawn="pos: 0 10 -5">
+  <!-- Entity respawns at 0,10,-5 when falling below Y=-100 -->
+</entity>
+```
+
+### Imperative Usage
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Add respawn to an entity
+const entity = state.createEntity();
+
+// Set spawn point from current transform
+state.addComponent(entity, GAME.Transform, {
+  posX: 0, posY: 10, posZ: 0,
+  eulerX: 0, eulerY: 0, eulerZ: 0
+});
+
+state.addComponent(entity, GAME.Respawn, {
+  posX: 0, posY: 10, posZ: 0,
+  eulerX: 0, eulerY: 0, eulerZ: 0
+});
+
+// Entity will respawn at (0,10,0) when falling
+```
+
+### Update Spawn Point
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Change respawn position dynamically
+GAME.Respawn.posX[entity] = 20;
+GAME.Respawn.posY[entity] = 5;
+GAME.Respawn.posZ[entity] = -10;
+```
+
+### XML with Transform Sync
+
+Position attributes automatically populate the respawn component:
+
+```xml
+<!-- Position sets both transform and respawn -->
+<player pos="5 3 -2" euler="0 90 0"></player>
+```
+
 ### Startup
+
+Auto-creates player, camera, and lighting entities at startup if missing.
 
 ### Systems
 
@@ -999,7 +1707,63 @@ Associates canvas with RenderContext
 - Group: setup
 - Adds animated character to players
 
+#### Examples
+
+## Examples
+
+### Basic Usage (Auto-Creation)
+
+```typescript
+// The plugin automatically creates defaults when included
+import * as GAME from 'vibegame';
+
+// This will create player, camera, and lighting automatically
+GAME.run(); // Uses DefaultPlugins which includes StartupPlugin
+```
+
+### Preventing Auto-Creation with XML
+
+```xml
+<world>
+  <!-- Creating your own player prevents auto-creation -->
+  <player pos="10 2 -5" speed="12" />
+  
+  <!-- Creating custom lighting prevents default lights -->
+  <entity ambient="sky-color: 0xff0000" directional />
+</world>
+```
+
+### Manual Plugin Registration
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Use startup plugin without other defaults
+GAME.withoutDefaultPlugins()
+  .withPlugin(GAME.TransformsPlugin)
+  .withPlugin(GAME.RenderingPlugin) 
+  .withPlugin(GAME.StartupPlugin)
+  .run();
+```
+
+### System Behavior
+
+The startup systems are idempotent - they check for existing entities before creating:
+
+```typescript
+import * as GAME from 'vibegame';
+
+// First run: Creates player, camera, lights
+const playerQuery = GAME.defineQuery([GAME.Player]);
+playerQuery(state.world).length // 0 -> creates player
+
+// Subsequent runs: Skips creation
+playerQuery(state.world).length // 1 -> skips creation
+```
+
 ### Transforms
+
+3D transforms with position, rotation, scale, and parent-child hierarchies.
 
 ### Components
 
@@ -1019,7 +1783,127 @@ Associates canvas with RenderContext
 - Group: simulation (last)
 - Syncs euler/quaternion and computes world transforms
 
+#### Examples
+
+## Examples
+
+### Basic Usage
+
+#### XML Position and Rotation
+```xml
+<!-- Position only -->
+<entity transform="pos: 0 5 -3"></entity>
+
+<!-- Euler rotation (degrees) -->
+<entity transform="euler: 0 45 0"></entity>
+
+<!-- Scale (single value applies to all axes) -->
+<entity transform="scale: 2"></entity>
+
+<!-- Combined transform -->
+<entity transform="pos: 0 5 0; euler: 0 45 0; scale: 1.5"></entity>
+```
+
+#### JavaScript API
+```typescript
+import * as GAME from 'vibegame';
+
+// In a system
+const MySystem = {
+  update: (state) => {
+    const entity = state.createEntity();
+    
+    // Add transform component with initial values
+    state.addComponent(entity, GAME.Transform, {
+      posX: 10, posY: 5, posZ: -3,
+      eulerX: 0, eulerY: 45, eulerZ: 0,
+      scaleX: 2, scaleY: 2, scaleZ: 2
+    });
+    
+    // Transform system automatically syncs euler to quaternion
+  }
+};
+```
+
+### Transform Hierarchy
+
+#### Parent-Child Relationships
+```xml
+<!-- Parent at origin -->
+<entity transform="pos: 0 0 0">
+  <!-- Children positioned relative to parent -->
+  <entity transform="pos: 2 0 0"></entity>
+  <entity transform="pos: -2 0 0"></entity>
+</entity>
+
+<!-- Rotating parent affects all children -->
+<entity transform="euler: 0 45 0">
+  <entity id="arm" transform="pos: 0 2 0">
+    <entity id="hand" transform="pos: 0 2 0"></entity>
+  </entity>
+</entity>
+```
+
+#### Accessing World Transform
+```typescript
+import * as GAME from 'vibegame';
+
+const transformQuery = GAME.defineQuery([GAME.Transform, GAME.WorldTransform]);
+const WorldTransformSystem = {
+  update: (state) => {
+    // Query entities with both transforms
+    const entities = transformQuery(state.world);
+    
+    for (const entity of entities) {
+      // Local position
+      const localX = GAME.Transform.posX[entity];
+      
+      // World position (after parent transforms)
+      const worldX = GAME.WorldTransform.posX[entity];
+      
+      console.log(`Local: ${localX}, World: ${worldX}`);
+    }
+  }
+};
+```
+
+### Common Patterns
+
+#### Setting Transform Values
+```typescript
+import * as GAME from 'vibegame';
+
+// Direct property access (bitECS style)
+GAME.Transform.posX[entity] = 10;
+GAME.Transform.posY[entity] = 5;
+GAME.Transform.posZ[entity] = -3;
+
+// Using euler angles for rotation
+GAME.Transform.eulerX[entity] = 0;
+GAME.Transform.eulerY[entity] = 45;
+GAME.Transform.eulerZ[entity] = 0;
+// Quaternion will be auto-synced by TransformHierarchySystem
+
+// Uniform scale
+GAME.Transform.scaleX[entity] = 2;
+GAME.Transform.scaleY[entity] = 2;
+GAME.Transform.scaleZ[entity] = 2;
+```
+
+#### Transform Interpolation
+```typescript
+import * as GAME from 'vibegame';
+
+// Interpolate between two positions
+const t = 0.5; // 50% between start and end
+GAME.Transform.posX[entity] = startX + (endX - startX) * t;
+GAME.Transform.posY[entity] = startY + (endY - startY) * t;
+GAME.Transform.posZ[entity] = startZ + (endZ - startZ) * t;
+```
+
 ### Tweening
+
+Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
 
 ### Components
 
@@ -1087,30 +1971,89 @@ Animates component property
 - at - body.posX/Y/Z
 - scale - transform.scaleX/Y/Z
 
-## API Reference (External Links)
+#### Examples
 
-- [Core](https://dylanebert.github.io/vibegame/reference/core)
-- [Animation](https://dylanebert.github.io/vibegame/reference/animation)
-- [Input](https://dylanebert.github.io/vibegame/reference/input)
-- [Orbit Camera](https://dylanebert.github.io/vibegame/reference/orbit-camera)
-- [Physics](https://dylanebert.github.io/vibegame/reference/physics)
-- [Player](https://dylanebert.github.io/vibegame/reference/player)
-- [Rendering](https://dylanebert.github.io/vibegame/reference/rendering)
-- [Respawn](https://dylanebert.github.io/vibegame/reference/respawn)
-- [Startup](https://dylanebert.github.io/vibegame/reference/startup)
-- [Transforms](https://dylanebert.github.io/vibegame/reference/transforms)
-- [Tweening](https://dylanebert.github.io/vibegame/reference/tweening)
+## Examples
 
-## Examples (External Links)
+### Basic XML Tween
 
-- [Core](https://dylanebert.github.io/vibegame/examples/core)
-- [Animation](https://dylanebert.github.io/vibegame/examples/animation)
-- [Input](https://dylanebert.github.io/vibegame/examples/input)
-- [Orbit Camera](https://dylanebert.github.io/vibegame/examples/orbit-camera)
-- [Physics](https://dylanebert.github.io/vibegame/examples/physics)
-- [Player](https://dylanebert.github.io/vibegame/examples/player)
-- [Rendering](https://dylanebert.github.io/vibegame/examples/rendering)
-- [Respawn](https://dylanebert.github.io/vibegame/examples/respawn)
-- [Startup](https://dylanebert.github.io/vibegame/examples/startup)
-- [Transforms](https://dylanebert.github.io/vibegame/examples/transforms)
-- [Tweening](https://dylanebert.github.io/vibegame/examples/tweening)
+```xml
+<!-- Animate Y position from 5 to 10 over 2 seconds -->
+<kinematic-part pos="0 5 -5">
+  <tween 
+    target="body.pos-y" 
+    from="5" 
+    to="10" 
+    duration="2" 
+    ease="sine-in-out" 
+    loop="ping-pong"
+  />
+</kinematic-part>
+```
+
+### Multiple Properties
+
+```xml
+<!-- Animate rotation on all axes -->
+<entity transform renderer>
+  <tween 
+    target="rotation" 
+    to="0 360 0" 
+    duration="4" 
+    loop="loop"
+  />
+</entity>
+```
+
+### Body Physics Properties
+
+```xml
+<!-- Animate physics body velocity -->
+<dynamic-part pos="0 10 0">
+  <tween 
+    target="body.velocity-x" 
+    from="0" 
+    to="10" 
+    duration="1" 
+    ease="quad-out"
+  />
+</tween>
+```
+
+### Programmatic Usage
+
+```typescript
+import * as GAME from 'vibegame';
+
+// In a system
+const MySystem = {
+  setup: (state) => {
+    const entity = state.createEntity();
+    state.addComponent(entity, GAME.Transform);
+    
+    // Create tween programmatically
+    GAME.createTween(state, entity, 'body.pos-y', {
+      from: 0,
+      to: 10,
+      duration: 2,
+      easing: 'bounce-out',
+      loop: 'once'
+    });
+  }
+};
+```
+
+### Complex Animation Sequence
+
+```xml
+<!-- Platform with multiple animated properties -->
+<kinematic-part pos="0 0 0" color="#ff0000">
+  <!-- Position animation -->
+  <tween target="body.pos-x" from="-5" to="5" duration="3" loop="ping-pong"></tween>
+  <!-- Rotation animation -->
+  <tween target="body.euler-y" to="360" duration="10" loop="loop"></tween>
+  <!-- Scale pulse -->
+  <tween target="transform.scale-x" from="1" to="1.5" duration="1" ease="sine-in-out" loop="ping-pong"></tween>
+  <tween target="transform.scale-z" from="1" to="1.5" duration="1" ease="sine-in-out" loop="ping-pong"></tween>
+</kinematic-part>
+```
