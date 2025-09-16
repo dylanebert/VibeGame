@@ -9,6 +9,10 @@ A vibe coding 3D game engine with declarative HTML-like syntax, ECS architecture
 
 </div>
 
+## Problem
+
+Vibe coding games works at first, but falls apart as the project grows.
+
 ## Quick Start
 
 ### Create a new project
@@ -44,10 +48,6 @@ bun install vibegame
   GAME.run();
 </script>
 ```
-
-## Problem
-
-Vibe coding games works at first, but falls apart as the project grows.
 
 ## Solution
 
