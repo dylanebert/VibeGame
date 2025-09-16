@@ -24,7 +24,6 @@
     ".prettierrc",
     ".prettierignore",
     ".gitignore",
-    "bun.lockb",
-    "llms.txt"
+    "bun.lockb"
   ]
 }
