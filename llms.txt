@@ -559,9 +559,6 @@ Orbital camera controller for third-person views and smooth target following.
 ### Player
 Complete player character controller with physics movement, jumping, and platform momentum preservation.
 
-### Recipes
-Foundation for declarative XML entity creation with parent-child hierarchies and attribute shorthands.
-
 ### Rendering
 Three.js rendering pipeline with meshes, lights, cameras, and post-processing effects.
 
@@ -892,45 +889,6 @@ Processes jump with buffering
 #### updateRotation(entity, inputVector, deltaTime, rotationData): Quaternion
 Smooth rotation towards movement
 
-### Recipes
-
-### Components
-
-#### Parent
-- entity: i32 - Parent entity ID
-
-### Functions
-
-#### parseXMLToEntities(state, xmlContent): EntityCreationResult[]
-Converts XML elements to ECS entities with hierarchy
-
-#### createEntityFromRecipe(state, recipeName, attributes?): number
-Creates entity from recipe with attributes
-
-#### fromEuler(x, y, z): Quaternion
-Converts Euler angles (radians) to quaternion
-
-### Types
-
-#### EntityCreationResult
-- entity: number - Entity ID
-- tagName: string - Recipe name
-- children: EntityCreationResult[]
-
-### Recipes
-
-#### entity
-- Base recipe with no default components
-
-### Property Formats
-
-- Single value: `transform="scale: 2"`
-- Vector3: `transform="pos: 0 5 -3"`
-- Broadcast: `transform="scale: 2"` → scale: 2 2 2
-- Euler angles: `transform="euler: 0 45 0"` (degrees)
-- Multiple: `transform="pos: 0 5 0; euler: 0 45 0"`
-- Shorthands: `pos="0 5 0"` → transform component
-
 ### Rendering
 
 ### Components
@@ -1137,7 +1095,6 @@ Animates component property
 - [Orbit Camera](https://dylanebert.github.io/vibegame/reference/orbit-camera)
 - [Physics](https://dylanebert.github.io/vibegame/reference/physics)
 - [Player](https://dylanebert.github.io/vibegame/reference/player)
-- [Recipes](https://dylanebert.github.io/vibegame/reference/recipes)
 - [Rendering](https://dylanebert.github.io/vibegame/reference/rendering)
 - [Respawn](https://dylanebert.github.io/vibegame/reference/respawn)
 - [Startup](https://dylanebert.github.io/vibegame/reference/startup)
@@ -1152,7 +1109,6 @@ Animates component property
 - [Orbit Camera](https://dylanebert.github.io/vibegame/examples/orbit-camera)
 - [Physics](https://dylanebert.github.io/vibegame/examples/physics)
 - [Player](https://dylanebert.github.io/vibegame/examples/player)
-- [Recipes](https://dylanebert.github.io/vibegame/examples/recipes)
 - [Rendering](https://dylanebert.github.io/vibegame/examples/rendering)
 - [Respawn](https://dylanebert.github.io/vibegame/examples/respawn)
 - [Startup](https://dylanebert.github.io/vibegame/examples/startup)

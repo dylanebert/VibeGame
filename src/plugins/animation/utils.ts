@@ -1,5 +1,5 @@
 import type { State } from '../../core';
-import { Parent } from '../recipes';
+import { Parent } from '../../core';
 import { Renderer } from '../rendering';
 import { Transform } from '../transforms';
 import { ANIMATION_CONFIG, BODY_PARTS } from './constants';

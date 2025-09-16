@@ -2,7 +2,7 @@ import { defineComponent, Types } from 'bitecs';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import { State, XMLParser } from 'vibegame';
-import { parseXMLToEntities, RecipePlugin } from 'vibegame';
+import { parseXMLToEntities } from 'vibegame';
 
 describe('XML Recipe Integration', () => {
   let state: State;
@@ -12,7 +12,6 @@ describe('XML Recipe Integration', () => {
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
-    state.registerPlugin(RecipePlugin);
   });
 
   it('should create entities from XML', () => {

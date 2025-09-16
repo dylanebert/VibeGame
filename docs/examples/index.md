@@ -8,7 +8,6 @@
 - [Orbit Camera](https://dylanebert.github.io/vibegame/examples/orbit-camera)
 - [Physics](https://dylanebert.github.io/vibegame/examples/physics)
 - [Player](https://dylanebert.github.io/vibegame/examples/player)
-- [Recipes](https://dylanebert.github.io/vibegame/examples/recipes)
 - [Rendering](https://dylanebert.github.io/vibegame/examples/rendering)
 - [Respawn](https://dylanebert.github.io/vibegame/examples/respawn)
 - [Startup](https://dylanebert.github.io/vibegame/examples/startup)

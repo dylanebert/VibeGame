@@ -11,7 +11,7 @@ import {
   setCanvasElement,
 } from 'vibegame';
 import { Transform, TransformsPlugin } from 'vibegame';
-import { RecipePlugin, parseXMLToEntities } from 'vibegame';
+import { parseXMLToEntities } from 'vibegame';
 
 describe('Rendering Recipes', () => {
   let state: State;
@@ -23,7 +23,6 @@ describe('Rendering Recipes', () => {
     state = new State();
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(RenderingPlugin);
-    state.registerPlugin(RecipePlugin);
   });
 
   describe('Basic Rendering Setup', () => {

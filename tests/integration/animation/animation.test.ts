@@ -6,7 +6,6 @@ import {
   CharacterController,
   parseXMLToEntities,
   PhysicsPlugin,
-  RecipePlugin,
   State,
   Transform,
   TransformsPlugin,
@@ -24,7 +23,6 @@ describe('Animation Plugin', () => {
     state = new State();
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(PhysicsPlugin);
-    state.registerPlugin(RecipePlugin);
     state.registerPlugin(AnimationPlugin);
   });
 

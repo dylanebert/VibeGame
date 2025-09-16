@@ -19,7 +19,7 @@ import {
   PLAYER_COLLIDER_DEFAULTS,
   PLAYER_DEFAULTS,
 } from '../player';
-import { Parent } from '../recipes';
+import { Parent } from '../../core';
 import {
   Ambient,
   AMBIENT_DEFAULTS,

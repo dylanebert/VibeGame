@@ -1,5 +1,5 @@
-import type { State } from '../../core';
-import { eulerToQuaternion, quaternionToEuler } from '../transforms';
+import type { State } from '../';
+import { eulerToQuaternion, quaternionToEuler } from '../math';
 import {
   formatEnumError,
   formatPropertyError,

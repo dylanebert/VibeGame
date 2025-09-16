@@ -11,7 +11,7 @@ import {
   Collider,
   ColliderShape,
 } from 'vibegame';
-import { RecipePlugin, parseXMLToEntities } from 'vibegame';
+import { parseXMLToEntities } from 'vibegame';
 import { RenderingPlugin } from 'vibegame';
 import { TransformsPlugin } from 'vibegame';
 import { TweenPlugin } from 'vibegame';
@@ -31,7 +31,6 @@ describe('Physics Recipes', () => {
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(RenderingPlugin);
     state.registerPlugin(PhysicsPlugin);
-    state.registerPlugin(RecipePlugin);
   });
 
   describe('static-part recipe', () => {

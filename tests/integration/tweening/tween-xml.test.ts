@@ -1,5 +1,5 @@
 import { State, XMLParser, defineQuery } from 'vibegame';
-import { parseXMLToEntities, RecipePlugin } from 'vibegame';
+import { parseXMLToEntities } from 'vibegame';
 import { Transform, TransformsPlugin, WorldTransform } from 'vibegame';
 import { Tween, TweenPlugin, TweenValue } from 'vibegame';
 import { beforeEach, describe, expect, it } from 'bun:test';
@@ -14,7 +14,6 @@ describe('Tween XML Integration', () => {
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
-    state.registerPlugin(RecipePlugin);
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(TweenPlugin);
   });

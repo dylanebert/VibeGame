@@ -244,7 +244,6 @@ describe('Global API', () => {
     expect(GAME.OrbitCameraPlugin).toBeDefined();
     expect(GAME.PhysicsPlugin).toBeDefined();
     expect(GAME.PlayerPlugin).toBeDefined();
-    expect(GAME.RecipePlugin).toBeDefined();
     expect(GAME.RenderingPlugin).toBeDefined();
     expect(GAME.RespawnPlugin).toBeDefined();
     expect(GAME.StartupPlugin).toBeDefined();

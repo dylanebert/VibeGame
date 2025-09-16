@@ -3,46 +3,7 @@ import { Transform, WorldTransform } from './components';
 
 type TransformComponent = typeof Transform | typeof WorldTransform;
 
-export function eulerToQuaternion(
-  x: number,
-  y: number,
-  z: number
-): { x: number; y: number; z: number; w: number } {
-  const radX = x * (Math.PI / 180);
-  const radY = y * (Math.PI / 180);
-  const radZ = z * (Math.PI / 180);
-
-  const c1 = Math.cos(radX / 2);
-  const c2 = Math.cos(radY / 2);
-  const c3 = Math.cos(radZ / 2);
-  const s1 = Math.sin(radX / 2);
-  const s2 = Math.sin(radY / 2);
-  const s3 = Math.sin(radZ / 2);
-
-  return {
-    x: s1 * c2 * c3 + c1 * s2 * s3,
-    y: c1 * s2 * c3 - s1 * c2 * s3,
-    z: c1 * c2 * s3 + s1 * s2 * c3,
-    w: c1 * c2 * c3 - s1 * s2 * s3,
-  };
-}
-
-export function quaternionToEuler(
-  x: number,
-  y: number,
-  z: number,
-  w: number
-): { x: number; y: number; z: number } {
-  const euler = new THREE.Euler();
-  const quat = new THREE.Quaternion(x, y, z, w);
-  euler.setFromQuaternion(quat, 'XYZ');
-
-  return {
-    x: euler.x * (180 / Math.PI),
-    y: euler.y * (180 / Math.PI),
-    z: euler.z * (180 / Math.PI),
-  };
-}
+import { eulerToQuaternion, quaternionToEuler } from '../../core/math';
 
 export function syncEulerFromQuaternion(
   transform: TransformComponent,

@@ -1,12 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import {
-  parseXMLToEntities,
-  RecipePlugin,
-  State,
-  XMLParser,
-  defineQuery,
-} from 'vibegame';
+import { parseXMLToEntities, State, XMLParser, defineQuery } from 'vibegame';
 import { TransformsPlugin } from 'vibegame';
 import { Tween, TweenPlugin, TweenValue } from 'vibegame';
 
@@ -18,7 +12,6 @@ describe('Tween Parser', () => {
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
-    state.registerPlugin(RecipePlugin);
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(TweenPlugin);
   });

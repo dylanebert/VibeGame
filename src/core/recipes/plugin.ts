@@ -1,4 +1,4 @@
-import type { Plugin } from '../../core';
+import type { Plugin } from '../';
 import { Parent } from './components';
 import { entityRecipe } from './recipes';
 

@@ -1,4 +1,4 @@
-import type { Component, Recipe, State, XMLValue } from '../../core';
+import type { Component, Recipe, State, XMLValue } from '../';
 
 export function expandShorthands(
   attributes: Record<string, XMLValue>,

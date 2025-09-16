@@ -1,17 +1,16 @@
 import { defineComponent, Types } from 'bitecs';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State } from 'vibegame';
-import { createEntityFromRecipe, fromEuler, RecipePlugin } from 'vibegame';
+import { fromEuler } from 'vibegame';
 
-describe('Recipe Plugin', () => {
+describe('Recipe Core', () => {
   let state: State;
 
   beforeEach(() => {
     state = new State();
-    state.registerPlugin(RecipePlugin);
   });
 
-  it('should register recipe plugin', () => {
+  it('should have entity recipe by default', () => {
     expect(state.hasRecipe('entity')).toBe(true);
   });
 
@@ -32,7 +31,7 @@ describe('Recipe Plugin', () => {
 
     state.registerRecipe(recipe);
 
-    const entity = createEntityFromRecipe(state, 'test-recipe');
+    const entity = state.createFromRecipe('test-recipe');
     expect(entity).toBeGreaterThanOrEqual(0);
     expect(state.hasComponent(entity, TestComponent)).toBe(true);
     expect(TestComponent.value[entity]).toBe(42);
@@ -65,7 +64,7 @@ describe('Recipe Plugin', () => {
 
     state.registerRecipe(recipe);
 
-    const entity = createEntityFromRecipe(state, 'moving-thing');
+    const entity = state.createFromRecipe('moving-thing');
 
     expect(state.hasComponent(entity, Position)).toBe(true);
     expect(state.hasComponent(entity, Velocity)).toBe(true);
@@ -107,7 +106,7 @@ describe('Recipe Plugin', () => {
 
       state.registerRecipe(recipe);
 
-      const entity = createEntityFromRecipe(state, 'test-shorthand', {
+      const entity = state.createFromRecipe('test-shorthand', {
         shape: '1',
         color: '0xff0000',
       });
@@ -146,7 +145,7 @@ describe('Recipe Plugin', () => {
 
       state.registerRecipe(recipe);
 
-      const entity = createEntityFromRecipe(state, 'test-override', {
+      const entity = state.createFromRecipe('test-override', {
         shape: '1',
         renderer: 'shape: 2',
       });
@@ -194,7 +193,7 @@ describe('Recipe Plugin', () => {
 
       state.registerRecipe(recipe);
 
-      const entity = createEntityFromRecipe(state, 'test-transform', {
+      const entity = state.createFromRecipe('test-transform', {
         size: '10 4 6',
       });
 
@@ -248,7 +247,7 @@ describe('Recipe Plugin', () => {
         components: ['transform', 'renderer'],
       });
 
-      const entity = createEntityFromRecipe(state, 'entity', {
+      const entity = state.createFromRecipe('entity', {
         pos: '0 5 0',
         color: '0xff0000',
       });
@@ -263,7 +262,7 @@ describe('Recipe Plugin', () => {
 
     it('should throw helpful error for unknown recipe', () => {
       expect(() => {
-        createEntityFromRecipe(state, 'unkown-recipe', {});
+        state.createFromRecipe('unkown-recipe', {});
       }).toThrow(/Unknown element <unkown-recipe>/);
     });
 

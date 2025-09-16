@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
@@ -54,5 +56,41 @@ export function slerp(
     y: scale0 * fromY + scale1 * toYAdjusted,
     z: scale0 * fromZ + scale1 * toZAdjusted,
     w: scale0 * fromW + scale1 * toWAdjusted,
+  };
+}
+
+export function eulerToQuaternion(
+  x: number,
+  y: number,
+  z: number
+): { x: number; y: number; z: number; w: number } {
+  const radX = x * (Math.PI / 180);
+  const radY = y * (Math.PI / 180);
+  const radZ = z * (Math.PI / 180);
+
+  const euler = new THREE.Euler(radX, radY, radZ, 'XYZ');
+  const quat = new THREE.Quaternion().setFromEuler(euler);
+
+  return {
+    x: quat.x,
+    y: quat.y,
+    z: quat.z,
+    w: quat.w,
+  };
+}
+
+export function quaternionToEuler(
+  x: number,
+  y: number,
+  z: number,
+  w: number
+): { x: number; y: number; z: number } {
+  const quat = new THREE.Quaternion(x, y, z, w);
+  const euler = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
+
+  return {
+    x: euler.x * (180 / Math.PI),
+    y: euler.y * (180 / Math.PI),
+    z: euler.z * (180 / Math.PI),
   };
 }

@@ -1,7 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import { State, XMLParser, parseXMLToEntities } from 'vibegame';
-import { RecipePlugin, createEntityFromRecipe } from 'vibegame';
 import {
   Player,
   PlayerPlugin,
@@ -33,7 +32,6 @@ describe('Player Recipes and XML', () => {
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
-    state.registerPlugin(RecipePlugin);
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(PhysicsPlugin);
     state.registerPlugin(RespawnPlugin);
@@ -150,7 +148,7 @@ describe('Player Recipes and XML', () => {
 
   describe('Player Recipe Defaults', () => {
     it('should have correct default body configuration', () => {
-      const entity = createEntityFromRecipe(state, 'player');
+      const entity = state.createFromRecipe('player');
 
       expect(Body.type[entity]).toBe(BodyType.KinematicPositionBased);
       expect(Body.mass[entity]).toBe(1);
@@ -164,7 +162,7 @@ describe('Player Recipes and XML', () => {
     });
 
     it('should have correct default collider configuration', () => {
-      const entity = createEntityFromRecipe(state, 'player');
+      const entity = state.createFromRecipe('player');
 
       expect(Collider.shape[entity]).toBe(ColliderShape.Capsule);
       expect(Collider.radius[entity]).toBeCloseTo(0.3);
@@ -176,7 +174,7 @@ describe('Player Recipes and XML', () => {
     });
 
     it('should have correct default character controller configuration', () => {
-      const entity = createEntityFromRecipe(state, 'player');
+      const entity = state.createFromRecipe('player');
 
       expect(CharacterController.offset[entity]).toBeCloseTo(0.08);
       expect(CharacterController.maxSlope[entity]).toBeCloseTo(Math.PI / 4);
@@ -190,7 +188,7 @@ describe('Player Recipes and XML', () => {
     });
 
     it('should have correct default transform values', () => {
-      const entity = createEntityFromRecipe(state, 'player');
+      const entity = state.createFromRecipe('player');
 
       expect(Transform.posX[entity]).toBe(0);
       expect(Transform.posY[entity]).toBe(0);
@@ -205,7 +203,7 @@ describe('Player Recipes and XML', () => {
     });
 
     it('should have correct default respawn values', () => {
-      const entity = createEntityFromRecipe(state, 'player');
+      const entity = state.createFromRecipe('player');
 
       expect(Respawn.posX[entity]).toBe(0);
       expect(Respawn.posY[entity]).toBe(0);
@@ -261,7 +259,7 @@ describe('Player Recipes and XML', () => {
 
   describe('Player Recipe with Overrides', () => {
     it('should override default values using recipe', () => {
-      const entity = createEntityFromRecipe(state, 'player', {
+      const entity = state.createFromRecipe('player', {
         'player.speed': 12,
         'player.jump-height': 6,
         'player.rotation-speed': 20,
@@ -277,7 +275,7 @@ describe('Player Recipes and XML', () => {
     });
 
     it('should handle transform position override', () => {
-      const entity = createEntityFromRecipe(state, 'player', {
+      const entity = state.createFromRecipe('player', {
         'transform.pos-x': 5,
         'transform.pos-y': 10,
         'transform.pos-z': -3,
@@ -289,7 +287,7 @@ describe('Player Recipes and XML', () => {
     });
 
     it('should handle collider customization', () => {
-      const entity = createEntityFromRecipe(state, 'player', {
+      const entity = state.createFromRecipe('player', {
         'collider.radius': 0.5,
         'collider.height': 1.5,
         'collider.friction': 0.3,

@@ -5,7 +5,6 @@ import {
   TIME_CONSTANTS,
   XMLParser,
   parseXMLToEntities,
-  RecipePlugin,
   TransformsPlugin,
   Transform,
   WorldTransform,
@@ -20,7 +19,6 @@ describe('Transform XML Behavior', () => {
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
-    state.registerPlugin(RecipePlugin);
     state.registerPlugin(TransformsPlugin);
   });
 

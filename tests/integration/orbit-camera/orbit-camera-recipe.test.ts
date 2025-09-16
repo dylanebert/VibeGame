@@ -1,10 +1,6 @@
 import { State, XMLParser } from 'vibegame';
 import { MainCamera, OrbitCamera, OrbitCameraPlugin } from 'vibegame';
-import {
-  createEntityFromRecipe,
-  parseXMLToEntities,
-  RecipePlugin,
-} from 'vibegame';
+import { parseXMLToEntities } from 'vibegame';
 import { Transform, TransformsPlugin } from 'vibegame';
 import { PlayerPlugin } from 'vibegame';
 import { RenderingPlugin } from 'vibegame';
@@ -19,7 +15,6 @@ describe('OrbitCamera Recipe Integration', () => {
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
-    state.registerPlugin(RecipePlugin);
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(OrbitCameraPlugin);
     state.registerPlugin(PlayerPlugin);
@@ -27,14 +22,14 @@ describe('OrbitCamera Recipe Integration', () => {
   });
 
   it('should create orbit camera from recipe', () => {
-    const entity = createEntityFromRecipe(state, 'camera');
+    const entity = state.createFromRecipe('camera');
 
     expect(state.hasComponent(entity, OrbitCamera)).toBe(true);
     expect(state.hasComponent(entity, Transform)).toBe(true);
   });
 
   it('should override values with custom attributes', () => {
-    const entity = createEntityFromRecipe(state, 'camera', {
+    const entity = state.createFromRecipe('camera', {
       'orbit-camera.target': 5,
       'orbit-camera.current-distance': 15,
       'orbit-camera.target-distance': 15,
@@ -48,7 +43,7 @@ describe('OrbitCamera Recipe Integration', () => {
   });
 
   it('should handle distance constraints in overrides', () => {
-    const entity = createEntityFromRecipe(state, 'camera', {
+    const entity = state.createFromRecipe('camera', {
       'orbit-camera.min-distance': 1,
       'orbit-camera.max-distance': 100,
     });
@@ -58,7 +53,7 @@ describe('OrbitCamera Recipe Integration', () => {
   });
 
   it('should handle angle values in overrides', () => {
-    const entity = createEntityFromRecipe(state, 'camera', {
+    const entity = state.createFromRecipe('camera', {
       'orbit-camera.current-yaw': Math.PI / 2,
       'orbit-camera.target-yaw': Math.PI / 2,
       'orbit-camera.current-pitch': Math.PI / 6,

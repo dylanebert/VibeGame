@@ -1,4 +1,4 @@
-import type { ParsedElement } from '../../core';
+import type { ParsedElement } from '../';
 
 /**
  * Calculate Levenshtein distance between two strings for typo detection

@@ -13,7 +13,7 @@ import {
   PhysicsPlugin,
   TouchedEvent,
 } from 'vibegame';
-import { RecipePlugin, parseXMLToEntities } from 'vibegame';
+import { parseXMLToEntities } from 'vibegame';
 import { RenderingPlugin } from 'vibegame';
 import { TransformsPlugin } from 'vibegame';
 
@@ -32,7 +32,6 @@ describe('Physics XML Declarative API', () => {
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(RenderingPlugin);
     state.registerPlugin(PhysicsPlugin);
-    state.registerPlugin(RecipePlugin);
   });
 
   describe('physics properties via XML', () => {

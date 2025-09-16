@@ -1,5 +1,7 @@
 import type { Component } from 'bitecs';
 import type { ParsedElement, XMLValue } from '../xml';
+
+export type { XMLValue };
 import type { State } from './state';
 
 export interface System {

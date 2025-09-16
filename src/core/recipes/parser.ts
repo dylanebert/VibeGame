@@ -1,5 +1,5 @@
-import type { ParsedElement, Recipe, State, XMLValue } from '../../core';
-import { toCamelCase } from '../../core';
+import type { ParsedElement, Recipe, State, XMLValue } from '../';
+import { toCamelCase } from '../';
 import { formatUnknownAttribute, formatUnknownElement } from './diagnostics';
 import { parseComponentProperties } from './property-parser';
 import { expandShorthands } from './shorthand-expander';
@@ -372,6 +372,9 @@ export function parseXMLToEntities(
       }
     }
   } else {
+    if (xmlContent.tagName === 'world') {
+      return results;
+    }
     const result = processElement(xmlContent);
     if (result) {
       results.push(result);

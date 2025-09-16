@@ -1,5 +1,4 @@
 import type { Plugin } from '../core';
-import { RecipePlugin } from './recipes';
 import { TweenPlugin } from './tweening';
 import { StartupPlugin } from './startup/plugin';
 import { TransformsPlugin } from './transforms';
@@ -12,7 +11,6 @@ import { PlayerPlugin } from './player/plugin';
 import { RespawnPlugin } from './respawn/plugin';
 
 export const DefaultPlugins: Plugin[] = [
-  RecipePlugin,
   TweenPlugin,
   TransformsPlugin,
   AnimationPlugin,

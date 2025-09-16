@@ -14,7 +14,6 @@ import {
   PhysicsPlugin,
   Player,
   PlayerPlugin,
-  RecipePlugin,
   Respawn,
   RespawnPlugin,
   State,
@@ -37,7 +36,6 @@ describe('Respawn Plugin', () => {
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
-    state.registerPlugin(RecipePlugin);
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(PhysicsPlugin);
     state.registerPlugin(OrbitCameraPlugin);

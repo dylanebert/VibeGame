@@ -4,7 +4,7 @@ import {
   formatEnumError,
   formatTypeMismatch,
   formatSyntaxError,
-} from '../../plugins/recipes/diagnostics';
+} from '../recipes/diagnostics';
 import { recipeSchemas } from './schemas';
 
 interface FormatOptions {

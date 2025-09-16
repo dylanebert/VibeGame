@@ -171,7 +171,6 @@ describe('Builder-Runtime Integration', () => {
       });
 
       const state = new GAME.State();
-      state.registerPlugin(GAME.RecipePlugin);
       state.registerPlugin(GAME.TransformsPlugin);
       state.registerComponent('test', TestComponent);
       state.registerRecipe({
@@ -268,7 +267,6 @@ describe('Builder-Runtime Integration', () => {
       `;
 
       const runtime = await GAME.withoutDefaultPlugins()
-        .withPlugin(GAME.RecipePlugin)
         .withPlugin(GAME.TransformsPlugin)
         .withPlugin(GamePlugin)
         .configure({

@@ -11,9 +11,19 @@ import {
 } from 'bitecs';
 import { toKebabCase } from '../utils/naming';
 import { ConfigRegistry } from './config';
+import { Parent } from './components';
 import { TIME_CONSTANTS } from './constants';
 import { Scheduler } from './scheduler';
-import type { Config, GameTime, Parser, Plugin, Recipe, System } from './types';
+import type {
+  Config,
+  GameTime,
+  Parser,
+  Plugin,
+  Recipe,
+  System,
+  XMLValue,
+} from './types';
+import { createEntityFromRecipe } from '../recipes/parser';
 
 export class State {
   public readonly world: IWorld;
@@ -31,6 +41,12 @@ export class State {
       fixedDeltaTime: TIME_CONSTANTS.FIXED_TIMESTEP,
       elapsed: 0,
     };
+
+    this.registerComponent('parent', Parent);
+    this.registerRecipe({
+      name: 'entity',
+      components: [],
+    });
   }
 
   registerPlugin(plugin: Plugin): void {
@@ -141,6 +157,13 @@ export class State {
 
   hasComponent<T extends Component>(eid: number, component: T): boolean {
     return hasComponent(this.world, component, eid);
+  }
+
+  createFromRecipe(
+    recipeName: string,
+    attributes: Record<string, XMLValue> = {}
+  ): number {
+    return createEntityFromRecipe(this, recipeName, attributes);
   }
 
   dispose(): void {

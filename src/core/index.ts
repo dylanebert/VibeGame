@@ -12,7 +12,7 @@ export {
   type IWorld,
 } from 'bitecs';
 
-export { NULL_ENTITY, State, TIME_CONSTANTS } from './ecs';
+export { NULL_ENTITY, Parent, State, TIME_CONSTANTS } from './ecs';
 export type {
   ComponentDefaults,
   ComponentEnums,
@@ -26,7 +26,13 @@ export type {
   System,
   ValidationRule,
 } from './ecs';
-export { lerp, slerp } from './math';
+export { lerp, slerp, eulerToQuaternion, quaternionToEuler } from './math';
+export {
+  parseXMLToEntities,
+  entityRecipe,
+  fromEuler,
+  type EntityCreationResult,
+} from './recipes';
 export { toCamelCase, toKebabCase } from './utils';
 export {
   findElements,

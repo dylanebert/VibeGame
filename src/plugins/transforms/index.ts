@@ -1,10 +1,8 @@
 export { Transform, WorldTransform } from './components';
-export { Parent } from '../recipes';
+export { Parent } from '../../core';
 export { TransformsPlugin } from './plugin';
 export { TransformHierarchySystem } from './systems';
 export {
-  eulerToQuaternion,
-  quaternionToEuler,
   syncEulerFromQuaternion,
   syncQuaternionFromEuler,
   copyTransform,
@@ -12,3 +10,4 @@ export {
   composeTransformMatrix,
   decomposeTransformMatrix,
 } from './utils';
+export { eulerToQuaternion, quaternionToEuler } from '../../core/math';

@@ -1,4 +1,4 @@
-import type { Recipe } from '../../core';
+import type { Recipe } from '../';
 
 export const entityRecipe: Recipe = {
   name: 'entity',

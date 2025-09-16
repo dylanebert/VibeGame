@@ -9,7 +9,6 @@ export * from './plugins/input';
 export * from './plugins/orbit-camera';
 export * from './plugins/physics';
 export * from './plugins/player';
-export * from './plugins/recipes';
 export * from './plugins/rendering';
 export * from './plugins/respawn';
 export * from './plugins/startup';

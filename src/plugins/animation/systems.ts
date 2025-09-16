@@ -6,7 +6,7 @@ import {
   InterpolatedTransform,
 } from '../physics';
 import { InputState } from '../input';
-import { Parent } from '../recipes';
+import { Parent } from '../../core';
 import { AnimatedCharacter } from './components';
 import { ANIMATION_CONFIG, ANIMATION_STATES } from './constants';
 import {
