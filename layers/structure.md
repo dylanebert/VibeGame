@@ -22,21 +22,17 @@ VibeGame - A vibe coding game engine using ECS architecture with bitECS, featuri
 
 ## AI Context
 
-**agents.md** provides concise system prompt context for AI agents working with VibeGame. It contains essential concepts and directs to Context7 for comprehensive documentation.
-
-**llms.txt** is automatically built from [layers/llms-template.txt](llms-template.txt) on `bun run build:release` and served via Context7. The template contains comprehensive usage patterns and pulls in reference material from context.md files.
+**llms.txt** is automatically built from [layers/llms-template.txt](llms-template.txt) on `bun run build:release`. It serves as a comprehensive system prompt containing all engine documentation, component references, and usage patterns. The template pulls in reference material from context.md files throughout the codebase.
 
 ## Layout
 
 ```
 vibegame/
 ├── CLAUDE.md  # Global context (Tier 0)
-├── agents.md  # AI system prompt context
 ├── create-vibegame/  # Project scaffolding CLI
 │   ├── index.js  # CLI script
 │   ├── package.json
 │   └── template/  # Project template files
-│       └── agents.md  # AI context for new projects
 ├── src/
 │   ├── core/  # Engine foundation
 │   │   ├── context.md  # Core module context

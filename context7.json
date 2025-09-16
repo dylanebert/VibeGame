@@ -25,6 +25,6 @@
     ".prettierignore",
     ".gitignore",
     "bun.lockb",
-    "agents.md"
+    "llms.txt"
   ]
 }

@@ -22,7 +22,7 @@ User arguments: "$ARGUMENTS"
 Traverse upward through context tiers (see CLAUDE.md):
 
 - **Tier 2**: Update relevant `context.md` files to reflect current code state
-- **Tier 1**: Update `layers/structure.md`, `layers/llms-template.txt`, and `agents.md` if structure/commands/stack changed
+- **Tier 1**: Update `layers/structure.md` and `layers/llms-template.txt` if structure/commands/stack changed
 - Follow all rules from CLAUDE.md, especially "No History" principle
 
 ### 3. Apply Cleanup

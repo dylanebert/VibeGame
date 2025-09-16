@@ -1,6 +1,37 @@
-# VibeGame
+# VibeGame Engine
 
 A 3D game engine with declarative XML syntax and ECS architecture. Start playing immediately with automatic player, camera, and lighting - just add a ground to prevent falling.
+
+## Core Architecture
+
+### ECS (Entity Component System)
+- **Entities**: Just numbers (IDs), no data or behavior
+- **Components**: Pure data containers (position, health, color)
+- **Systems**: Functions that process entities with specific components
+- **Queries**: Find entities with specific component combinations
+
+### Plugin System
+Bevy-inspired modular architecture:
+- **Components**: Data definitions using bitECS
+- **Systems**: Logic organized by update phases (setup, fixed, simulation, draw)
+- **Recipes**: XML entity templates with preset components
+- **Config**: Defaults, shorthands, enums, validations, parsers
+
+### Update Phases
+1. **SetupBatch**: Input gathering and frame setup
+2. **FixedBatch**: Physics simulation at fixed timestep (50Hz)
+3. **SimulationBatch**: Game logic and state updates
+4. **DrawBatch**: Rendering and interpolation
+
+## Critical Rules
+
+⚠️ **Physics Position Override**: Physics bodies override transform positions. Always use `pos` attribute on physics entities, not transform position.
+
+⚠️ **Ground Required**: Always include ground/platforms or the player falls infinitely.
+
+⚠️ **Component Declaration**: Bare attributes mean "include with defaults", not "empty".
+
+## Essential Knowledge
 
 ## Instant Playable Game
 
@@ -368,44 +399,74 @@ Recipes are registered component bundles with defaults:
 - "Add a score display and upgrade menu with animations"
 - "Create a game with currency system and floating text effects"
 
-### Beginner Learning Patterns
+### Troubleshooting
 
-#### Progressive Complexity Framework
-When helping beginners, follow the "three escalating encounters" pattern:
-
-1. **Introduction** - Working template that demonstrates the concept
-2. **Guided modification** - Change one parameter to see the effect
-3. **Independent exploration** - Combine concepts or create variations
-
-#### Multiple Learning Paths Available
-- **XML-first** (visual/declarative learners) - Start with recipe tags, then explain underlying components
-- **JavaScript-first** (code-focused learners) - Begin with TypeScript examples, then show XML equivalent
-- **Hybrid approach** - XML for basic setup + custom systems for advanced features
-
-#### Early Win-State Examples
-Always provide examples that work immediately:
-
-```xml
-<!-- ✅ INSTANT SUCCESS: Complete playable scene -->
-<world canvas="#game-canvas" sky="#87ceeb">
-  <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
-</world>
-<!-- This immediately creates: playable character + camera + lighting + ground -->
-```
-
-#### Common Failure Recovery Patterns
-When users report issues, guide them through these simplification steps:
-
-1. **Start minimal** - Just ground + player (auto-created)
-2. **Add one element** - Single physics object or platform
-3. **Verify basics work** - Movement, camera, physics
-4. **Incrementally add complexity** - One feature at a time
-
-#### Scaffolding Troubleshooting
 - **Physics not working?** → Check if ground exists, verify `<world>` tag
 - **Entity not appearing?** → Verify transform component, check position values
-- **Movement feels wrong?** → Explain physics vs transform position hierarchy
-- **Too complex?** → Break into smaller working pieces first
+- **Movement feels wrong?** → Physics body position overrides transform position
+- **Player falling forever?** → Add a ground/platform with `<static-part>`
+
+## Plugin Development Pattern
+
+```typescript
+// Component Definition
+export const MyComponent = GAME.defineComponent({
+  value: GAME.Types.f32,
+  enabled: GAME.Types.ui8
+});
+
+// System Definition
+const myQuery = GAME.defineQuery([MyComponent]);
+export const MySystem: GAME.System = {
+  group: 'simulation', // or 'setup', 'fixed', 'draw'
+  update: (state) => {
+    const entities = myQuery(state.world);
+    for (const entity of entities) {
+      // System logic
+      MyComponent.value[entity] += state.time.deltaTime;
+    }
+  }
+};
+
+// Plugin Bundle
+export const MyPlugin: GAME.Plugin = {
+  components: { MyComponent },
+  systems: [MySystem],
+  config: {
+    defaults: { "my-component": { value: 1, enabled: 1 } },
+    shorthands: { "my-val": "my-component.value" }
+  }
+};
+
+// Registration
+GAME.withPlugin(MyPlugin).run();
+```
+
+## State Management Patterns
+
+### Singleton Entities (Game State)
+```typescript
+function getOrCreateGameState(state: GAME.State): number {
+  const query = GAME.defineQuery([GameState]);
+  const entities = query(state.world);
+  if (entities.length > 0) return entities[0];
+
+  const entity = state.createEntity();
+  state.addComponent(entity, GameState, { score: 0, level: 1 });
+  return entity;
+}
+```
+
+### Component Access (bitECS style)
+```typescript
+// Direct property access
+GAME.Transform.posX[entity] = 10;
+GAME.Transform.posY[entity] = 5;
+
+// Read values
+const x = GAME.Transform.posX[entity];
+const health = GAME.Health.current[entity];
+```
 
 ## Features Not Yet Built-In
 

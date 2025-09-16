@@ -24,7 +24,7 @@ cd my-game
 bun dev
 ```
 
-This scaffolds a complete project with `agents.md` context for AI-assisted development.
+This scaffolds a complete project with `llms.txt` system prompt for AI-assisted development.
 
 ### Or install directly
 
@@ -53,7 +53,7 @@ bun install vibegame
 
 ### 1. AI Context Management
 
-**System Prompt**: Include `agents.md` in your AI system prompt for essential VibeGame context.
+**System Prompt**: Include `llms.txt` in your AI system prompt for comprehensive VibeGame documentation.
 
 **Comprehensive Documentation**: Use Context7 to fetch detailed documentation:
 ```typescript

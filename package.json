@@ -1,7 +1,7 @@
 {
   "name": "vibegame",
-  "version": "0.1.8",
-  "description": "a vibe coding game engine",
+  "version": "0.1.9",
+  "description": "a 3D game engine designed for vibe coding",
   "type": "module",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -70,7 +70,6 @@
   },
   "files": [
     "dist",
-    "agents.md",
     "llms.txt",
     "!dist/reference",
     "!dist/examples"

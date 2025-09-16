@@ -7,6 +7,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit",
+    "update": "cp node_modules/vibegame/llms.txt ./llms.txt && echo '✓ Updated llms.txt from vibegame'",
+    "postinstall": "test -f node_modules/vibegame/llms.txt && cp node_modules/vibegame/llms.txt ./llms.txt || true",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
