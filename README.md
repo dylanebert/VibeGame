@@ -207,5 +207,6 @@ bun test
 
 - [GitHub Repository](https://github.com/dylanebert/vibegame)
 - [NPM Package](https://www.npmjs.com/package/vibegame)
+- [Live Demo on Hugging Face](https://huggingface.co/spaces/dylanebert/VibeGame)
 - [Live Demo on JSFiddle](https://jsfiddle.net/zhLtd6e2/6/)
 - [Shallot Context Manager](https://github.com/dylanebert/shallot)
