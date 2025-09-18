@@ -69,18 +69,25 @@ player/
 - cameraSensitivity: f32 (0.007)
 - cameraZoomSensitivity: f32 (1.5)
 - cameraEntity: eid (0)
-- inheritedVelX: f32 (0) - Horizontal momentum inherited from platform
-- inheritedVelZ: f32 (0) - Horizontal momentum inherited from platform
+- inheritedVelX: f32 (0) - Total horizontal momentum from platform
+- inheritedVelZ: f32 (0) - Total horizontal momentum from platform
+- inheritedAngVelX: f32 (0) - Platform angular velocity X
+- inheritedAngVelY: f32 (0) - Platform angular velocity Y
+- inheritedAngVelZ: f32 (0) - Platform angular velocity Z
+- platformOffsetX: f32 (0) - Position relative to platform center
+- platformOffsetY: f32 (0) - Position relative to platform center
+- platformOffsetZ: f32 (0) - Position relative to platform center
+- lastPlatform: eid (0) - Track platform changes
 
 ### Systems
 
 #### PlayerMovementSystem
 - Group: fixed
-- Handles movement, rotation, jumping with platform momentum preservation
+- Handles movement, rotation, jumping with full platform velocity inheritance (linear + angular)
 
 #### PlayerGroundedSystem
 - Group: fixed
-- Tracks grounded state, jump availability, and clears inherited momentum on landing
+- Tracks grounded state, platform changes, and clears momentum on landing
 
 #### PlayerCameraLinkingSystem
 - Group: simulation
@@ -101,8 +108,11 @@ player/
 #### processInput(moveForward, moveRight, cameraYaw): Vector3
 Converts input to world-space movement
 
-#### handleJump(entity, jumpPressed, currentTime): number
-Processes jump with buffering
+#### calculateTangentialVelocity(angVelX, angVelY, angVelZ, offsetX, offsetY, offsetZ): Vector3
+Computes tangential velocity from angular rotation (v = ω × r)
+
+#### handleJump(entity, jumpPressed, currentTime, platform?): number
+Processes jump with buffering and angular momentum inheritance
 
 #### updateRotation(entity, inputVector, deltaTime, rotationData): Quaternion
 Smooth rotation towards movement

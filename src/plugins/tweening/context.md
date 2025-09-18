@@ -1,7 +1,7 @@
 # Tweening Plugin
 
 <!-- LLM:OVERVIEW -->
-Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
+Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement and rotation.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -11,8 +11,8 @@ tweening/
 ├── context.md  # This file
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
-├── components.ts  # Tween, TweenValue, KinematicTween
-├── systems.ts  # KinematicTweenSystem, TweenSystem
+├── components.ts  # Tween, TweenValue, KinematicTween, KinematicRotationTween
+├── systems.ts  # KinematicTweenSystem, KinematicRotationTweenSystem, TweenSystem
 ├── parser.ts  # Tween XML parser
 └── utils.ts  # Easing functions, tween creation
 ```
@@ -25,12 +25,12 @@ tweening/
 ## Entry Points
 
 - **plugin.ts**: TweenPlugin definition for registration
-- **systems.ts**: KinematicTweenSystem (fixed group), TweenSystem (simulation group)
+- **systems.ts**: KinematicTweenSystem, KinematicRotationTweenSystem (fixed group), TweenSystem (simulation group)
 - **parser.ts**: Parses `<tween>` elements from XML scenes
 
 ## Dependencies
 
-- **Internal**: Core ECS, physics (Body, SetLinearVelocity)
+- **Internal**: Core ECS, physics (Body, SetLinearVelocity, SetAngularVelocity)
 - **External**: gsap (for easing functions)
 
 <!-- LLM:REFERENCE -->
@@ -60,11 +60,24 @@ tweening/
 - lastPosition: f32
 - targetPosition: f32
 
+#### KinematicRotationTween
+- tweenEntity: ui32 - Associated tween entity
+- targetEntity: ui32 - Kinematic body entity
+- axis: ui8 - 0=X, 1=Y, 2=Z
+- from: f32 - Start rotation (radians)
+- to: f32 - End rotation (radians)
+- lastRotation: f32
+- targetRotation: f32
+
 ### Systems
 
 #### KinematicTweenSystem
 - Group: fixed
 - Converts position tweens to velocity for kinematic bodies
+
+#### KinematicRotationTweenSystem
+- Group: fixed
+- Converts rotation tweens to angular velocity for kinematic bodies
 
 #### TweenSystem
 - Group: simulation
@@ -96,7 +109,7 @@ Animates component property
 
 ### Shorthand Targets
 
-- rotation - body.eulerX/Y/Z
+- rotation - body.eulerX/Y/Z (physics bodies) or transform.eulerX/Y/Z
 - at - body.posX/Y/Z
 - scale - transform.scaleX/Y/Z
 <!-- /LLM:REFERENCE -->
@@ -120,18 +133,18 @@ Animates component property
 </kinematic-part>
 ```
 
-### Multiple Properties
+### Rotation Animation
 
 ```xml
-<!-- Animate rotation on all axes -->
-<entity transform renderer>
-  <tween 
-    target="rotation" 
-    to="0 360 0" 
-    duration="4" 
+<!-- Animate rotation on kinematic body -->
+<kinematic-part pos="0 2 0">
+  <tween
+    target="rotation"
+    to="0 360 0"
+    duration="4"
     loop="loop"
   />
-</entity>
+</kinematic-part>
 ```
 
 ### Body Physics Properties

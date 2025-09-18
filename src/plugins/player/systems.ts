@@ -46,19 +46,39 @@ export const PlayerMovementSystem: System = {
       const horizontalVelX = inputVector.x * speed;
       const horizontalVelZ = inputVector.z * speed;
 
+      const platform = state.hasComponent(entity, CharacterController)
+        ? CharacterController.platform[entity]
+        : null;
       const jumpVelocity = handleJump(
         entity,
         InputState.jump[entity],
-        state.time.elapsed * 1000
+        state.time.elapsed * 1000,
+        platform
       );
 
       if (jumpVelocity > 0 && state.hasComponent(entity, CharacterController)) {
-        const platform = CharacterController.platform[entity];
-        if (platform > 0) {
+        const currentPlatform = CharacterController.platform[entity];
+        if (currentPlatform > 0) {
           Player.inheritedVelX[entity] =
             CharacterController.platformVelX[entity];
           Player.inheritedVelZ[entity] =
             CharacterController.platformVelZ[entity];
+
+          if (state.hasComponent(currentPlatform, Body)) {
+            Player.inheritedAngVelX[entity] =
+              Body.rotVelX[currentPlatform] || 0;
+            Player.inheritedAngVelY[entity] =
+              Body.rotVelY[currentPlatform] || 0;
+            Player.inheritedAngVelZ[entity] =
+              Body.rotVelZ[currentPlatform] || 0;
+
+            Player.platformOffsetX[entity] =
+              Body.posX[entity] - Body.posX[currentPlatform];
+            Player.platformOffsetY[entity] =
+              Body.posY[entity] - Body.posY[currentPlatform];
+            Player.platformOffsetZ[entity] =
+              Body.posZ[entity] - Body.posZ[currentPlatform];
+          }
         }
       }
 
@@ -110,6 +130,20 @@ export const PlayerGroundedSystem: System = {
     for (const entity of players) {
       const isGrounded = CharacterController.grounded[entity] === 1;
       const wasJumping = Player.isJumping[entity] === 1;
+      const currentPlatform = CharacterController.platform[entity];
+
+      if (currentPlatform !== Player.lastPlatform[entity]) {
+        Player.lastPlatform[entity] = currentPlatform;
+
+        if (currentPlatform > 0 && state.hasComponent(currentPlatform, Body)) {
+          Player.platformOffsetX[entity] =
+            Body.posX[entity] - Body.posX[currentPlatform];
+          Player.platformOffsetY[entity] =
+            Body.posY[entity] - Body.posY[currentPlatform];
+          Player.platformOffsetZ[entity] =
+            Body.posZ[entity] - Body.posZ[currentPlatform];
+        }
+      }
 
       if (isGrounded) {
         Player.lastGroundedTime[entity] = state.time.elapsed * 1000;
@@ -118,6 +152,9 @@ export const PlayerGroundedSystem: System = {
           Player.isJumping[entity] = 0;
           Player.inheritedVelX[entity] = 0;
           Player.inheritedVelZ[entity] = 0;
+          Player.inheritedAngVelX[entity] = 0;
+          Player.inheritedAngVelY[entity] = 0;
+          Player.inheritedAngVelZ[entity] = 0;
         }
 
         if (Player.canJump[entity] === 0 && Player.jumpCooldown[entity] <= 0) {

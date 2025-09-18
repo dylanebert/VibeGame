@@ -47,10 +47,6 @@ export const Body = defineComponent({
   rotVelX: Types.f32,
   rotVelY: Types.f32,
   rotVelZ: Types.f32,
-
-  lastPosX: Types.f32,
-  lastPosY: Types.f32,
-  lastPosZ: Types.f32,
 });
 
 export const Collider = defineComponent({
@@ -94,9 +90,6 @@ export const CharacterController = defineComponent({
   platformVelX: Types.f32,
   platformVelY: Types.f32,
   platformVelZ: Types.f32,
-  platformDeltaX: Types.f32,
-  platformDeltaY: Types.f32,
-  platformDeltaZ: Types.f32,
 });
 
 export const CharacterMovement = defineComponent({
@@ -159,3 +152,4 @@ export const SetLinearVelocity = defineComponent(vector3Fields);
 export const SetAngularVelocity = defineComponent(vector3Fields);
 export const KinematicMove = defineComponent(vector3Fields);
 export const KinematicRotate = defineComponent(quaternionFields);
+export const KinematicAngularVelocity = defineComponent(vector3Fields);

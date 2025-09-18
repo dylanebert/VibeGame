@@ -13,6 +13,20 @@ export const JUMP_CONSTANTS = {
   cooldown: 0.2,
 };
 
+export function calculateTangentialVelocity(
+  angVelX: number,
+  angVelY: number,
+  angVelZ: number,
+  offsetX: number,
+  offsetY: number,
+  offsetZ: number
+): THREE.Vector3 {
+  const tangentialVelX = angVelY * offsetZ - angVelZ * offsetY;
+  const tangentialVelY = angVelZ * offsetX - angVelX * offsetZ;
+  const tangentialVelZ = angVelX * offsetY - angVelY * offsetX;
+  return new THREE.Vector3(tangentialVelX, tangentialVelY, tangentialVelZ);
+}
+
 export function processInput(
   moveForward: number,
   moveRight: number,
@@ -48,7 +62,8 @@ function calculateJumpVelocity(entity: number): number {
 export function handleJump(
   entity: number,
   jumpPressed: number,
-  currentTime: number
+  currentTime: number,
+  platform: number | null = null
 ): number {
   if (jumpPressed === 1) {
     Player.jumpBufferTime[entity] = currentTime;
@@ -61,6 +76,21 @@ export function handleJump(
     Player.canJump[entity] = 0;
     Player.jumpCooldown[entity] = JUMP_CONSTANTS.cooldown;
     Player.jumpBufferTime[entity] = -10000;
+
+    if (platform && platform > 0) {
+      const tangentialVel = calculateTangentialVelocity(
+        Player.inheritedAngVelX[entity],
+        Player.inheritedAngVelY[entity],
+        Player.inheritedAngVelZ[entity],
+        Player.platformOffsetX[entity],
+        Player.platformOffsetY[entity],
+        Player.platformOffsetZ[entity]
+      );
+
+      Player.inheritedVelX[entity] += tangentialVel.x;
+      Player.inheritedVelZ[entity] += tangentialVel.z;
+    }
+
     return jumpVelocity;
   }
 

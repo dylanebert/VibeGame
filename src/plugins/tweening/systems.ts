@@ -1,7 +1,17 @@
 import type { State, System } from '../../core';
 import { defineQuery, lerp } from '../../core';
-import { Body, BodyType, SetLinearVelocity } from '../physics';
-import { KinematicTween, Tween, TweenValue } from './components';
+import {
+  Body,
+  BodyType,
+  SetAngularVelocity,
+  SetLinearVelocity,
+} from '../physics';
+import {
+  KinematicRotationTween,
+  KinematicTween,
+  Tween,
+  TweenValue,
+} from './components';
 import {
   applyEasing,
   EasingNames,
@@ -14,6 +24,7 @@ const easingKeys = Object.values(EasingNames);
 const tweenQuery = defineQuery([Tween]);
 const tweenValueQuery = defineQuery([TweenValue]);
 const kinematicTweenQuery = defineQuery([KinematicTween]);
+const kinematicRotationTweenQuery = defineQuery([KinematicRotationTween]);
 
 export const KinematicTweenSystem: System = {
   group: 'fixed',
@@ -122,6 +133,126 @@ export const KinematicTweenSystem: System = {
   },
 };
 
+export const KinematicRotationTweenSystem: System = {
+  group: 'fixed',
+  after: [KinematicTweenSystem],
+  update(state: State): void {
+    const dt = state.time.fixedDeltaTime;
+    const tweensToDestroy = new Set<number>();
+
+    for (const kinematicEntity of kinematicRotationTweenQuery(state.world)) {
+      const tweenEntity = KinematicRotationTween.tweenEntity[kinematicEntity];
+      const targetEntity = KinematicRotationTween.targetEntity[kinematicEntity];
+
+      if (
+        !state.hasComponent(tweenEntity, Tween) ||
+        !state.hasComponent(targetEntity, Body)
+      ) {
+        tweensToDestroy.add(kinematicEntity);
+        continue;
+      }
+
+      const duration = Tween.duration[tweenEntity];
+      const elapsed = Tween.elapsed[tweenEntity];
+      const loopMode = Tween.loopMode[tweenEntity];
+
+      let progress = elapsed / duration;
+
+      if (loopMode === LoopMode.Once) {
+        if (progress >= 1) {
+          progress = 1;
+          tweensToDestroy.add(kinematicEntity);
+        }
+      } else if (loopMode === LoopMode.Loop) {
+        progress = progress % 1;
+      } else if (loopMode === LoopMode.PingPong) {
+        const cycle = Math.floor(progress);
+        progress = progress % 1;
+        if (cycle % 2 === 1) {
+          progress = 1 - progress;
+        }
+      }
+
+      const easingIndex = Tween.easingIndex[tweenEntity];
+      const easingKey = easingKeys[easingIndex] || 'linear';
+      const t = applyEasing(progress, easingKey);
+
+      const from = KinematicRotationTween.from[kinematicEntity];
+      const to = KinematicRotationTween.to[kinematicEntity];
+      const currentTargetRotation = lerp(from, to, t);
+
+      const nextElapsed = Math.min(
+        Tween.elapsed[tweenEntity] + dt,
+        loopMode === LoopMode.Once
+          ? Tween.duration[tweenEntity]
+          : Tween.elapsed[tweenEntity] + dt
+      );
+      let nextProgress = nextElapsed / Tween.duration[tweenEntity];
+      if (loopMode === LoopMode.Loop) {
+        nextProgress = nextProgress % 1;
+      } else if (loopMode === LoopMode.PingPong) {
+        const nextCycle = Math.floor(nextProgress);
+        nextProgress = nextProgress % 1;
+        if (nextCycle % 2 === 1) {
+          nextProgress = 1 - nextProgress;
+        }
+      } else if (loopMode === LoopMode.Once && nextProgress > 1) {
+        nextProgress = 1;
+      }
+
+      const nextT = applyEasing(nextProgress, easingKey);
+      const nextTargetRotation = lerp(from, to, nextT);
+
+      let rotationDelta = nextTargetRotation - currentTargetRotation;
+
+      if (rotationDelta > Math.PI) {
+        rotationDelta -= 2 * Math.PI;
+      } else if (rotationDelta < -Math.PI) {
+        rotationDelta += 2 * Math.PI;
+      }
+
+      const angularVelocity = rotationDelta / dt;
+      KinematicRotationTween.targetRotation[kinematicEntity] =
+        currentTargetRotation;
+
+      const axis = KinematicRotationTween.axis[kinematicEntity];
+
+      if (axis === 0) {
+        Body.eulerX[targetEntity] = currentTargetRotation * (180 / Math.PI);
+      } else if (axis === 1) {
+        Body.eulerY[targetEntity] = currentTargetRotation * (180 / Math.PI);
+      } else {
+        Body.eulerZ[targetEntity] = currentTargetRotation * (180 / Math.PI);
+      }
+
+      if (!state.hasComponent(targetEntity, SetAngularVelocity)) {
+        state.addComponent(targetEntity, SetAngularVelocity);
+        SetAngularVelocity.x[targetEntity] = Body.rotVelX[targetEntity] || 0;
+        SetAngularVelocity.y[targetEntity] = Body.rotVelY[targetEntity] || 0;
+        SetAngularVelocity.z[targetEntity] = Body.rotVelZ[targetEntity] || 0;
+      }
+
+      const currentRotVelX = SetAngularVelocity.x[targetEntity];
+      const currentRotVelY = SetAngularVelocity.y[targetEntity];
+      const currentRotVelZ = SetAngularVelocity.z[targetEntity];
+
+      SetAngularVelocity.x[targetEntity] =
+        axis === 0 ? angularVelocity : currentRotVelX;
+      SetAngularVelocity.y[targetEntity] =
+        axis === 1 ? angularVelocity : currentRotVelY;
+      SetAngularVelocity.z[targetEntity] =
+        axis === 2 ? angularVelocity : currentRotVelZ;
+
+      KinematicRotationTween.lastRotation[kinematicEntity] =
+        currentTargetRotation;
+    }
+
+    for (const kinematicEntity of tweensToDestroy) {
+      state.destroyEntity(kinematicEntity);
+    }
+  },
+};
+
 export const TweenSystem: System = {
   group: 'simulation',
   update(state: State): void {
@@ -166,7 +297,12 @@ export const TweenSystem: System = {
           state.hasComponent(targetEntity, Body) &&
           Body.type[targetEntity] === BodyType.KinematicVelocityBased &&
           array &&
-          (array === Body.posX || array === Body.posY || array === Body.posZ);
+          (array === Body.posX ||
+            array === Body.posY ||
+            array === Body.posZ ||
+            array === Body.eulerX ||
+            array === Body.eulerY ||
+            array === Body.eulerZ);
 
         if (isKinematicVelocityBody) {
           continue;

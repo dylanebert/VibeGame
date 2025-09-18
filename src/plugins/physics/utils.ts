@@ -7,11 +7,11 @@ import {
   type State,
 } from '../../core';
 import {
-  Transform,
-  WorldTransform,
   eulerToQuaternion,
   quaternionToEuler,
   syncEulerFromQuaternion,
+  Transform,
+  WorldTransform,
 } from '../transforms';
 import {
   ApplyAngularImpulse,
@@ -24,6 +24,7 @@ import {
   CharacterMovement,
   ColliderShape,
   InterpolatedTransform,
+  KinematicAngularVelocity,
   KinematicMove,
   KinematicRotate,
   SetAngularVelocity,
@@ -290,14 +291,18 @@ export function setAngularVelocityForEntity(
     );
     body.applyTorqueImpulse(impulse, true);
   } else if (type === BodyType.KinematicVelocityBased) {
-    body.setAngvel(
-      new RAPIER.Vector3(
-        SetAngularVelocity.x[entity],
-        SetAngularVelocity.y[entity],
-        SetAngularVelocity.z[entity]
-      ),
-      true
-    );
+    const angVelX = SetAngularVelocity.x[entity];
+    const angVelY = SetAngularVelocity.y[entity];
+    const angVelZ = SetAngularVelocity.z[entity];
+
+    body.setAngvel(new RAPIER.Vector3(angVelX, angVelY, angVelZ), true);
+
+    if (!state.hasComponent(entity, KinematicAngularVelocity)) {
+      state.addComponent(entity, KinematicAngularVelocity);
+    }
+    KinematicAngularVelocity.x[entity] = angVelX;
+    KinematicAngularVelocity.y[entity] = angVelY;
+    KinematicAngularVelocity.z[entity] = angVelZ;
   }
 
   state.removeComponent(entity, SetAngularVelocity);
@@ -483,55 +488,51 @@ export function applyCharacterMovement(
   let platformVelX = 0;
   let platformVelY = 0;
   let platformVelZ = 0;
-  let platformDeltaX = 0;
-  let platformDeltaY = 0;
-  let platformDeltaZ = 0;
+  let tangentialVelX = 0;
+  let tangentialVelY = 0;
+  let tangentialVelZ = 0;
 
   const platform = CharacterController.platform[entity];
   if (wasGrounded && platform !== NULL_ENTITY) {
     const platformBodyType = Body.type[platform];
-    if (
-      platformBodyType === BodyType.KinematicPositionBased ||
-      platformBodyType === BodyType.KinematicVelocityBased
-    ) {
-      const currentPosX = Body.posX[platform] || 0;
-      const currentPosY = Body.posY[platform] || 0;
-      const currentPosZ = Body.posZ[platform] || 0;
-      const lastPosX = Body.lastPosX[platform] || currentPosX;
-      const lastPosY = Body.lastPosY[platform] || currentPosY;
-      const lastPosZ = Body.lastPosZ[platform] || currentPosZ;
-
-      platformDeltaX = currentPosX - lastPosX;
-      platformDeltaY = currentPosY - lastPosY;
-      platformDeltaZ = currentPosZ - lastPosZ;
-
-      CharacterController.platformDeltaX[entity] = platformDeltaX;
-      CharacterController.platformDeltaY[entity] = platformDeltaY;
-      CharacterController.platformDeltaZ[entity] = platformDeltaZ;
-
-      if (platformBodyType === BodyType.KinematicVelocityBased) {
-        platformVelX = Body.velX[platform] || 0;
-        platformVelY = Body.velY[platform] || 0;
-        platformVelZ = Body.velZ[platform] || 0;
-      }
-
-      CharacterController.platformVelX[entity] = platformVelX;
-      CharacterController.platformVelY[entity] = platformVelY;
-      CharacterController.platformVelZ[entity] = platformVelZ;
+    if (platformBodyType === BodyType.KinematicVelocityBased) {
+      platformVelX = Body.velX[platform] || 0;
+      platformVelY = Body.velY[platform] || 0;
+      platformVelZ = Body.velZ[platform] || 0;
     }
-  } else {
-    CharacterController.platformVelX[entity] = 0;
-    CharacterController.platformVelY[entity] = 0;
-    CharacterController.platformVelZ[entity] = 0;
-    CharacterController.platformDeltaX[entity] = 0;
-    CharacterController.platformDeltaY[entity] = 0;
-    CharacterController.platformDeltaZ[entity] = 0;
+
+    const angVelX = Body.rotVelX[platform] || 0;
+    const angVelY = Body.rotVelY[platform] || 0;
+    const angVelZ = Body.rotVelZ[platform] || 0;
+
+    if (angVelX !== 0 || angVelY !== 0 || angVelZ !== 0) {
+      const playerPosX = Body.posX[entity];
+      const playerPosY = Body.posY[entity];
+      const playerPosZ = Body.posZ[entity];
+      const platformPosX = Body.posX[platform];
+      const platformPosY = Body.posY[platform];
+      const platformPosZ = Body.posZ[platform];
+
+      const offsetX = playerPosX - platformPosX;
+      const offsetY = playerPosY - platformPosY;
+      const offsetZ = playerPosZ - platformPosZ;
+
+      tangentialVelX = angVelY * offsetZ - angVelZ * offsetY;
+      tangentialVelY = angVelZ * offsetX - angVelX * offsetZ;
+      tangentialVelZ = angVelX * offsetY - angVelY * offsetX;
+    }
   }
 
+  CharacterController.platformVelX[entity] = platformVelX + tangentialVelX;
+  CharacterController.platformVelY[entity] = platformVelY + tangentialVelY;
+  CharacterController.platformVelZ[entity] = platformVelZ + tangentialVelZ;
+
   const desiredTranslation = new RAPIER.Vector3(
-    (CharacterMovement.desiredVelX[entity] + platformVelX) * deltaTime,
-    (totalVelY + platformVelY) * deltaTime,
-    (CharacterMovement.desiredVelZ[entity] + platformVelZ) * deltaTime
+    (CharacterMovement.desiredVelX[entity] + platformVelX + tangentialVelX) *
+      deltaTime,
+    (totalVelY + platformVelY + tangentialVelY) * deltaTime,
+    (CharacterMovement.desiredVelZ[entity] + platformVelZ + tangentialVelZ) *
+      deltaTime
   );
 
   controller.computeColliderMovement(
@@ -572,9 +573,9 @@ export function applyCharacterMovement(
 
   const currentPos = body.translation();
   const newPos = new RAPIER.Vector3(
-    currentPos.x + finalMovement.x + platformDeltaX,
-    currentPos.y + finalMovement.y + platformDeltaY,
-    currentPos.z + finalMovement.z + platformDeltaZ
+    currentPos.x + finalMovement.x,
+    currentPos.y + finalMovement.y,
+    currentPos.z + finalMovement.z
   );
 
   body.setNextKinematicTranslation(newPos);
@@ -668,12 +669,12 @@ export function interpolateTransforms(state: State, alpha: number): void {
 
 export function syncRigidbodyToECS(
   entity: number,
-  body: RAPIER.RigidBody
+  body: RAPIER.RigidBody,
+  state: State
 ): void {
   const position = body.translation();
   const rotation = body.rotation();
   const linvel = body.linvel();
-  const angvel = body.angvel();
 
   Body.posX[entity] = position.x;
   Body.posY[entity] = position.y;
@@ -696,9 +697,17 @@ export function syncRigidbodyToECS(
   Body.velX[entity] = linvel.x;
   Body.velY[entity] = linvel.y;
   Body.velZ[entity] = linvel.z;
-  Body.rotVelX[entity] = angvel.x;
-  Body.rotVelY[entity] = angvel.y;
-  Body.rotVelZ[entity] = angvel.z;
+
+  if (state.hasComponent(entity, KinematicAngularVelocity)) {
+    Body.rotVelX[entity] = KinematicAngularVelocity.x[entity];
+    Body.rotVelY[entity] = KinematicAngularVelocity.y[entity];
+    Body.rotVelZ[entity] = KinematicAngularVelocity.z[entity];
+  } else {
+    const angvel = body.angvel();
+    Body.rotVelX[entity] = angvel.x;
+    Body.rotVelY[entity] = angvel.y;
+    Body.rotVelZ[entity] = angvel.z;
+  }
 }
 
 export function copyRigidbodyToTransforms(entity: number, state: State): void {

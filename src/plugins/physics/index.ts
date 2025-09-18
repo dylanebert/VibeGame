@@ -11,6 +11,7 @@ export {
   ColliderShape,
   CollisionEvents,
   InterpolatedTransform,
+  KinematicAngularVelocity,
   KinematicMove,
   KinematicRotate,
   PhysicsWorld,

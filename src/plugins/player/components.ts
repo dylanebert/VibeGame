@@ -14,4 +14,11 @@ export const Player = defineComponent({
   cameraEntity: Types.eid,
   inheritedVelX: Types.f32,
   inheritedVelZ: Types.f32,
+  inheritedAngVelX: Types.f32,
+  inheritedAngVelY: Types.f32,
+  inheritedAngVelZ: Types.f32,
+  platformOffsetX: Types.f32,
+  platformOffsetY: Types.f32,
+  platformOffsetZ: Types.f32,
+  lastPlatform: Types.eid,
 });

@@ -22,6 +22,14 @@
 
       <!-- Ball -->
       <dynamic-part pos="-2 4 -3" shape="sphere" size="1" color="#ff4500"></dynamic-part>
+
+      <!-- Cylinder -->
+      <dynamic-part pos="5 2 -3" shape="cylinder" size="1 0.5 1" color="#0000ff"></dynamic-part>
+
+      <kinematic-part pos="0 2 -5" euler="0 45 0" shape="box" size="3 0.5 3" color="#0000ff">
+        <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
+        <tween target="body.pos-x" from="-2" to="2" duration="5" loop="ping-pong"></tween>
+      </kinematic-part>
     </world>
 
     <canvas id="game-canvas"></canvas>

@@ -37,7 +37,6 @@ import {
   PhysicsRapierSyncSystem,
   PhysicsStepSystem,
   PhysicsWorldSystem,
-  PlatformDeltaSystem,
   SetVelocitySystem,
   TeleportationSystem,
 } from './systems';
@@ -47,7 +46,6 @@ export const PhysicsPlugin: Plugin = {
     PhysicsWorldSystem,
     PhysicsInitializationSystem,
     PhysicsCleanupSystem,
-    PlatformDeltaSystem,
     CharacterMovementSystem,
     CollisionEventCleanupSystem,
     ApplyForcesSystem,

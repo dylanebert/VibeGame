@@ -19,10 +19,11 @@
 - **Interpolation**: InterpolatedTransform smooths visual movement between physics steps
 
 ### Platform Movement
-- **Platform sticking**: Characters automatically stick to moving platforms
-- **Position delta tracking**: Platform movement is tracked and applied to characters
-- **Momentum preservation**: Platform velocity is tracked for momentum transfer when jumping
-- **Works with all kinematic types**: Both position and velocity-based platforms supported
+- **Platform sticking**: Characters automatically stick to moving and rotating platforms
+- **Velocity inheritance**: Characters inherit both linear and angular velocity from platforms
+- **Tangential velocity**: Rotation creates tangential velocity based on distance from platform center (v = ω × r)
+- **Momentum preservation**: Full platform velocity (linear + tangential) transfers when jumping
+- **Velocity-based only**: Only velocity-based kinematic platforms support character movement
 
 ### Example Timing
 ```
@@ -99,7 +100,6 @@ physics/
 - eulerX, eulerY, eulerZ: f32
 - velX, velY, velZ: f32
 - rotVelX, rotVelY, rotVelZ: f32
-- lastPosX, lastPosY, lastPosZ: f32
 
 #### Collider
 - shape: ui8 - ColliderShape enum (Box)
@@ -127,8 +127,7 @@ physics/
 - moveX, moveY, moveZ: f32
 - grounded: ui8
 - platform: eid - Entity the character is standing on
-- platformVelX, platformVelY, platformVelZ: f32
-- platformDeltaX, platformDeltaY, platformDeltaZ: f32
+- platformVelX, platformVelY, platformVelZ: f32 - Inherited velocity from platform
 
 #### CharacterMovement
 - desiredVelX, desiredVelY, desiredVelZ: f32
@@ -150,6 +149,7 @@ physics/
 - SetAngularVelocity: x, y, z (f32)
 - KinematicMove: x, y, z (f32)
 - KinematicRotate: x, y, z, w (f32)
+- KinematicAngularVelocity: x, y, z (f32)
 
 #### Collision Events
 - CollisionEvents: activeEvents (ui8)
@@ -161,8 +161,7 @@ physics/
 - PhysicsWorldSystem - Initializes physics world
 - PhysicsInitializationSystem - Creates bodies and colliders
 - PhysicsCleanupSystem - Removes physics on entity destroy
-- PlatformDeltaSystem - Tracks platform position changes
-- CharacterMovementSystem - Character controller movement with platform sticking
+- CharacterMovementSystem - Character controller with full velocity inheritance (linear + angular)
 - CollisionEventCleanupSystem - Clears collision events
 - ApplyForcesSystem - Applies forces
 - ApplyTorquesSystem - Applies torques

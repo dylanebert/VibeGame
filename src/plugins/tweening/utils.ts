@@ -3,7 +3,12 @@ import { gsap } from 'gsap';
 import type { State } from '../../core';
 import { toCamelCase } from '../../core';
 import { Body, BodyType } from '../physics';
-import { KinematicTween, Tween, TweenValue } from './components';
+import {
+  KinematicRotationTween,
+  KinematicTween,
+  Tween,
+  TweenValue,
+} from './components';
 
 export enum LoopMode {
   Once = 0,
@@ -120,7 +125,9 @@ function parseNumberOrArray(
 
 export function expandShorthand(
   target: string,
-  options: { from?: number | number[]; to: number | number[] }
+  options: { from?: number | number[]; to: number | number[] },
+  entity: number,
+  state: State
 ): Array<{ field: string; from: number; to: number }> {
   const results: Array<{ field: string; from: number; to: number }> = [];
 
@@ -128,10 +135,12 @@ export function expandShorthand(
     const toArray = parseNumberOrArray(options.to, [0, 0, 0]);
     const fromArray = parseNumberOrArray(options.from, [0, 0, 0]);
     const fields = ['eulerX', 'eulerY', 'eulerZ'];
+    const hasBody = state.hasComponent(entity, Body);
+    const prefix = hasBody ? 'body' : 'transform';
 
     for (let i = 0; i < fields.length; i++) {
       results.push({
-        field: `transform.${fields[i]}`,
+        field: `${prefix}.${fields[i]}`,
         from: fromArray[i] || 0,
         to: toArray[i] || 0,
       });
@@ -202,7 +211,7 @@ export function createTween(
     Tween.loopMode[tweenEntity] = options.loop ?? LoopMode.Once;
   }
 
-  const shorthandFields = expandShorthand(target, options);
+  const shorthandFields = expandShorthand(target, options, entity, state);
   if (shorthandFields.length > 0) {
     for (const fieldData of shorthandFields) {
       const resolved = resolveComponentField(fieldData.field, entity, state);
@@ -210,12 +219,19 @@ export function createTween(
 
       const isKinematicVelocityBody =
         state.hasComponent(entity, Body) &&
-        Body.type[entity] === BodyType.KinematicVelocityBased &&
-        (resolved.array === Body.posX ||
-          resolved.array === Body.posY ||
-          resolved.array === Body.posZ);
+        Body.type[entity] === BodyType.KinematicVelocityBased;
 
-      if (isKinematicVelocityBody) {
+      const isPositionField =
+        resolved.array === Body.posX ||
+        resolved.array === Body.posY ||
+        resolved.array === Body.posZ;
+
+      const isRotationField =
+        resolved.array === Body.eulerX ||
+        resolved.array === Body.eulerY ||
+        resolved.array === Body.eulerZ;
+
+      if (isKinematicVelocityBody && isPositionField) {
         const kinematicEntity = state.createEntity();
         state.addComponent(kinematicEntity, KinematicTween);
 
@@ -232,6 +248,29 @@ export function createTween(
         KinematicTween.to[kinematicEntity] = fieldData.to;
         KinematicTween.lastPosition[kinematicEntity] = currentValue;
         KinematicTween.targetPosition[kinematicEntity] = fieldData.from;
+      } else if (isKinematicVelocityBody && isRotationField) {
+        const kinematicRotEntity = state.createEntity();
+        state.addComponent(kinematicRotEntity, KinematicRotationTween);
+
+        let axis = 0;
+        if (resolved.array === Body.eulerY) axis = 1;
+        else if (resolved.array === Body.eulerZ) axis = 2;
+
+        const currentValue = resolved.array[entity];
+
+        KinematicRotationTween.tweenEntity[kinematicRotEntity] = tweenEntity;
+        KinematicRotationTween.targetEntity[kinematicRotEntity] = entity;
+        KinematicRotationTween.axis[kinematicRotEntity] = axis;
+        KinematicRotationTween.from[kinematicRotEntity] = degreesToRadians(
+          fieldData.from
+        );
+        KinematicRotationTween.to[kinematicRotEntity] = degreesToRadians(
+          fieldData.to
+        );
+        KinematicRotationTween.lastRotation[kinematicRotEntity] =
+          degreesToRadians(currentValue);
+        KinematicRotationTween.targetRotation[kinematicRotEntity] =
+          degreesToRadians(fieldData.from);
       } else {
         const valueEntity = state.createEntity();
         state.addComponent(valueEntity, TweenValue);
@@ -260,12 +299,19 @@ export function createTween(
 
     const isKinematicVelocityBody =
       state.hasComponent(entity, Body) &&
-      Body.type[entity] === BodyType.KinematicVelocityBased &&
-      (resolved.array === Body.posX ||
-        resolved.array === Body.posY ||
-        resolved.array === Body.posZ);
+      Body.type[entity] === BodyType.KinematicVelocityBased;
 
-    if (isKinematicVelocityBody) {
+    const isPositionField =
+      resolved.array === Body.posX ||
+      resolved.array === Body.posY ||
+      resolved.array === Body.posZ;
+
+    const isRotationField =
+      resolved.array === Body.eulerX ||
+      resolved.array === Body.eulerY ||
+      resolved.array === Body.eulerZ;
+
+    if (isKinematicVelocityBody && isPositionField) {
       const kinematicEntity = state.createEntity();
       state.addComponent(kinematicEntity, KinematicTween);
 
@@ -280,6 +326,24 @@ export function createTween(
       KinematicTween.to[kinematicEntity] = toValue;
       KinematicTween.lastPosition[kinematicEntity] = currentValue;
       KinematicTween.targetPosition[kinematicEntity] = fromValue;
+    } else if (isKinematicVelocityBody && isRotationField) {
+      const kinematicRotEntity = state.createEntity();
+      state.addComponent(kinematicRotEntity, KinematicRotationTween);
+
+      let axis = 0;
+      if (resolved.array === Body.eulerY) axis = 1;
+      else if (resolved.array === Body.eulerZ) axis = 2;
+
+      KinematicRotationTween.tweenEntity[kinematicRotEntity] = tweenEntity;
+      KinematicRotationTween.targetEntity[kinematicRotEntity] = entity;
+      KinematicRotationTween.axis[kinematicRotEntity] = axis;
+      KinematicRotationTween.from[kinematicRotEntity] =
+        degreesToRadians(fromValue);
+      KinematicRotationTween.to[kinematicRotEntity] = degreesToRadians(toValue);
+      KinematicRotationTween.lastRotation[kinematicRotEntity] =
+        degreesToRadians(currentValue);
+      KinematicRotationTween.targetRotation[kinematicRotEntity] =
+        degreesToRadians(fromValue);
     } else {
       const valueEntity = state.createEntity();
       state.addComponent(valueEntity, TweenValue);
