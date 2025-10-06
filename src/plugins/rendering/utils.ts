@@ -1,7 +1,9 @@
 import type { State } from '../../core';
 import * as THREE from 'three';
 
-const MAX_INSTANCES = 1000;
+const INITIAL_INSTANCES = 1000;
+const MAX_TOTAL_INSTANCES = 50000;
+const PERFORMANCE_WARNING_THRESHOLD = 10000;
 const DEFAULT_COLOR = 0xffffff;
 
 export const RendererShape = {
@@ -28,7 +30,8 @@ export function findAvailableInstanceSlot(
   mesh: THREE.InstancedMesh,
   matrix: THREE.Matrix4
 ): number | null {
-  for (let i = 0; i < MAX_INSTANCES; i++) {
+  const maxCount = mesh.count;
+  for (let i = 0; i < maxCount; i++) {
     mesh.getMatrixAt(i, matrix);
     if (
       matrix.elements[0] === 0 &&
@@ -43,9 +46,10 @@ export function findAvailableInstanceSlot(
 
 export function initializeInstancedMesh(
   geometry: THREE.BufferGeometry,
-  material: THREE.Material
+  material: THREE.Material,
+  count: number = INITIAL_INSTANCES
 ): THREE.InstancedMesh {
-  const mesh = new THREE.InstancedMesh(geometry, material, MAX_INSTANCES);
+  const mesh = new THREE.InstancedMesh(geometry, material, count);
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -55,7 +59,7 @@ export function initializeInstancedMesh(
   zeroMatrix.makeScale(0, 0, 0);
   const defaultColor = new THREE.Color(DEFAULT_COLOR);
 
-  for (let i = 0; i < MAX_INSTANCES; i++) {
+  for (let i = 0; i < count; i++) {
     mesh.setMatrixAt(i, zeroMatrix);
     mesh.setColorAt(i, defaultColor);
   }
@@ -66,6 +70,42 @@ export function initializeInstancedMesh(
   }
 
   return mesh;
+}
+
+export function resizeInstancedMesh(
+  oldMesh: THREE.InstancedMesh,
+  geometry: THREE.BufferGeometry,
+  material: THREE.Material,
+  scene: THREE.Scene
+): THREE.InstancedMesh {
+  const oldCount = oldMesh.count;
+  const newCount = oldCount * 2;
+
+  const newMesh = initializeInstancedMesh(geometry, material, newCount);
+
+  const matrix = new THREE.Matrix4();
+  const color = new THREE.Color();
+
+  for (let i = 0; i < oldCount; i++) {
+    oldMesh.getMatrixAt(i, matrix);
+    newMesh.setMatrixAt(i, matrix);
+
+    if (oldMesh.instanceColor) {
+      oldMesh.getColorAt(i, color);
+      newMesh.setColorAt(i, color);
+    }
+  }
+
+  newMesh.instanceMatrix.needsUpdate = true;
+  if (newMesh.instanceColor) {
+    newMesh.instanceColor.needsUpdate = true;
+  }
+
+  scene.remove(oldMesh);
+  oldMesh.dispose();
+  scene.add(newMesh);
+
+  return newMesh;
 }
 
 export interface RenderingContext {
@@ -80,6 +120,8 @@ export interface RenderingContext {
   };
   renderer?: THREE.WebGLRenderer;
   canvas?: HTMLCanvasElement;
+  totalInstanceCount: number;
+  hasShownPerformanceWarning: boolean;
 }
 
 const stateToRenderingContext = new WeakMap<State, RenderingContext>();
@@ -117,6 +159,8 @@ export function initializeContext(): RenderingContext {
       ambient: ambient,
       directional: directional,
     },
+    totalInstanceCount: 0,
+    hasShownPerformanceWarning: false,
   };
 }
 
@@ -190,3 +234,5 @@ export const SHADOW_CONFIG = {
   NEAR_PLANE: 1,
   FAR_PLANE: 200,
 } as const;
+
+export { MAX_TOTAL_INSTANCES, PERFORMANCE_WARNING_THRESHOLD };

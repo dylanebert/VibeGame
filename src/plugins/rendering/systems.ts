@@ -46,12 +46,13 @@ export const MeshInstanceSystem: System = {
           hideInstance(mesh, entity, context);
         }
         context.entityInstances.delete(entity);
+        context.totalInstanceCount--;
       }
     }
 
     const rendererEntities = rendererQuery(state.world);
     for (const entity of rendererEntities) {
-      const mesh = getOrCreateMesh(context, Renderer.shape[entity]);
+      let mesh = getOrCreateMesh(context, Renderer.shape[entity]);
       if (!mesh) continue;
 
       if (Renderer.visible[entity] !== 1) {
@@ -59,7 +60,7 @@ export const MeshInstanceSystem: System = {
         continue;
       }
 
-      updateInstance(mesh, entity, context, state);
+      mesh = updateInstance(mesh, entity, context, state);
     }
 
     updateShadowCamera(context, state);

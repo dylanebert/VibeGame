@@ -24,6 +24,13 @@ rendering/
 - **In-scope**: Three.js rendering, mesh management, lighting, camera sync
 - **Out-of-scope**: Post-processing effects (handled by postprocessing plugin), Physics visualization, UI overlays
 
+## Performance
+
+- **Dynamic instance pooling**: Starts at 1000 instances per shape, automatically doubles when full
+- **Performance warning**: Console warning at 10,000 total instances
+- **Hard limit**: 50,000 total instances (throws error)
+- **Roblox-like scaling**: Graceful growth with developer-friendly warnings
+
 ## Entry Points
 
 - **plugin.ts**: RenderingPlugin bundles all components, systems, and recipes

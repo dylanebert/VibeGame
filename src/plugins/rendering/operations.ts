@@ -6,8 +6,11 @@ import { MainCamera, Renderer } from './components';
 import {
   findAvailableInstanceSlot,
   initializeInstancedMesh,
+  resizeInstancedMesh,
   RendererShape,
   SHADOW_CONFIG,
+  MAX_TOTAL_INSTANCES,
+  PERFORMANCE_WARNING_THRESHOLD,
   type RenderingContext,
 } from './utils';
 
@@ -41,15 +44,50 @@ export function updateInstance(
   entity: number,
   context: RenderingContext,
   state: State
-): void {
+): THREE.InstancedMesh {
   let instanceInfo = context.entityInstances.get(entity);
 
   if (!instanceInfo) {
-    const instanceId = findAvailableInstanceSlot(mesh, matrix);
-    if (instanceId === null) return;
+    let instanceId = findAvailableInstanceSlot(mesh, matrix);
+
+    if (instanceId === null) {
+      if (context.totalInstanceCount >= MAX_TOTAL_INSTANCES) {
+        throw new Error(
+          `Maximum total instances (${MAX_TOTAL_INSTANCES}) exceeded. ` +
+            `Cannot render entity ${entity}. Consider reducing the number of rendered objects.`
+        );
+      }
+
+      const shapeId = Renderer.shape[entity];
+      const geometry = context.geometries.get(shapeId);
+      if (!geometry) return mesh;
+
+      mesh = resizeInstancedMesh(
+        mesh,
+        geometry,
+        context.material,
+        context.scene
+      );
+      context.meshPools.set(shapeId, mesh);
+
+      instanceId = findAvailableInstanceSlot(mesh, matrix);
+      if (instanceId === null) return mesh;
+    }
 
     instanceInfo = { poolId: Renderer.shape[entity], instanceId };
     context.entityInstances.set(entity, instanceInfo);
+    context.totalInstanceCount++;
+
+    if (
+      !context.hasShownPerformanceWarning &&
+      context.totalInstanceCount >= PERFORMANCE_WARNING_THRESHOLD
+    ) {
+      console.warn(
+        `Performance warning: ${context.totalInstanceCount} rendered instances. ` +
+          `Consider optimizing your scene or reducing object count for better performance.`
+      );
+      context.hasShownPerformanceWarning = true;
+    }
   }
 
   if (state.hasComponent(entity, WorldTransform)) {
@@ -91,6 +129,8 @@ export function updateInstance(
       mesh.instanceColor.needsUpdate = true;
     }
   }
+
+  return mesh;
 }
 
 export function hideInstance(
