@@ -16,13 +16,13 @@ export const RenderContext = defineComponent({
 
 export const MainCamera = defineComponent();
 
-export const Ambient = defineComponent({
+export const AmbientLight = defineComponent({
   skyColor: Types.ui32,
   groundColor: Types.ui32,
   intensity: Types.f32,
 });
 
-export const Directional = defineComponent({
+export const DirectionalLight = defineComponent({
   color: Types.ui32,
   intensity: Types.f32,
   castShadow: Types.ui8,

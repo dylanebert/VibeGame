@@ -3,8 +3,8 @@ import type { State } from '../../core';
 import { defineQuery, type System } from '../../core';
 import { WorldTransform } from '../transforms';
 import {
-  Ambient,
-  Directional,
+  AmbientLight,
+  DirectionalLight,
   MainCamera,
   RenderContext,
   Renderer,
@@ -28,8 +28,8 @@ import {
 } from './utils';
 
 const rendererQuery = defineQuery([Renderer]);
-const ambientQuery = defineQuery([Ambient]);
-const directionalQuery = defineQuery([Directional]);
+const ambientQuery = defineQuery([AmbientLight]);
+const directionalQuery = defineQuery([DirectionalLight]);
 const mainCameraTransformQuery = defineQuery([MainCamera, WorldTransform]);
 const mainCameraQuery = defineQuery([MainCamera]);
 const renderContextQuery = defineQuery([RenderContext]);
@@ -83,9 +83,9 @@ export const LightSyncSystem: System = {
         context.lights.ambient = light;
       }
 
-      light.color.setHex(Ambient.skyColor[entity]);
-      light.groundColor.setHex(Ambient.groundColor[entity]);
-      light.intensity = Ambient.intensity[entity];
+      light.color.setHex(AmbientLight.skyColor[entity]);
+      light.groundColor.setHex(AmbientLight.groundColor[entity]);
+      light.intensity = AmbientLight.intensity[entity];
     }
 
     const directionals = directionalQuery(state.world);
@@ -99,13 +99,13 @@ export const LightSyncSystem: System = {
         context.lights.directional = light;
       }
 
-      light.color.setHex(Directional.color[entity]);
-      light.intensity = Directional.intensity[entity];
+      light.color.setHex(DirectionalLight.color[entity]);
+      light.intensity = DirectionalLight.intensity[entity];
 
-      if (Directional.castShadow[entity] === 1) {
+      if (DirectionalLight.castShadow[entity] === 1) {
         light.castShadow = true;
-        light.shadow.mapSize.width = Directional.shadowMapSize[entity];
-        light.shadow.mapSize.height = Directional.shadowMapSize[entity];
+        light.shadow.mapSize.width = DirectionalLight.shadowMapSize[entity];
+        light.shadow.mapSize.height = DirectionalLight.shadowMapSize[entity];
       } else {
         light.castShadow = false;
       }
@@ -126,14 +126,16 @@ export const LightSyncSystem: System = {
         );
 
         const lightDirection = new THREE.Vector3(
-          Directional.directionX[entity],
-          Directional.directionY[entity],
-          Directional.directionZ[entity]
+          DirectionalLight.directionX[entity],
+          DirectionalLight.directionY[entity],
+          DirectionalLight.directionZ[entity]
         ).normalize();
 
         const lightPosition = targetPosition
           .clone()
-          .add(lightDirection.multiplyScalar(Directional.distance[entity]));
+          .add(
+            lightDirection.multiplyScalar(DirectionalLight.distance[entity])
+          );
 
         light.position.copy(lightPosition);
         light.target.position.copy(targetPosition);

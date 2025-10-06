@@ -1,17 +1,11 @@
 import type { Plugin } from '../../core';
 import {
-  Ambient,
-  Directional,
+  AmbientLight,
+  DirectionalLight,
   MainCamera,
   RenderContext,
   Renderer,
 } from './components';
-import { AMBIENT_DEFAULTS, DIRECTIONAL_DEFAULTS } from './constants';
-import {
-  ambientLightRecipe,
-  directionalLightRecipe,
-  lightRecipe,
-} from './recipes';
 import {
   CameraSyncSystem,
   LightSyncSystem,
@@ -26,30 +20,29 @@ export const RenderingPlugin: Plugin = {
     CameraSyncSystem,
     WebGLRenderSystem,
   ],
-  recipes: [ambientLightRecipe, directionalLightRecipe, lightRecipe],
   components: {
     Renderer,
     RenderContext,
     MainCamera,
-    Ambient,
-    Directional,
+    AmbientLight,
+    DirectionalLight,
   },
   config: {
     defaults: {
-      ambient: {
-        skyColor: AMBIENT_DEFAULTS.skyColor,
-        groundColor: AMBIENT_DEFAULTS.groundColor,
-        intensity: AMBIENT_DEFAULTS.intensity,
+      ambientLight: {
+        skyColor: 0x87ceeb,
+        groundColor: 0x4a4a4a,
+        intensity: 0.6,
       },
-      directional: {
-        color: DIRECTIONAL_DEFAULTS.color,
-        intensity: DIRECTIONAL_DEFAULTS.intensity,
-        castShadow: DIRECTIONAL_DEFAULTS.castShadow,
-        shadowMapSize: DIRECTIONAL_DEFAULTS.shadowMapSize,
-        directionX: DIRECTIONAL_DEFAULTS.directionX,
-        directionY: DIRECTIONAL_DEFAULTS.directionY,
-        directionZ: DIRECTIONAL_DEFAULTS.directionZ,
-        distance: DIRECTIONAL_DEFAULTS.distance,
+      directionalLight: {
+        color: 0xffffff,
+        intensity: 1,
+        castShadow: 1,
+        shadowMapSize: 4096,
+        directionX: -1,
+        directionY: 2,
+        directionZ: -1,
+        distance: 30,
       },
       renderer: {
         visible: 1,

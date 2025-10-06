@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { State, defineQuery } from 'vibegame';
-import { Ambient, Directional, MainCamera, Renderer } from 'vibegame';
+import {
+  AmbientLight,
+  DirectionalLight,
+  MainCamera,
+  Renderer,
+  State,
+  defineQuery,
+} from 'vibegame';
 
 describe('Rendering Components', () => {
   let state: State;
@@ -90,40 +96,40 @@ describe('Rendering Components', () => {
 
   it('should create HemisphereLight component', () => {
     const entity = state.createEntity();
-    state.addComponent(entity, Ambient);
+    state.addComponent(entity, AmbientLight);
 
-    Ambient.skyColor[entity] = 0x87ceeb;
-    Ambient.groundColor[entity] = 0x4a4a4a;
-    Ambient.intensity[entity] = 0.6;
+    AmbientLight.skyColor[entity] = 0x87ceeb;
+    AmbientLight.groundColor[entity] = 0x4a4a4a;
+    AmbientLight.intensity[entity] = 0.6;
 
-    expect(Ambient.skyColor[entity]).toBe(0x87ceeb);
-    expect(Ambient.groundColor[entity]).toBe(0x4a4a4a);
-    expect(Ambient.intensity[entity]).toBeCloseTo(0.6);
+    expect(AmbientLight.skyColor[entity]).toBe(0x87ceeb);
+    expect(AmbientLight.groundColor[entity]).toBe(0x4a4a4a);
+    expect(AmbientLight.intensity[entity]).toBeCloseTo(0.6);
   });
 
   it('should create DirectionalLight component', () => {
     const entity = state.createEntity();
-    state.addComponent(entity, Directional);
+    state.addComponent(entity, DirectionalLight);
 
-    Directional.color[entity] = 0xffffff;
-    Directional.intensity[entity] = 1.0;
-    Directional.castShadow[entity] = 1;
-    Directional.shadowMapSize[entity] = 2048;
-    Directional.directionX[entity] = -1;
-    Directional.directionY[entity] = -2;
-    Directional.directionZ[entity] = -1;
-    Directional.distance[entity] = 30;
+    DirectionalLight.color[entity] = 0xffffff;
+    DirectionalLight.intensity[entity] = 1.0;
+    DirectionalLight.castShadow[entity] = 1;
+    DirectionalLight.shadowMapSize[entity] = 2048;
+    DirectionalLight.directionX[entity] = -1;
+    DirectionalLight.directionY[entity] = -2;
+    DirectionalLight.directionZ[entity] = -1;
+    DirectionalLight.distance[entity] = 30;
 
-    expect(Directional.color[entity]).toBe(0xffffff);
-    expect(Directional.intensity[entity]).toBe(1.0);
-    expect(Directional.castShadow[entity]).toBe(1);
-    expect(Directional.shadowMapSize[entity]).toBe(2048);
-    expect(Directional.distance[entity]).toBe(30);
+    expect(DirectionalLight.color[entity]).toBe(0xffffff);
+    expect(DirectionalLight.intensity[entity]).toBe(1.0);
+    expect(DirectionalLight.castShadow[entity]).toBe(1);
+    expect(DirectionalLight.shadowMapSize[entity]).toBe(2048);
+    expect(DirectionalLight.distance[entity]).toBe(30);
   });
 
   it('should support querying light components', () => {
-    const ambientQuery = defineQuery([Ambient])(state.world);
-    const directionalQuery = defineQuery([Directional])(state.world);
+    const ambientQuery = defineQuery([AmbientLight])(state.world);
+    const directionalQuery = defineQuery([DirectionalLight])(state.world);
 
     expect(ambientQuery).toBeDefined();
     expect(directionalQuery).toBeDefined();

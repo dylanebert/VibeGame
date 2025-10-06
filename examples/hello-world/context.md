@@ -79,14 +79,13 @@ const engine = GAME.builder()
 // Load XML scene
 const sceneXML = `
   <world clear-color="#87ceeb">
-    <ambient-light intensity="0.5"></ambient-light>
-    <directional-light directional="dir: 1 -1 1"></directional-light>
-    
+    <entity ambient-light="intensity: 0.5" directional-light></entity>
+
     <entity transform="pos: 0 10 20" main-camera orbit-camera></entity>
-    
+
     <player transform="pos: 0 1 0"></player>
-    
-    <entity transform="pos: 0 -0.5 0" 
+
+    <entity transform="pos: 0 -0.5 0"
             renderer="shape: box; size: 20 1 20; color: 0x808080"
             body="type: fixed">
     </entity>

@@ -315,49 +315,6 @@ export const tweenElementSchema = z
   })
   .strict();
 
-export const ambientLightRecipeSchema = z
-  .object({
-    'sky-color': colorSchema.optional(),
-    'ground-color': colorSchema.optional(),
-    intensity: z.union([numberSchema, numberStringSchema]).optional(),
-
-    ambient: z.string().optional(),
-
-    id: z.string().optional(),
-  })
-  .strict();
-
-export const directionalLightRecipeSchema = z
-  .object({
-    color: colorSchema.optional(),
-    intensity: z.union([numberSchema, numberStringSchema]).optional(),
-    direction: vector3Schema.optional(),
-    'cast-shadow': booleanSchema.optional(),
-    'shadow-map-size': z.union([numberSchema, numberStringSchema]).optional(),
-    distance: z.union([numberSchema, numberStringSchema]).optional(),
-
-    directional: z.string().optional(),
-
-    id: z.string().optional(),
-  })
-  .strict();
-
-export const lightRecipeSchema = z
-  .object({
-    'sky-color': colorSchema.optional(),
-    'ground-color': colorSchema.optional(),
-    color: colorSchema.optional(),
-    intensity: z.union([numberSchema, numberStringSchema]).optional(),
-    direction: vector3Schema.optional(),
-    'cast-shadow': booleanSchema.optional(),
-
-    ambient: z.string().optional(),
-    directional: z.string().optional(),
-
-    id: z.string().optional(),
-  })
-  .strict();
-
 export const recipeSchemas = {
   entity: entityRecipeSchema,
   'static-part': staticPartRecipeSchema,
@@ -367,9 +324,6 @@ export const recipeSchemas = {
   camera: cameraRecipeSchema,
   world: worldRecipeSchema,
   tween: tweenElementSchema,
-  'ambient-light': ambientLightRecipeSchema,
-  'directional-light': directionalLightRecipeSchema,
-  light: lightRecipeSchema,
 } as const;
 
 export type RecipeSchemas = typeof recipeSchemas;

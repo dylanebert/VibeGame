@@ -150,7 +150,7 @@ const DamageSystem: GAME.System = {
 The engine automatically creates these if missing:
 1. **Player** - Character with physics, controls, and respawn (at 0, 1, 0)
 2. **Camera** - Orbital camera following the player
-3. **Lighting** - Ambient + directional light with shadows
+3. **Lighting** - Combined ambient + directional light with shadows
 
 You only need to provide:
 - **Ground/platforms** - Or the player falls forever
@@ -163,16 +163,18 @@ While auto-creation is recommended, you can manually create these for customizat
 ```xml
 <world canvas="#game-canvas">
   <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
-  
+
   <!-- Custom player spawn position and properties -->
   <player pos="0 10 0" speed="8" jump-height="3"></player>
-  
+
   <!-- Custom camera settings -->
   <camera orbit-camera="distance: 10; target-pitch: 0.5"></camera>
-  
-  <!-- Custom lighting (or use <light> for both ambient + directional) -->
-  <ambient-light sky-color="#ff6b6b" ground-color="#4ecdc4" intensity="0.8"></ambient-light>
-  <directional-light color="#ffffff" intensity="0.5" direction="-1 -2 -1"></directional-light>
+
+  <!-- Custom lighting (combined entity) -->
+  <entity
+    ambient-light="sky-color: 0xff6b6b; ground-color: 0x4ecdc4; intensity: 0.8"
+    directional-light="color: 0xffffff; intensity: 0.5; direction-x: -1; direction-y: -2; direction-z: -1"
+  ></entity>
 </world>
 ```
 

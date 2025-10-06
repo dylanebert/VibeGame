@@ -1,21 +1,5 @@
 import { BodyType, ColliderShape } from '../physics';
 
-export const PLAYER_DEFAULTS = {
-  speed: 5.3,
-  jumpHeight: 2.3,
-  rotationSpeed: 10,
-  canJump: 1,
-  isJumping: 0,
-  jumpCooldown: 0,
-  lastGroundedTime: 0,
-  jumpBufferTime: -10000,
-  cameraSensitivity: 0.007,
-  cameraZoomSensitivity: 1.5,
-  cameraEntity: 0,
-  inheritedVelX: 0,
-  inheritedVelZ: 0,
-} as const;
-
 export const PLAYER_BODY_DEFAULTS = {
   type: BodyType.KinematicPositionBased,
   mass: 1,
@@ -64,21 +48,4 @@ export const PLAYER_COLLIDER_DEFAULTS = {
   rotOffsetY: 0,
   rotOffsetZ: 0,
   rotOffsetW: 1,
-} as const;
-
-export const PLAYER_CHARACTER_CONTROLLER_DEFAULTS = {
-  offset: 0.08,
-  maxSlope: 45 * (Math.PI / 180),
-  maxSlide: 30 * (Math.PI / 180),
-  snapDist: 0.5,
-  autoStep: 1,
-  maxStepHeight: 0.3,
-  minStepWidth: 0.05,
-  upX: 0,
-  upY: 1,
-  upZ: 0,
-  moveX: 0,
-  moveY: 0,
-  moveZ: 0,
-  grounded: 0,
 } as const;

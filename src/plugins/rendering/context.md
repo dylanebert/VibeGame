@@ -15,8 +15,7 @@ rendering/
 ├── systems.ts  # Rendering systems
 ├── operations.ts  # Mesh and shadow operations
 ├── utils.ts  # Canvas and context utilities
-├── constants.ts  # Default values
-└── recipes.ts  # Light recipes
+└── constants.ts  # Default values
 ```
 
 ## Scope
@@ -58,12 +57,12 @@ rendering/
 #### MainCamera
 Tag component (no properties)
 
-#### Ambient
+#### AmbientLight
 - skyColor: ui32 (0x87ceeb)
 - groundColor: ui32 (0x4a4a4a)
 - intensity: f32 (0.6)
 
-#### Directional
+#### DirectionalLight
 - color: ui32 (0xffffff)
 - intensity: f32 (1)
 - castShadow: ui8 (1)
@@ -95,12 +94,6 @@ Tag component (no properties)
 
 #### setCanvasElement(entity, canvas): void
 Associates canvas with RenderContext
-
-### Recipes
-
-- ambient-light - Ambient hemisphere lighting
-- directional-light - Directional light with shadows
-- light - Both ambient and directional
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -111,16 +104,16 @@ Associates canvas with RenderContext
 ```xml
 <!-- Declarative scene with lighting and rendered objects -->
 <world canvas="#game-canvas" sky="#87ceeb">
-  <!-- Default lighting -->
-  <light></light>
-  
+  <!-- Lighting (auto-created if omitted) -->
+  <entity ambient-light directional-light></entity>
+
   <!-- Rendered box -->
-  <entity 
+  <entity
     transform
     renderer="shape: box; color: 0xff0000; size-x: 2"
     pos="0 1 0"
   />
-  
+
   <!-- Rendered sphere -->
   <entity
     transform
@@ -133,22 +126,15 @@ Associates canvas with RenderContext
 ### Custom Lighting
 
 ```xml
-<!-- Separate ambient and directional lights -->
-<ambient-light 
-  sky-color="#ffd4a3"
-  ground-color="#808080"
-  intensity="0.4"
-/>
+<!-- Combined lighting entity with custom properties -->
+<entity
+  ambient-light="sky-color: 0xffd4a3; ground-color: 0x808080; intensity: 0.4"
+  directional-light="color: 0xffffff; intensity: 1.5; direction-x: -1; direction-y: 3; direction-z: -0.5; cast-shadow: 1; shadow-map-size: 2048"
+></entity>
 
-<directional-light
-  color="#ffffff"
-  intensity="1.5"
-  direction-x="-1"
-  direction-y="3"
-  direction-z="-0.5"
-  cast-shadow="1"
-  shadow-map-size="2048"
-/>
+<!-- Or separate entities for independent control -->
+<entity ambient-light="sky-color: 0xffd4a3; intensity: 0.4"></entity>
+<entity directional-light="intensity: 1.5; direction-y: 3"></entity>
 ```
 
 ### Imperative Usage
