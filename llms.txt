@@ -221,13 +221,13 @@ While auto-creation is recommended, you can manually create these for customizat
 ```xml
 <world canvas="#game-canvas">
   <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
-  
+
   <!-- Spinning coins -->
-  <kinematic-part pos="2 1 0" shape="cylinder" size="0.5 0.1 0.5" color="#ffd700">
+  <kinematic-part pos="2 1 0" shape="box" size="0.5 0.5 0.1" color="#ffd700">
     <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
   </kinematic-part>
-  
-  <kinematic-part pos="-2 1 0" shape="cylinder" size="0.5 0.1 0.5" color="#ffd700">
+
+  <kinematic-part pos="-2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700">
     <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
   </kinematic-part>
 </world>
@@ -269,13 +269,10 @@ While auto-creation is recommended, you can manually create these for customizat
 ### Shape Options
 - `box` - Rectangular solid (default)
 - `sphere` - Ball shape
-- `cylinder` - Cylindrical shape
-- `capsule` - Pill shape (good for characters)
 
 ### Size Attribute
 - Box: `size="width height depth"` or `size="2 1 2"`
 - Sphere: `size="diameter"` or `size="1"`
-- Cylinder: `size="diameter height"` or `size="1 2"`
 - Broadcast: `size="2"` becomes `size="2 2 2"`
 
 ## How Recipes and Shorthands Work
@@ -614,12 +611,17 @@ Available in all systems via the `state` parameter:
 ```typescript
 import * as GAME from 'vibegame';
 
-// Start with no plugins
+// Start with no defaults, add specific plugins
 GAME
   .withoutDefaultPlugins()
-  .withPlugin(TransformsPlugin)  // Just transforms
-  .withPlugin(RenderingPlugin)   // Add rendering
-  .withPlugin(PhysicsPlugin)     // Add physics
+  .withPlugin(TransformsPlugin)
+  .withPlugin(RenderingPlugin)
+  .withPlugin(PhysicsPlugin)
+  .run();
+
+// Keep defaults, exclude specific plugins
+GAME
+  .withoutPlugins(AnimationPlugin, PostprocessingPlugin)
   .run();
 ```
 
@@ -627,6 +629,7 @@ GAME
 - **RecipesPlugin** - XML parsing and entity creation
 - **TransformsPlugin** - Position, rotation, scale, hierarchy
 - **RenderingPlugin** - Three.js meshes, lights, camera
+- **PostprocessingPlugin** - Bloom, dithering, tonemapping effects
 - **PhysicsPlugin** - Rapier physics simulation
 - **InputPlugin** - Keyboard, mouse, gamepad input
 - **OrbitCameraPlugin** - Third-person camera
@@ -1026,7 +1029,6 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 #### ColliderShape
 - Box = 0
 - Sphere = 1
-- Capsule = 2
 
 ### Components
 
@@ -1050,7 +1052,6 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 - eulerX, eulerY, eulerZ: f32
 - velX, velY, velZ: f32
 - rotVelX, rotVelY, rotVelZ: f32
-- lastPosX, lastPosY, lastPosZ: f32
 
 #### Collider
 - shape: ui8 - ColliderShape enum (Box)
@@ -1078,8 +1079,7 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 - moveX, moveY, moveZ: f32
 - grounded: ui8
 - platform: eid - Entity the character is standing on
-- platformVelX, platformVelY, platformVelZ: f32
-- platformDeltaX, platformDeltaY, platformDeltaZ: f32
+- platformVelX, platformVelY, platformVelZ: f32 - Inherited velocity from platform
 
 #### CharacterMovement
 - desiredVelX, desiredVelY, desiredVelZ: f32
@@ -1101,6 +1101,7 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 - SetAngularVelocity: x, y, z (f32)
 - KinematicMove: x, y, z (f32)
 - KinematicRotate: x, y, z, w (f32)
+- KinematicAngularVelocity: x, y, z (f32)
 
 #### Collision Events
 - CollisionEvents: activeEvents (ui8)
@@ -1112,8 +1113,7 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 - PhysicsWorldSystem - Initializes physics world
 - PhysicsInitializationSystem - Creates bodies and colliders
 - PhysicsCleanupSystem - Removes physics on entity destroy
-- PlatformDeltaSystem - Tracks platform position changes
-- CharacterMovementSystem - Character controller movement with platform sticking
+- CharacterMovementSystem - Character controller with full velocity inheritance (linear + angular)
 - CollisionEventCleanupSystem - Clears collision events
 - ApplyForcesSystem - Applies forces
 - ApplyTorquesSystem - Applies torques
@@ -1349,18 +1349,25 @@ Complete player character controller with physics movement, jumping, and platfor
 - cameraSensitivity: f32 (0.007)
 - cameraZoomSensitivity: f32 (1.5)
 - cameraEntity: eid (0)
-- inheritedVelX: f32 (0) - Horizontal momentum inherited from platform
-- inheritedVelZ: f32 (0) - Horizontal momentum inherited from platform
+- inheritedVelX: f32 (0) - Total horizontal momentum from platform
+- inheritedVelZ: f32 (0) - Total horizontal momentum from platform
+- inheritedAngVelX: f32 (0) - Platform angular velocity X
+- inheritedAngVelY: f32 (0) - Platform angular velocity Y
+- inheritedAngVelZ: f32 (0) - Platform angular velocity Z
+- platformOffsetX: f32 (0) - Position relative to platform center
+- platformOffsetY: f32 (0) - Position relative to platform center
+- platformOffsetZ: f32 (0) - Position relative to platform center
+- lastPlatform: eid (0) - Track platform changes
 
 ### Systems
 
 #### PlayerMovementSystem
 - Group: fixed
-- Handles movement, rotation, jumping with platform momentum preservation
+- Handles movement, rotation, jumping with full platform velocity inheritance (linear + angular)
 
 #### PlayerGroundedSystem
 - Group: fixed
-- Tracks grounded state, jump availability, and clears inherited momentum on landing
+- Tracks grounded state, platform changes, and clears momentum on landing
 
 #### PlayerCameraLinkingSystem
 - Group: simulation
@@ -1381,8 +1388,11 @@ Complete player character controller with physics movement, jumping, and platfor
 #### processInput(moveForward, moveRight, cameraYaw): Vector3
 Converts input to world-space movement
 
-#### handleJump(entity, jumpPressed, currentTime): number
-Processes jump with buffering
+#### calculateTangentialVelocity(angVelX, angVelY, angVelZ, offsetX, offsetY, offsetZ): Vector3
+Computes tangential velocity from angular rotation (v = ω × r)
+
+#### handleJump(entity, jumpPressed, currentTime, platform?): number
+Processes jump with buffering and angular momentum inheritance
 
 #### updateRotation(entity, inputVector, deltaTime, rotationData): Quaternion
 Smooth rotation towards movement
@@ -1483,14 +1493,133 @@ GAME
   .run();
 ```
 
+### Postprocessing
+
+Post-processing effects layer using the postprocessing library for Three.js rendering.
+
+### Components
+
+#### Bloom
+- intensity: f32 (1.0) - Bloom intensity
+- luminanceThreshold: f32 (1.0) - Luminance threshold for bloom
+- luminanceSmoothing: f32 (0.03) - Smoothness of luminance threshold
+- mipmapBlur: ui8 (1) - Enable mipmap blur
+- radius: f32 (0.85) - Blur radius for mipmap blur
+- levels: ui8 (8) - Number of MIP levels for mipmap blur
+
+#### Dithering
+- colorBits: ui8 (4) - Bits per color channel (1-8)
+- intensity: f32 (1.0) - Effect intensity (0-1)
+- grayscale: ui8 (0) - Enable grayscale mode (0/1)
+- scale: f32 (1.0) - Pattern scale (higher = coarser dithering)
+- noise: f32 (1.0) - Noise threshold intensity
+
+#### Tonemapping
+- mode: ui8 (7) - Tonemapping mode (0-9)
+- middleGrey: f32 (0.6) - Middle grey value
+- whitePoint: f32 (4.0) - White point
+- averageLuminance: f32 (1.0) - Average luminance
+- adaptationRate: f32 (1.0) - Adaptation rate
+
+### Systems
+
+#### PostprocessingSystem
+- Group: draw
+- Manages EffectComposer and rebuilds effect passes based on components
+
+#### PostprocessingRenderSystem
+- Group: draw (last)
+- Renders scene through EffectComposer with effects
+
+### Tonemapping Modes
+
+- 0: linear
+- 1: reinhard
+- 2: reinhard2
+- 3: reinhard2-adaptive
+- 4: uncharted2
+- 5: optimized-cineon
+- 6: cineon
+- 7: aces-filmic (default)
+- 8: agx
+- 9: neutral
+
+#### Examples
+
+## Examples
+
+### Bloom Effect
+
+```xml
+<!-- Camera with bloom effect (using defaults) -->
+<camera bloom></camera>
+
+<!-- Camera with custom bloom settings -->
+<camera bloom="intensity: 2; luminance-threshold: 0.8; luminance-smoothing: 0.05"></camera>
+
+<!-- Camera with mipmap blur settings -->
+<camera bloom="mipmap-blur: 1; radius: 0.9; levels: 10"></camera>
+```
+
+### Dithering Effect
+
+```xml
+<!-- Camera with retro dithering effect -->
+<camera dithering="color-bits: 3; intensity: 0.8; scale: 2"></camera>
+
+<!-- Subtle dithering for vintage look -->
+<camera dithering="color-bits: 5; intensity: 0.5; scale: 1"></camera>
+
+<!-- Coarse pixel-art style dithering -->
+<camera dithering="color-bits: 2; scale: 4; intensity: 1"></camera>
+
+<!-- Grayscale dithering -->
+<camera dithering="grayscale: 1; color-bits: 4"></camera>
+```
+
+### Combined Effects
+
+```xml
+<!-- Combined bloom and dithering for retro aesthetic -->
+<camera bloom="intensity: 1.5" dithering="color-bits: 2; grayscale: 1; scale: 3"></camera>
+
+<!-- Bloom with tonemapping -->
+<camera bloom="intensity: 2" tonemapping="mode: 7; middle-grey: 0.6"></camera>
+```
+
+### Imperative Usage
+
+```typescript
+import * as GAME from 'vibegame';
+
+// Add bloom to camera entity
+const cameraEntity = state.createEntity();
+state.addComponent(cameraEntity, GAME.MainCamera);
+state.addComponent(cameraEntity, GAME.Bloom, {
+  intensity: 1.5,
+  luminanceThreshold: 0.9,
+  luminanceSmoothing: 0.05,
+});
+
+// Add dithering
+state.addComponent(cameraEntity, GAME.Dithering, {
+  colorBits: 4,
+  intensity: 0.8,
+  scale: 2,
+});
+
+// Remove effects
+state.removeComponent(cameraEntity, GAME.Bloom);
+```
+
 ### Rendering
 
-Three.js rendering pipeline with meshes, lights, cameras, and post-processing effects.
+Lightweight Three.js rendering wrapper with meshes, lights, and cameras.
 
 ### Components
 
 #### Renderer
-- shape: ui8 - 0=box, 1=sphere, 2=cylinder, 3=plane
+- shape: ui8 - 0=box, 1=sphere
 - sizeX, sizeY, sizeZ: f32 (1)
 - color: ui32 (0xffffff)
 - visible: ui8 (1)
@@ -1517,21 +1646,6 @@ Tag component (no properties)
 - directionZ: f32 (-1)
 - distance: f32 (30)
 
-#### Bloom
-- intensity: f32 (1.0) - Bloom intensity
-- luminanceThreshold: f32 (1.0) - Luminance threshold for bloom
-- luminanceSmoothing: f32 (0.03) - Smoothness of luminance threshold
-- mipmapBlur: ui8 (1) - Enable mipmap blur
-- radius: f32 (0.85) - Blur radius for mipmap blur
-- levels: ui8 (8) - Number of MIP levels for mipmap blur
-
-#### Dithering
-- colorBits: ui8 (4) - Bits per color channel (1-8)
-- intensity: f32 (1.0) - Effect intensity (0-1)
-- grayscale: ui8 (0) - Enable grayscale mode (0/1)
-- scale: f32 (1.0) - Pattern scale (higher = coarser dithering)
-- noise: f32 (1.0) - Noise threshold intensity
-
 ### Systems
 
 #### MeshInstanceSystem
@@ -1544,11 +1658,11 @@ Tag component (no properties)
 
 #### CameraSyncSystem
 - Group: draw
-- Updates Three.js camera and manages post-processing effects
+- Synchronizes camera position and rotation from WorldTransform
 
 #### WebGLRenderSystem
 - Group: draw (last)
-- Renders scene through EffectComposer
+- Renders scene directly via WebGLRenderer (or through EffectComposer if postprocessing plugin is active)
 
 ### Functions
 
@@ -1648,9 +1762,7 @@ import * as GAME from 'vibegame';
 // Available shape enums
 const shapes = {
   box: 0,
-  sphere: 1,
-  cylinder: 2,
-  plane: 3
+  sphere: 1
 };
 
 // Use in XML
@@ -1671,34 +1783,6 @@ GAME.Renderer.visible[entity] = 1; // Show
 
 // In XML
 <entity renderer="visible: 0"></entity>  <!-- Initially hidden -->
-```
-
-### Post-Processing Effects
-
-```xml
-<!-- Camera with bloom effect (using defaults) -->
-<camera bloom></camera>
-
-<!-- Camera with custom bloom settings -->
-<camera bloom="intensity: 2; luminance-threshold: 0.8; luminance-smoothing: 0.05"></camera>
-
-<!-- Camera with mipmap blur settings -->
-<camera bloom="mipmap-blur: 1; radius: 0.9; levels: 10"></camera>
-
-<!-- Camera without effects (still uses composer internally) -->
-<camera></camera>
-
-<!-- Camera with retro dithering effect -->
-<camera dithering="color-bits: 3; intensity: 0.8; scale: 2"></camera>
-
-<!-- Combined bloom and dithering for retro aesthetic -->
-<camera bloom="intensity: 1.5" dithering="color-bits: 2; grayscale: 1; scale: 3"></camera>
-
-<!-- Subtle dithering for vintage look -->
-<camera dithering="color-bits: 5; intensity: 0.5; scale: 1"></camera>
-
-<!-- Coarse pixel-art style dithering -->
-<camera dithering="color-bits: 2; scale: 4; intensity: 1"></camera>
 ```
 
 ### Respawn
@@ -2000,7 +2084,7 @@ GAME.Transform.posZ[entity] = startZ + (endZ - startZ) * t;
 
 ### Tweening
 
-Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
+Animates component properties with easing functions and loop modes. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement and rotation.
 
 ### Components
 
@@ -2028,11 +2112,24 @@ Animates component properties with easing functions and loop modes. Kinematic ve
 - lastPosition: f32
 - targetPosition: f32
 
+#### KinematicRotationTween
+- tweenEntity: ui32 - Associated tween entity
+- targetEntity: ui32 - Kinematic body entity
+- axis: ui8 - 0=X, 1=Y, 2=Z
+- from: f32 - Start rotation (radians)
+- to: f32 - End rotation (radians)
+- lastRotation: f32
+- targetRotation: f32
+
 ### Systems
 
 #### KinematicTweenSystem
 - Group: fixed
 - Converts position tweens to velocity for kinematic bodies
+
+#### KinematicRotationTweenSystem
+- Group: fixed
+- Converts rotation tweens to angular velocity for kinematic bodies
 
 #### TweenSystem
 - Group: simulation
@@ -2064,7 +2161,7 @@ Animates component property
 
 ### Shorthand Targets
 
-- rotation - body.eulerX/Y/Z
+- rotation - body.eulerX/Y/Z (physics bodies) or transform.eulerX/Y/Z
 - at - body.posX/Y/Z
 - scale - transform.scaleX/Y/Z
 
@@ -2088,18 +2185,18 @@ Animates component property
 </kinematic-part>
 ```
 
-### Multiple Properties
+### Rotation Animation
 
 ```xml
-<!-- Animate rotation on all axes -->
-<entity transform renderer>
-  <tween 
-    target="rotation" 
-    to="0 360 0" 
-    duration="4" 
+<!-- Animate rotation on kinematic body -->
+<kinematic-part pos="0 2 0">
+  <tween
+    target="rotation"
+    to="0 360 0"
+    duration="4"
     loop="loop"
   />
-</entity>
+</kinematic-part>
 ```
 
 ### Body Physics Properties

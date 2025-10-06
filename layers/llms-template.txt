@@ -611,12 +611,17 @@ Available in all systems via the `state` parameter:
 ```typescript
 import * as GAME from 'vibegame';
 
-// Start with no plugins
+// Start with no defaults, add specific plugins
 GAME
   .withoutDefaultPlugins()
-  .withPlugin(TransformsPlugin)  // Just transforms
-  .withPlugin(RenderingPlugin)   // Add rendering
-  .withPlugin(PhysicsPlugin)     // Add physics
+  .withPlugin(TransformsPlugin)
+  .withPlugin(RenderingPlugin)
+  .withPlugin(PhysicsPlugin)
+  .run();
+
+// Keep defaults, exclude specific plugins
+GAME
+  .withoutPlugins(AnimationPlugin, PostprocessingPlugin)
   .run();
 ```
 

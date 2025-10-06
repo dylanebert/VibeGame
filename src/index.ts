@@ -39,6 +39,10 @@ export function withoutDefaultPlugins() {
   return getBuilder().withoutDefaultPlugins();
 }
 
+export function withoutPlugins(...plugins: Plugin[]) {
+  return getBuilder().withoutPlugins(...plugins);
+}
+
 export function withSystem(system: System) {
   return getBuilder().withSystem(system);
 }
