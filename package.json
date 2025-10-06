@@ -83,7 +83,7 @@
     "build:release": "bun scripts/prepare.ts && vite build && vite build --config vite.config.cdn.ts",
     "dev": "vite build --watch",
     "check": "tsc --noEmit",
-    "example": "bun run build && cd example && bun run dev",
+    "example": "bun run build && cd examples/hello-world && bun run dev",
     "clean": "rm -rf dist",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -190,7 +190,7 @@ When registered, the custom component `MyComponent` will be automatically parsed
 # Install dependencies
 bun install
 
-# Run example
+# Run example (hello-world)
 bun run example
 
 # Build library (fast, library only)

@@ -1,6 +1,6 @@
 dist/
 node_modules/
-example/dist/
+examples/**/dist/
 *.lock
 package-lock.json
 bun.lockb

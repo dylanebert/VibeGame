@@ -207,7 +207,7 @@ export default [
     ignores: [
       'dist/**',
       'node_modules/**',
-      'example/**',
+      'examples/**',
       '**/*.test.js',
     ],
   },

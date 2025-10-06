@@ -62,12 +62,13 @@ vibegame/
 │   ├── builder.ts  # Builder pattern API
 │   ├── runtime.ts  # Game runtime engine
 │   └── index.ts  # Main exports
-├── example/  # Demo application
-│   ├── src/
-│   │   └── main.ts
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.ts
+├── examples/  # Example applications
+│   └── hello-world/  # Basic example
+│       ├── src/
+│       │   └── main.ts
+│       ├── index.html
+│       ├── package.json
+│       └── vite.config.ts
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   ├── context-template.md  # Template for context files
@@ -146,7 +147,7 @@ Bevy-inspired ECS with explicit update phases:
 - **Vite plugin**: src/vite/index.ts (WASM setup for Rapier physics)
 - **Builder API**: src/builder.ts (fluent builder pattern)
 - **Runtime**: src/runtime.ts (game runtime engine)
-- **Example app**: example/src/main.ts (demo application)
+- **Example apps**: examples/*/src/main.ts (demo applications)
 
 ## Naming Conventions
 
