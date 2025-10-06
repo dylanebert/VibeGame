@@ -9,6 +9,7 @@
 ### Transform Synchronization
 - **Body position is authoritative**: For entities with a Body component, the physics position/rotation overwrites Transform values
 - **One-way sync**: Body → Transform (never Transform → Body except via teleportation)
+- **Scale inheritance**: Collider dimensions are multiplied by Transform scale at creation time
 - **Initialization delay**: Rapier bodies aren't created until the next fixed update after entity creation
 
 ### Fixed Timestep Execution

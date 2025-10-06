@@ -33,6 +33,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(box1, CollisionEvents);
     state.addComponent(box1, Transform);
 
+    Transform.scaleX[box1] = 1;
+    Transform.scaleY[box1] = 1;
+    Transform.scaleZ[box1] = 1;
+
     Body.type[box1] = BodyType.Dynamic;
     Body.posX[box1] = 0;
     Body.posY[box1] = 10;
@@ -52,6 +56,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(box2, Collider);
     state.addComponent(box2, CollisionEvents);
     state.addComponent(box2, Transform);
+
+    Transform.scaleX[box2] = 1;
+    Transform.scaleY[box2] = 1;
+    Transform.scaleZ[box2] = 1;
 
     Body.type[box2] = BodyType.Dynamic;
     Body.posX[box2] = 0;
@@ -96,6 +104,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(floor, CollisionEvents);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -110,6 +122,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(box, Collider);
     state.addComponent(box, CollisionEvents);
     state.addComponent(box, Transform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
@@ -153,6 +169,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(trigger, CollisionEvents);
     state.addComponent(trigger, Transform);
 
+    Transform.scaleX[trigger] = 1;
+    Transform.scaleY[trigger] = 1;
+    Transform.scaleZ[trigger] = 1;
+
     Body.type[trigger] = BodyType.Fixed;
     Body.posX[trigger] = 0;
     Body.posY[trigger] = 5;
@@ -170,6 +190,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(box, Collider);
     state.addComponent(box, CollisionEvents);
     state.addComponent(box, Transform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
@@ -214,6 +238,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(box1, CollisionEvents);
     state.addComponent(box1, Transform);
 
+    Transform.scaleX[box1] = 1;
+    Transform.scaleY[box1] = 1;
+    Transform.scaleZ[box1] = 1;
+
     Body.type[box1] = BodyType.Dynamic;
     Body.posX[box1] = 0;
     Body.posY[box1] = 5;
@@ -235,6 +263,10 @@ describe('Collision Events Integration', () => {
     state.addComponent(box2, Collider);
     state.addComponent(box2, CollisionEvents);
     state.addComponent(box2, Transform);
+
+    Transform.scaleX[box2] = 1;
+    Transform.scaleY[box2] = 1;
+    Transform.scaleZ[box2] = 1;
 
     Body.type[box2] = BodyType.Dynamic;
     Body.posX[box2] = 1.5;

@@ -30,6 +30,10 @@ describe('Kinematic Bodies Integration', () => {
     state.addComponent(platform, Collider);
     state.addComponent(platform, Transform);
 
+    Transform.scaleX[platform] = 1;
+    Transform.scaleY[platform] = 1;
+    Transform.scaleZ[platform] = 1;
+
     Body.type[platform] = BodyType.KinematicPositionBased;
     Body.posX[platform] = 0;
     Body.posY[platform] = 0;
@@ -60,6 +64,10 @@ describe('Kinematic Bodies Integration', () => {
     state.addComponent(platform, Body);
     state.addComponent(platform, Collider);
     state.addComponent(platform, Transform);
+
+    Transform.scaleX[platform] = 1;
+    Transform.scaleY[platform] = 1;
+    Transform.scaleZ[platform] = 1;
 
     Body.type[platform] = BodyType.KinematicPositionBased;
     Body.posX[platform] = 0;
@@ -95,6 +103,10 @@ describe('Kinematic Bodies Integration', () => {
     state.addComponent(platform, Collider);
     state.addComponent(platform, Transform);
 
+    Transform.scaleX[platform] = 1;
+    Transform.scaleY[platform] = 1;
+    Transform.scaleZ[platform] = 1;
+
     Body.type[platform] = BodyType.KinematicPositionBased;
     Body.posX[platform] = 0;
     Body.posY[platform] = 0;
@@ -110,6 +122,10 @@ describe('Kinematic Bodies Integration', () => {
     state.addComponent(box, Body);
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
@@ -146,6 +162,10 @@ describe('Kinematic Bodies Integration', () => {
     state.addComponent(platform, Collider);
     state.addComponent(platform, Transform);
 
+    Transform.scaleX[platform] = 1;
+    Transform.scaleY[platform] = 1;
+    Transform.scaleZ[platform] = 1;
+
     Body.type[platform] = BodyType.KinematicVelocityBased;
     Body.posX[platform] = 0;
     Body.posY[platform] = 0;
@@ -175,6 +195,10 @@ describe('Kinematic Bodies Integration', () => {
     state.addComponent(platform, Body);
     state.addComponent(platform, Collider);
     state.addComponent(platform, Transform);
+
+    Transform.scaleX[platform] = 1;
+    Transform.scaleY[platform] = 1;
+    Transform.scaleZ[platform] = 1;
 
     Body.type[platform] = BodyType.KinematicPositionBased;
     Body.posX[platform] = 5;
