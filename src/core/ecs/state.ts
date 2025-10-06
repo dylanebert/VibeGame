@@ -11,6 +11,7 @@ import {
 } from 'bitecs';
 import { toKebabCase } from '../utils/naming';
 import { ConfigRegistry } from './config';
+import { setComponentFields } from './utils';
 import { Parent } from './components';
 import { TIME_CONSTANTS } from './constants';
 import { Scheduler } from './scheduler';
@@ -114,6 +115,15 @@ export class State {
     return Array.from(this.components.keys());
   }
 
+  private getComponentName(component: Component): string | undefined {
+    for (const [name, comp] of this.components.entries()) {
+      if (comp === component) {
+        return name;
+      }
+    }
+    return undefined;
+  }
+
   step(deltaTime = TIME_CONSTANTS.DEFAULT_DELTA): void {
     this.checkDisposed();
     this.scheduler.step(this, deltaTime);
@@ -139,19 +149,15 @@ export class State {
     values?: Record<string, number>
   ): void {
     addComponent(this.world, component, eid);
+
+    const componentName = this.getComponentName(component);
+    if (componentName) {
+      const defaults = this.config.getDefaults(componentName);
+      setComponentFields(component, eid, defaults);
+    }
+
     if (values) {
-      for (const [key, value] of Object.entries(values)) {
-        const field = component[key as keyof T] as
-          | Float32Array
-          | Int32Array
-          | Uint8Array
-          | Uint16Array
-          | Uint32Array
-          | undefined;
-        if (field) {
-          field[eid] = value;
-        }
-      }
+      setComponentFields(component, eid, values);
     }
   }
 

@@ -193,7 +193,10 @@ export default [
       },
     },
     rules: {
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
     },
   },
   // Template files are examples, not part of the main codebase
@@ -204,11 +207,6 @@ export default [
     },
   },
   {
-    ignores: [
-      'dist/**',
-      'node_modules/**',
-      'example/**',
-      '**/*.test.js',
-    ],
+    ignores: ['dist/**', 'node_modules/**', 'examples/**', '**/*.test.js'],
   },
 ];

@@ -32,6 +32,10 @@ describe('Physics Interpolation', () => {
     state.addComponent(box, WorldTransform);
     state.addComponent(box, InterpolatedTransform);
 
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
+
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
     Body.posY[box] = 10;
@@ -79,6 +83,10 @@ describe('Physics Interpolation', () => {
     state.addComponent(box, Transform);
     state.addComponent(box, WorldTransform);
     state.addComponent(box, InterpolatedTransform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
@@ -178,6 +186,10 @@ describe('Physics Interpolation', () => {
     state.addComponent(box, Transform);
     state.addComponent(box, WorldTransform);
     state.addComponent(box, InterpolatedTransform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;

@@ -76,7 +76,8 @@ See [layers/structure.md](../layers/structure.md) for complete plugin architectu
 Global functions for configuring and running a game:
 
 - `withPlugin(plugin: Plugin)` - Add a plugin to the game
-- `withoutDefaultPlugins()` - Exclude default plugins 
+- `withoutDefaultPlugins()` - Exclude all default plugins
+- `withoutPlugins(...plugins: Plugin[])` - Exclude specific default plugins
 - `withSystem(system: System)` - Add a custom system
 - `withComponent(name: string, component: Component)` - Register a named component
 - `configure(options: BuilderOptions)` - Set configuration options
@@ -166,15 +167,20 @@ GAME.run();
 import * as GAME from 'vibegame';
 import { MyCustomPlugin } from './my-plugin';
 
-// Configure without defaults
+// Exclude all defaults and use specific plugins
 GAME.withoutDefaultPlugins()
   .withPlugin(GAME.RenderingPlugin)
-  .withPlugin(GAME.PhysicsPlugin) 
+  .withPlugin(GAME.PhysicsPlugin)
   .withPlugin(MyCustomPlugin)
-  .configure({ 
+  .configure({
     canvas: '#game-canvas',
-    autoStart: true 
+    autoStart: true
   })
+  .run();
+
+// Keep defaults but exclude specific plugins
+GAME.withoutPlugins(GAME.AnimationPlugin, GAME.PostprocessingPlugin)
+  .withPlugin(MyCustomPlugin)
   .run();
 ```
 

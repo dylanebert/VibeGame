@@ -1,4 +1,4 @@
-import type { Plugin } from '../../core';
+import { NULL_ENTITY, type Plugin } from '../../core';
 import { AnimatedCharacter, HasAnimator } from './components';
 import {
   AnimatedCharacterInitializationSystem,
@@ -17,12 +17,12 @@ export const AnimationPlugin: Plugin = {
   config: {
     defaults: {
       'animated-character': {
-        headEntity: -1,
-        torsoEntity: -1,
-        leftArmEntity: -1,
-        rightArmEntity: -1,
-        leftLegEntity: -1,
-        rightLegEntity: -1,
+        headEntity: NULL_ENTITY,
+        torsoEntity: NULL_ENTITY,
+        leftArmEntity: NULL_ENTITY,
+        rightArmEntity: NULL_ENTITY,
+        leftLegEntity: NULL_ENTITY,
+        rightLegEntity: NULL_ENTITY,
         phase: 0,
         jumpTime: 0,
         fallTime: 0,

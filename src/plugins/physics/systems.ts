@@ -334,11 +334,20 @@ function createColliderForEntity(
     rotOffsetW
   );
 
+  let scaleX = 1;
+  let scaleY = 1;
+  let scaleZ = 1;
+  if (state.hasComponent(entity, Transform)) {
+    scaleX = Transform.scaleX[entity];
+    scaleY = Transform.scaleY[entity];
+    scaleZ = Transform.scaleZ[entity];
+  }
+
   const descriptor = createColliderDescriptor(
     Collider.shape[entity],
-    Collider.sizeX[entity],
-    Collider.sizeY[entity],
-    Collider.sizeZ[entity],
+    Collider.sizeX[entity] * scaleX,
+    Collider.sizeY[entity] * scaleY,
+    Collider.sizeZ[entity] * scaleZ,
     Collider.radius[entity],
     Collider.height[entity],
     Collider.friction[entity],

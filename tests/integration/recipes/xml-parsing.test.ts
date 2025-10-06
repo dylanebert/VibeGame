@@ -484,7 +484,7 @@ describe('XML Recipe Integration', () => {
     expect(Body.type[entity]).toBe(1);
   });
 
-  it('should demonstrate order-of-operations issue from example/index.html', () => {
+  it('should demonstrate order-of-operations issue', () => {
     const consoleWarnSpy = console.warn;
     let warning = '';
     console.warn = (msg: string) => {

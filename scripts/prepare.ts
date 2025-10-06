@@ -76,7 +76,7 @@ async function buildLLMDocs() {
 
   const contextFiles = await glob('**/context.md', {
     cwd: ROOT_DIR,
-    ignore: ['node_modules/**', 'dist/**', 'example/**', 'layers/**'],
+    ignore: ['node_modules/**', 'dist/**', 'examples/**', 'layers/**'],
   });
 
   const modules = new Map();

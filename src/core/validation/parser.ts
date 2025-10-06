@@ -71,9 +71,6 @@ const hierarchyRules: Record<string, string[]> = {
     'kinematic-part',
     'player',
     'camera',
-    'ambient-light',
-    'directional-light',
-    'light',
   ],
   entity: [
     'tween',
@@ -83,18 +80,12 @@ const hierarchyRules: Record<string, string[]> = {
     'kinematic-part',
     'player',
     'camera',
-    'ambient-light',
-    'directional-light',
-    'light',
   ],
   'static-part': ['tween'],
   'dynamic-part': ['tween'],
   'kinematic-part': ['tween'],
   player: ['tween'],
   camera: [],
-  'ambient-light': [],
-  'directional-light': [],
-  light: [],
   tween: [],
 };
 
@@ -184,7 +175,7 @@ export function validateHTMLContent(
   const results: ValidationResult[] = [];
 
   const xmlPattern =
-    /<(world|entity|static-part|dynamic-part|kinematic-part|player|camera|ambient-light|directional-light|light|tween)([^>]*?)(?:\/>|>[\s\S]*?<\/\1>)/gi;
+    /<(world|entity|static-part|dynamic-part|kinematic-part|player|camera|tween)([^>]*?)(?:\/>|>[\s\S]*?<\/\1>)/gi;
   const matches = htmlContent.matchAll(xmlPattern);
 
   for (const match of matches) {

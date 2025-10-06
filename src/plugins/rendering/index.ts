@@ -1,13 +1,14 @@
 export {
-  Ambient,
-  Bloom,
-  Directional,
-  Dithering,
+  AmbientLight,
+  DirectionalLight,
   MainCamera,
   RenderContext,
   Renderer,
-  Tonemapping,
 } from './components';
-export { AMBIENT_DEFAULTS, DIRECTIONAL_DEFAULTS } from './constants';
 export { RenderingPlugin } from './plugin';
-export { setCanvasElement } from './utils';
+export {
+  getRenderingContext,
+  getScene,
+  setCanvasElement,
+  threeCameras,
+} from './utils';

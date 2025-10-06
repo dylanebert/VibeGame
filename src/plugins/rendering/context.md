@@ -1,7 +1,7 @@
 # Rendering Plugin
 
 <!-- LLM:OVERVIEW -->
-Three.js rendering pipeline with meshes, lights, cameras, and post-processing effects.
+Lightweight Three.js rendering wrapper with meshes, lights, and cameras.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -15,15 +15,20 @@ rendering/
 ├── systems.ts  # Rendering systems
 ├── operations.ts  # Mesh and shadow operations
 ├── utils.ts  # Canvas and context utilities
-├── constants.ts  # Default values
-├── recipes.ts  # Light recipes
-└── dithering-effect.ts  # IGN dithering post-processing effect
+└── constants.ts  # Default values
 ```
 
 ## Scope
 
-- **In-scope**: Three.js rendering, mesh management, lighting, camera sync, post-processing effects
-- **Out-of-scope**: Physics visualization, UI overlays
+- **In-scope**: Three.js rendering, mesh management, lighting, camera sync
+- **Out-of-scope**: Post-processing effects (handled by postprocessing plugin), Physics visualization, UI overlays
+
+## Performance
+
+- **Dynamic instance pooling**: Starts at 1000 instances per shape, automatically doubles when full
+- **Performance warning**: Console warning at 10,000 total instances
+- **Hard limit**: 50,000 total instances (throws error)
+- **Roblox-like scaling**: Graceful growth with developer-friendly warnings
 
 ## Entry Points
 
@@ -34,13 +39,13 @@ rendering/
 ## Dependencies
 
 - **Internal**: Transforms plugin (WorldTransform component)
-- **External**: Three.js, postprocessing
+- **External**: Three.js
 
 <!-- LLM:REFERENCE -->
 ### Components
 
 #### Renderer
-- shape: ui8 - 0=box, 1=sphere, 2=cylinder, 3=plane
+- shape: ui8 - 0=box, 1=sphere
 - sizeX, sizeY, sizeZ: f32 (1)
 - color: ui32 (0xffffff)
 - visible: ui8 (1)
@@ -52,12 +57,12 @@ rendering/
 #### MainCamera
 Tag component (no properties)
 
-#### Ambient
+#### AmbientLight
 - skyColor: ui32 (0x87ceeb)
 - groundColor: ui32 (0x4a4a4a)
 - intensity: f32 (0.6)
 
-#### Directional
+#### DirectionalLight
 - color: ui32 (0xffffff)
 - intensity: f32 (1)
 - castShadow: ui8 (1)
@@ -66,21 +71,6 @@ Tag component (no properties)
 - directionY: f32 (2)
 - directionZ: f32 (-1)
 - distance: f32 (30)
-
-#### Bloom
-- intensity: f32 (1.0) - Bloom intensity
-- luminanceThreshold: f32 (1.0) - Luminance threshold for bloom
-- luminanceSmoothing: f32 (0.03) - Smoothness of luminance threshold
-- mipmapBlur: ui8 (1) - Enable mipmap blur
-- radius: f32 (0.85) - Blur radius for mipmap blur
-- levels: ui8 (8) - Number of MIP levels for mipmap blur
-
-#### Dithering
-- colorBits: ui8 (4) - Bits per color channel (1-8)
-- intensity: f32 (1.0) - Effect intensity (0-1)
-- grayscale: ui8 (0) - Enable grayscale mode (0/1)
-- scale: f32 (1.0) - Pattern scale (higher = coarser dithering)
-- noise: f32 (1.0) - Noise threshold intensity
 
 ### Systems
 
@@ -94,22 +84,16 @@ Tag component (no properties)
 
 #### CameraSyncSystem
 - Group: draw
-- Updates Three.js camera and manages post-processing effects
+- Synchronizes camera position and rotation from WorldTransform
 
 #### WebGLRenderSystem
 - Group: draw (last)
-- Renders scene through EffectComposer
+- Renders scene directly via WebGLRenderer (or through EffectComposer if postprocessing plugin is active)
 
 ### Functions
 
 #### setCanvasElement(entity, canvas): void
 Associates canvas with RenderContext
-
-### Recipes
-
-- ambient-light - Ambient hemisphere lighting
-- directional-light - Directional light with shadows
-- light - Both ambient and directional
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -120,16 +104,16 @@ Associates canvas with RenderContext
 ```xml
 <!-- Declarative scene with lighting and rendered objects -->
 <world canvas="#game-canvas" sky="#87ceeb">
-  <!-- Default lighting -->
-  <light></light>
-  
+  <!-- Lighting (auto-created if omitted) -->
+  <entity ambient-light directional-light></entity>
+
   <!-- Rendered box -->
-  <entity 
+  <entity
     transform
     renderer="shape: box; color: 0xff0000; size-x: 2"
     pos="0 1 0"
   />
-  
+
   <!-- Rendered sphere -->
   <entity
     transform
@@ -142,22 +126,15 @@ Associates canvas with RenderContext
 ### Custom Lighting
 
 ```xml
-<!-- Separate ambient and directional lights -->
-<ambient-light 
-  sky-color="#ffd4a3"
-  ground-color="#808080"
-  intensity="0.4"
-/>
+<!-- Combined lighting entity with custom properties -->
+<entity
+  ambient-light="sky-color: 0xffd4a3; ground-color: 0x808080; intensity: 0.4"
+  directional-light="color: 0xffffff; intensity: 1.5; direction-x: -1; direction-y: 3; direction-z: -0.5; cast-shadow: 1; shadow-map-size: 2048"
+></entity>
 
-<directional-light
-  color="#ffffff"
-  intensity="1.5"
-  direction-x="-1"
-  direction-y="3"
-  direction-z="-0.5"
-  cast-shadow="1"
-  shadow-map-size="2048"
-/>
+<!-- Or separate entities for independent control -->
+<entity ambient-light="sky-color: 0xffd4a3; intensity: 0.4"></entity>
+<entity directional-light="intensity: 1.5; direction-y: 3"></entity>
 ```
 
 ### Imperative Usage
@@ -198,9 +175,7 @@ import * as GAME from 'vibegame';
 // Available shape enums
 const shapes = {
   box: 0,
-  sphere: 1,
-  cylinder: 2,
-  plane: 3
+  sphere: 1
 };
 
 // Use in XML
@@ -223,31 +198,4 @@ GAME.Renderer.visible[entity] = 1; // Show
 <entity renderer="visible: 0"></entity>  <!-- Initially hidden -->
 ```
 
-### Post-Processing Effects
-
-```xml
-<!-- Camera with bloom effect (using defaults) -->
-<camera bloom></camera>
-
-<!-- Camera with custom bloom settings -->
-<camera bloom="intensity: 2; luminance-threshold: 0.8; luminance-smoothing: 0.05"></camera>
-
-<!-- Camera with mipmap blur settings -->
-<camera bloom="mipmap-blur: 1; radius: 0.9; levels: 10"></camera>
-
-<!-- Camera without effects (still uses composer internally) -->
-<camera></camera>
-
-<!-- Camera with retro dithering effect -->
-<camera dithering="color-bits: 3; intensity: 0.8; scale: 2"></camera>
-
-<!-- Combined bloom and dithering for retro aesthetic -->
-<camera bloom="intensity: 1.5" dithering="color-bits: 2; grayscale: 1; scale: 3"></camera>
-
-<!-- Subtle dithering for vintage look -->
-<camera dithering="color-bits: 5; intensity: 0.5; scale: 1"></camera>
-
-<!-- Coarse pixel-art style dithering -->
-<camera dithering="color-bits: 2; scale: 4; intensity: 1"></camera>
-```
 <!-- /LLM:EXAMPLES -->
