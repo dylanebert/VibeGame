@@ -39,7 +39,7 @@ rendering/
 ### Components
 
 #### Renderer
-- shape: ui8 - 0=box, 1=sphere, 2=cylinder, 3=plane
+- shape: ui8 - 0=box, 1=sphere
 - sizeX, sizeY, sizeZ: f32 (1)
 - color: ui32 (0xffffff)
 - visible: ui8 (1)
@@ -182,9 +182,7 @@ import * as GAME from 'vibegame';
 // Available shape enums
 const shapes = {
   box: 0,
-  sphere: 1,
-  cylinder: 2,
-  plane: 3
+  sphere: 1
 };
 
 // Use in XML

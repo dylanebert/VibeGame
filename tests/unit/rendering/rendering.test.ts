@@ -31,23 +31,15 @@ describe('Rendering Components', () => {
   it('should handle different shape types', () => {
     const box = state.createEntity();
     const sphere = state.createEntity();
-    const cylinder = state.createEntity();
-    const plane = state.createEntity();
 
     state.addComponent(box, Renderer);
     state.addComponent(sphere, Renderer);
-    state.addComponent(cylinder, Renderer);
-    state.addComponent(plane, Renderer);
 
     Renderer.shape[box] = 0; // BOX
     Renderer.shape[sphere] = 1; // SPHERE
-    Renderer.shape[cylinder] = 2; // CYLINDER
-    Renderer.shape[plane] = 3; // PLANE
 
     expect(Renderer.shape[box]).toBe(0);
     expect(Renderer.shape[sphere]).toBe(1);
-    expect(Renderer.shape[cylinder]).toBe(2);
-    expect(Renderer.shape[plane]).toBe(3);
   });
 
   it('should handle visibility states', () => {

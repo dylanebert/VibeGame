@@ -221,13 +221,13 @@ While auto-creation is recommended, you can manually create these for customizat
 ```xml
 <world canvas="#game-canvas">
   <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
-  
+
   <!-- Spinning coins -->
-  <kinematic-part pos="2 1 0" shape="cylinder" size="0.5 0.1 0.5" color="#ffd700">
+  <kinematic-part pos="2 1 0" shape="box" size="0.5 0.5 0.1" color="#ffd700">
     <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
   </kinematic-part>
-  
-  <kinematic-part pos="-2 1 0" shape="cylinder" size="0.5 0.1 0.5" color="#ffd700">
+
+  <kinematic-part pos="-2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700">
     <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
   </kinematic-part>
 </world>
@@ -269,13 +269,10 @@ While auto-creation is recommended, you can manually create these for customizat
 ### Shape Options
 - `box` - Rectangular solid (default)
 - `sphere` - Ball shape
-- `cylinder` - Cylindrical shape
-- `capsule` - Pill shape (good for characters)
 
 ### Size Attribute
 - Box: `size="width height depth"` or `size="2 1 2"`
 - Sphere: `size="diameter"` or `size="1"`
-- Cylinder: `size="diameter height"` or `size="1 2"`
 - Broadcast: `size="2"` becomes `size="2 2 2"`
 
 ## How Recipes and Shorthands Work

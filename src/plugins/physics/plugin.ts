@@ -140,12 +140,8 @@ export const PhysicsPlugin: Plugin = {
       collider: {
         shape: {
           box: 0,
-          cuboid: 0,
           sphere: 1,
-          ball: 1,
           capsule: 2,
-          cylinder: 3,
-          cone: 4,
         },
       },
     },

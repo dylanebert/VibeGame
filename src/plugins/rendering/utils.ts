@@ -7,8 +7,6 @@ const DEFAULT_COLOR = 0xffffff;
 export const RendererShape = {
   BOX: 0,
   SPHERE: 1,
-  CYLINDER: 2,
-  PLANE: 3,
 } as const;
 
 export const threeCameras = new Map<number, THREE.PerspectiveCamera>();
@@ -90,11 +88,6 @@ export function createGeometries(): Map<number, THREE.BufferGeometry> {
   const geometries = new Map<number, THREE.BufferGeometry>();
   geometries.set(RendererShape.BOX, new THREE.BoxGeometry());
   geometries.set(RendererShape.SPHERE, new THREE.SphereGeometry(1));
-  geometries.set(
-    RendererShape.CYLINDER,
-    new THREE.CylinderGeometry(0.5, 0.5, 1)
-  );
-  geometries.set(RendererShape.PLANE, new THREE.PlaneGeometry());
   return geometries;
 }
 

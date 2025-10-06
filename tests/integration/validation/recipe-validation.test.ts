@@ -87,8 +87,8 @@ describe('Recipe Validation Integration', () => {
     it('should validate body component override', () => {
       const attributes = {
         pos: '0 0 0',
-        shape: 'capsule',
-        size: '1 2 1',
+        shape: 'sphere',
+        size: '1',
         color: '#00ff00',
         body: 'type: dynamic; mass: 10; linear-damping: 0.5',
       };
@@ -464,7 +464,7 @@ describe('Recipe Validation Integration', () => {
           <kinematic-part pos="0 3 5" shape="box" size="4 0.5 4" color="#4169e1">
             <tween target="body.pos-x" from="-10" to="10" duration="5" loop="ping-pong"></tween>
           </kinematic-part>
-          <kinematic-part pos="2 1 0" shape="cylinder" size="0.5 0.1 0.5" color="#ffd700">
+          <kinematic-part pos="2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700">
             <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
           </kinematic-part>
         </entity>

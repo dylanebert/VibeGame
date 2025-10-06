@@ -91,14 +91,14 @@ describe('Validation Schemas', () => {
     it('should accept valid shape values', () => {
       expect(shapeSchema.parse('box')).toBe('box');
       expect(shapeSchema.parse('sphere')).toBe('sphere');
-      expect(shapeSchema.parse('cylinder')).toBe('cylinder');
-      expect(shapeSchema.parse('capsule')).toBe('capsule');
-      expect(shapeSchema.parse('cone')).toBe('cone');
-      expect(shapeSchema.parse('torus')).toBe('torus');
-      expect(shapeSchema.parse('plane')).toBe('plane');
     });
 
     it('should reject invalid shape values', () => {
+      expect(() => shapeSchema.parse('cylinder')).toThrow();
+      expect(() => shapeSchema.parse('capsule')).toThrow();
+      expect(() => shapeSchema.parse('cone')).toThrow();
+      expect(() => shapeSchema.parse('torus')).toThrow();
+      expect(() => shapeSchema.parse('plane')).toThrow();
       expect(() => shapeSchema.parse('invalid-shape')).toThrow();
       expect(() => shapeSchema.parse('triangle')).toThrow();
       expect(() => shapeSchema.parse('')).toThrow();

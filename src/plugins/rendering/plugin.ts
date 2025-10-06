@@ -64,8 +64,6 @@ export const RenderingPlugin: Plugin = {
         shape: {
           box: 0,
           sphere: 1,
-          cylinder: 2,
-          plane: 3,
         },
       },
     },

@@ -61,15 +61,7 @@ export const colorSchema = z.union([
   numberStringSchema,
 ]);
 
-export const shapeSchema = z.enum([
-  'box',
-  'sphere',
-  'cylinder',
-  'capsule',
-  'cone',
-  'torus',
-  'plane',
-]);
+export const shapeSchema = z.enum(['box', 'sphere']);
 
 export const bodyTypeSchema = z.enum(['static', 'dynamic', 'kinematic']);
 
