@@ -1,7 +1,7 @@
-# Example Application
+# Hello World Example
 
 <!-- LLM:OVERVIEW -->
-Demo application showcasing the VibeGame game engine features. Use this as a reference for integrating the engine into your own projects or testing engine capabilities with hot-reload development.
+Basic example demonstrating VibeGame engine features including physics, player controls, and XML-based entity creation. Use as reference for integrating the engine into your own projects.
 <!-- /LLM:OVERVIEW -->
 
 ## Purpose
@@ -14,8 +14,10 @@ Demo application showcasing the VibeGame game engine features. Use this as a ref
 ## Layout
 
 ```
-example/
+hello-world/
 ├── context.md  # This file
+├── src/
+│   └── main.ts  # Entry point
 ├── index.html  # HTML entry point
 ├── package.json  # Example dependencies
 └── vite.config.ts  # Vite configuration
@@ -28,6 +30,7 @@ example/
 
 ## Entry Points
 
+- **src/main.ts**: Application entry point
 - **index.html**: Browser entry point
 
 ## Dependencies
@@ -47,28 +50,24 @@ example/
 ## Running
 
 ```bash
+# From repository root
 bun run example
 ```
-
-Opens development server with hot reload
 
 <!-- LLM:EXAMPLES -->
 ## Examples
 
-### Running the Demo
+### Running the Example
 
 ```bash
-# Install dependencies
-bun install
-
-# Run the example application
+# From repository root
 bun run example
 ```
 
 ### Basic Integration
 
 ```typescript
-// example/src/main.ts
+// src/main.ts
 import * as GAME from 'vibegame';
 
 // Create engine with default plugins
@@ -80,14 +79,13 @@ const engine = GAME.builder()
 // Load XML scene
 const sceneXML = `
   <world clear-color="#87ceeb">
-    <ambient-light intensity="0.5"></ambient-light>
-    <directional-light directional="dir: 1 -1 1"></directional-light>
-    
+    <entity ambient-light="intensity: 0.5" directional-light></entity>
+
     <entity transform="pos: 0 10 20" main-camera orbit-camera></entity>
-    
+
     <player transform="pos: 0 1 0"></player>
-    
-    <entity transform="pos: 0 -0.5 0" 
+
+    <entity transform="pos: 0 -0.5 0"
             renderer="shape: box; size: 20 1 20; color: 0x808080"
             body="type: fixed">
     </entity>

@@ -56,12 +56,14 @@ bun install vibegame
 **System Prompt**: Include `llms.txt` in your AI system prompt for comprehensive VibeGame documentation.
 
 **Comprehensive Documentation**: Use Context7 to fetch detailed documentation:
+
 ```typescript
 // Use mcp__context7__resolve-library-id to find "vibegame"
 // Then use mcp__context7__get-library-docs for full documentation
 ```
 
 **Context Workflow**: Use [Shallot](https://github.com/dylanebert/shallot) to manage context across conversations:
+
 - Use `/peel` at conversation start to load necessary context
 - Use `/nourish` at conversation end to update context
 
@@ -190,7 +192,7 @@ When registered, the custom component `MyComponent` will be automatically parsed
 # Install dependencies
 bun install
 
-# Run example
+# Run example (hello-world)
 bun run example
 
 # Build library (fast, library only)

@@ -87,8 +87,8 @@ describe('Recipe Validation Integration', () => {
     it('should validate body component override', () => {
       const attributes = {
         pos: '0 0 0',
-        shape: 'capsule',
-        size: '1 2 1',
+        shape: 'sphere',
+        size: '1',
         color: '#00ff00',
         body: 'type: dynamic; mass: 10; linear-damping: 0.5',
       };
@@ -297,70 +297,6 @@ describe('Recipe Validation Integration', () => {
     });
   });
 
-  describe('lighting validation', () => {
-    it('should validate ambient-light attributes', () => {
-      const attributes = {
-        'sky-color': '#87ceeb',
-        'ground-color': '#4a4a4a',
-        intensity: '0.8',
-      };
-
-      const result = validateRecipeAttributes('ambient-light', attributes);
-      expect(result['sky-color']).toBe(8900331);
-      expect(result['ground-color']).toBe(4868682);
-      expect(result.intensity).toBe(0.8);
-    });
-
-    it('should validate directional-light attributes', () => {
-      const attributes = {
-        color: '#ffffff',
-        intensity: '1.5',
-        direction: '-1 -2 -1',
-        'cast-shadow': 'true',
-        'shadow-map-size': '4096',
-        distance: '30',
-      };
-
-      const result = validateRecipeAttributes('directional-light', attributes);
-      expect(result.color).toBe(16777215);
-      expect(result.intensity).toBe(1.5);
-      expect(result.direction).toEqual({ x: -1, y: -2, z: -1 });
-      expect(result['cast-shadow']).toBe(true);
-      expect(result['shadow-map-size']).toBe(4096);
-      expect(result.distance).toBe(30);
-    });
-
-    it('should validate light combination recipe', () => {
-      const attributes = {
-        'sky-color': '#87ceeb',
-        color: '#ffffcc',
-        intensity: '0.9',
-        direction: '1 -1 1',
-        'cast-shadow': false,
-      };
-
-      const result = validateRecipeAttributes('light', attributes);
-      expect(result['sky-color']).toBe(8900331);
-      expect(result.color).toBe(16777164);
-      expect(result.intensity).toBe(0.9);
-      expect(result['cast-shadow']).toBe(false);
-    });
-
-    it('should accept minimal lighting configuration', () => {
-      const ambientResult = validateRecipeAttributes('ambient-light', {});
-      expect(ambientResult).toBeDefined();
-
-      const directionalResult = validateRecipeAttributes(
-        'directional-light',
-        {}
-      );
-      expect(directionalResult).toBeDefined();
-
-      const lightResult = validateRecipeAttributes('light', {});
-      expect(lightResult).toBeDefined();
-    });
-  });
-
   describe('hierarchical validation', () => {
     it('should allow tween as child of entity types', () => {
       const xml = `
@@ -401,8 +337,7 @@ describe('Recipe Validation Integration', () => {
     it('should allow lighting in world', () => {
       const xml = `
         <world canvas="#game">
-          <ambient-light sky-color="#87ceeb"></ambient-light>
-          <directional-light color="#ffffff"></directional-light>
+          <entity ambient-light="sky-color: 0x87ceeb" directional-light="color: 0xffffff"></entity>
         </world>
       `;
 
@@ -439,8 +374,7 @@ describe('Recipe Validation Integration', () => {
     it('should validate complete game world with lighting', () => {
       const xml = `
         <world canvas="#game-canvas" sky="#87ceeb">
-          <ambient-light sky-color="#87ceeb" intensity="0.6"></ambient-light>
-          <directional-light color="#ffffff" intensity="1" direction="-1 -2 -1"></directional-light>
+          <entity ambient-light="sky-color: 0x87ceeb; intensity: 0.6" directional-light="color: 0xffffff; intensity: 1; direction-x: -1; direction-y: -2; direction-z: -1"></entity>
           <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
           <dynamic-part pos="-2 4 -3" shape="sphere" size="1" color="#ff4500"></dynamic-part>
           <kinematic-part pos="5 2 0" shape="box" size="3 0.5 3" color="#0000ff">
@@ -464,7 +398,7 @@ describe('Recipe Validation Integration', () => {
           <kinematic-part pos="0 3 5" shape="box" size="4 0.5 4" color="#4169e1">
             <tween target="body.pos-x" from="-10" to="10" duration="5" loop="ping-pong"></tween>
           </kinematic-part>
-          <kinematic-part pos="2 1 0" shape="cylinder" size="0.5 0.1 0.5" color="#ffd700">
+          <kinematic-part pos="2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700">
             <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
           </kinematic-part>
         </entity>

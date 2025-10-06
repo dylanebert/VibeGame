@@ -38,6 +38,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Transform);
       state.addComponent(box, ApplyForce);
 
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
+
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;
       Body.posY[box] = 5;
@@ -72,6 +76,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Collider);
       state.addComponent(box, Transform);
       state.addComponent(box, ApplyImpulse);
+
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
 
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;
@@ -113,6 +121,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Transform);
       state.addComponent(box, ApplyTorque);
 
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
+
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;
       Body.posY[box] = 5;
@@ -147,6 +159,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Collider);
       state.addComponent(box, Transform);
       state.addComponent(box, ApplyAngularImpulse);
+
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
 
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;
@@ -187,6 +203,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Transform);
       state.addComponent(box, SetLinearVelocity);
 
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
+
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;
       Body.posY[box] = 5;
@@ -218,6 +238,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Collider);
       state.addComponent(box, Transform);
       state.addComponent(box, SetAngularVelocity);
+
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
 
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;
@@ -253,6 +277,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(platform, Transform);
       state.addComponent(platform, KinematicMove);
 
+      Transform.scaleX[platform] = 1;
+      Transform.scaleY[platform] = 1;
+      Transform.scaleZ[platform] = 1;
+
       Body.type[platform] = BodyType.KinematicPositionBased;
       Body.posX[platform] = 0;
       Body.posY[platform] = 0;
@@ -281,6 +309,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(platform, Collider);
       state.addComponent(platform, Transform);
 
+      Transform.scaleX[platform] = 1;
+      Transform.scaleY[platform] = 1;
+      Transform.scaleZ[platform] = 1;
+
       Body.type[platform] = BodyType.KinematicVelocityBased;
       Body.posX[platform] = 0;
       Body.posY[platform] = 0;
@@ -296,6 +328,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Body);
       state.addComponent(box, Collider);
       state.addComponent(box, Transform);
+
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
 
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;
@@ -336,6 +372,10 @@ describe('Physics Forces and Impulses', () => {
       state.addComponent(box, Collider);
       state.addComponent(box, Transform);
       state.addComponent(box, ApplyForce);
+
+      Transform.scaleX[box] = 1;
+      Transform.scaleY[box] = 1;
+      Transform.scaleZ[box] = 1;
 
       Body.type[box] = BodyType.Dynamic;
       Body.posX[box] = 0;

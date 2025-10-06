@@ -37,14 +37,14 @@ async function commandExists(cmd) {
 async function init() {
   // Get project name from command line
   let projectName = process.argv[2];
-  
+
   // Validate project name
   if (!projectName) {
     console.error(red('Error: Please specify a project name'));
     console.log('  ' + cyan('npm create vibegame@latest <project-name>'));
     process.exit(1);
   }
-  
+
   const targetDir = path.resolve(process.cwd(), projectName);
 
   // Check if directory exists
@@ -71,29 +71,43 @@ async function init() {
 
   // Detect package manager
   const userAgent = process.env.npm_config_user_agent ?? '';
-  let pkgManager = /bun/.test(userAgent) ? 'bun' : 
-                   /yarn/.test(userAgent) ? 'yarn' : 
-                   /pnpm/.test(userAgent) ? 'pnpm' : 'npm';
-  
+  let pkgManager = /bun/.test(userAgent)
+    ? 'bun'
+    : /yarn/.test(userAgent)
+      ? 'yarn'
+      : /pnpm/.test(userAgent)
+        ? 'pnpm'
+        : 'npm';
+
   // Check if bun is available even if not used to run create-vibegame
-  if (pkgManager === 'npm' && await commandExists('bun')) {
+  if (pkgManager === 'npm' && (await commandExists('bun'))) {
     pkgManager = 'bun';
   }
 
   // Install dependencies
   console.log();
   console.log('Installing dependencies...');
-  
+
   try {
-    const installCmd = pkgManager === 'yarn' ? 'yarn' : 
-                      pkgManager === 'pnpm' ? 'pnpm install' :
-                      pkgManager === 'bun' ? 'bun install' : 'npm install';
-    
+    const installCmd =
+      pkgManager === 'yarn'
+        ? 'yarn'
+        : pkgManager === 'pnpm'
+          ? 'pnpm install'
+          : pkgManager === 'bun'
+            ? 'bun install'
+            : 'npm install';
+
     await execAsync(installCmd, { cwd: targetDir });
     console.log(green('✓') + ' Dependencies installed');
-    
+
     const targetLLMPath = path.join(targetDir, 'llms.txt');
-    const vibegameLLMPath = path.join(targetDir, 'node_modules', 'vibegame', 'llms.txt');
+    const vibegameLLMPath = path.join(
+      targetDir,
+      'node_modules',
+      'vibegame',
+      'llms.txt'
+    );
 
     if (fs.existsSync(vibegameLLMPath)) {
       fs.copyFileSync(vibegameLLMPath, targetLLMPath);
@@ -109,7 +123,7 @@ async function init() {
   console.log('Done! Now run:');
   console.log();
   console.log(cyan(`  cd ${projectName}`));
-  
+
   if (pkgManager === 'bun') {
     console.log(cyan('  bun dev'));
   } else if (pkgManager === 'yarn') {
@@ -119,7 +133,7 @@ async function init() {
   } else {
     console.log(cyan('  npm run dev'));
   }
-  
+
   console.log();
   console.log('AI system prompt available in llms.txt');
   console.log('Full engine documentation embedded for AI assistance');

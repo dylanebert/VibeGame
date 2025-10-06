@@ -35,6 +35,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
 
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
+
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
     Body.posY[character] = 5;
@@ -65,6 +69,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -80,6 +88,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -114,6 +126,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -129,6 +145,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -164,6 +184,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(slope, Collider);
     state.addComponent(slope, Transform);
 
+    Transform.scaleX[slope] = 1;
+    Transform.scaleY[slope] = 1;
+    Transform.scaleZ[slope] = 1;
+
     Body.type[slope] = BodyType.Fixed;
     Body.posY[slope] = 0;
     Body.rotX[slope] = 0.2;
@@ -180,6 +204,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -214,6 +242,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -229,6 +261,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -262,6 +298,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(platform, Collider);
     state.addComponent(platform, Transform);
 
+    Transform.scaleX[platform] = 1;
+    Transform.scaleY[platform] = 1;
+    Transform.scaleZ[platform] = 1;
+
     Body.type[platform] = BodyType.KinematicPositionBased;
     Body.posY[platform] = 2;
     Body.rotW[platform] = 1;
@@ -277,6 +317,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -310,6 +354,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -325,6 +373,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -370,6 +422,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -383,6 +439,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(step, Body);
     state.addComponent(step, Collider);
     state.addComponent(step, Transform);
+
+    Transform.scaleX[step] = 1;
+    Transform.scaleY[step] = 1;
+    Transform.scaleZ[step] = 1;
 
     Body.type[step] = BodyType.Fixed;
     Body.posX[step] = 3;
@@ -401,6 +461,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -440,6 +504,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
 
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
+
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
     Body.posY[character] = 10;
@@ -476,6 +544,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -491,6 +563,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;
@@ -540,6 +616,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -553,6 +633,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(box, Body);
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 3;
@@ -574,6 +658,10 @@ describe('Character Controller Integration', () => {
     state.addComponent(character, CharacterController);
     state.addComponent(character, CharacterMovement);
     state.addComponent(character, Transform);
+
+    Transform.scaleX[character] = 1;
+    Transform.scaleY[character] = 1;
+    Transform.scaleZ[character] = 1;
 
     Body.type[character] = BodyType.KinematicPositionBased;
     Body.posX[character] = 0;

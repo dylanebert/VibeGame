@@ -29,6 +29,10 @@ describe('Static Bodies Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posX[floor] = 0;
     Body.posY[floor] = -10;
@@ -57,6 +61,10 @@ describe('Static Bodies Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -70,6 +78,10 @@ describe('Static Bodies Integration', () => {
     state.addComponent(box, Body);
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posY[box] = 10;
@@ -108,6 +120,10 @@ describe('Static Bodies Integration', () => {
       state.addComponent(wall, Collider);
       state.addComponent(wall, Transform);
 
+      Transform.scaleX[wall] = 1;
+      Transform.scaleY[wall] = 1;
+      Transform.scaleZ[wall] = 1;
+
       Body.type[wall] = BodyType.Fixed;
       Body.posX[wall] = i * 10;
       Body.posY[wall] = 0;
@@ -139,6 +155,10 @@ describe('Static Bodies Integration', () => {
     state.addComponent(staticBox, Body);
     state.addComponent(staticBox, Collider);
     state.addComponent(staticBox, Transform);
+
+    Transform.scaleX[staticBox] = 1;
+    Transform.scaleY[staticBox] = 1;
+    Transform.scaleZ[staticBox] = 1;
 
     Body.type[staticBox] = BodyType.Fixed;
     Body.posY[staticBox] = 10;

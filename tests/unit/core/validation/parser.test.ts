@@ -171,10 +171,7 @@ describe('Validation Parser', () => {
       expect(names).toContain('camera');
       expect(names).toContain('world');
       expect(names).toContain('tween');
-      expect(names).toContain('ambient-light');
-      expect(names).toContain('directional-light');
-      expect(names).toContain('light');
-      expect(names.length).toBe(11);
+      expect(names.length).toBe(8);
     });
   });
 

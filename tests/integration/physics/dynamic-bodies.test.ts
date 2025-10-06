@@ -32,6 +32,10 @@ describe('Dynamic Bodies Integration', () => {
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
 
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
+
     Body.type[box] = BodyType.Dynamic;
     Body.posY[box] = 10;
     Body.rotW[box] = 1;
@@ -65,6 +69,10 @@ describe('Dynamic Bodies Integration', () => {
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
 
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
+
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
     Body.posY[box] = 5;
@@ -97,6 +105,10 @@ describe('Dynamic Bodies Integration', () => {
     state.addComponent(box, Body);
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
@@ -138,6 +150,10 @@ describe('Dynamic Bodies Integration', () => {
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
 
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
+
     Body.type[box] = BodyType.Dynamic;
     Body.posX[box] = 0;
     Body.posY[box] = 5;
@@ -178,6 +194,10 @@ describe('Dynamic Bodies Integration', () => {
     state.addComponent(floor, Collider);
     state.addComponent(floor, Transform);
 
+    Transform.scaleX[floor] = 1;
+    Transform.scaleY[floor] = 1;
+    Transform.scaleZ[floor] = 1;
+
     Body.type[floor] = BodyType.Fixed;
     Body.posY[floor] = 0;
     Body.rotW[floor] = 1;
@@ -192,6 +212,10 @@ describe('Dynamic Bodies Integration', () => {
     state.addComponent(ball, Body);
     state.addComponent(ball, Collider);
     state.addComponent(ball, Transform);
+
+    Transform.scaleX[ball] = 1;
+    Transform.scaleY[ball] = 1;
+    Transform.scaleZ[ball] = 1;
 
     Body.type[ball] = BodyType.Dynamic;
     Body.posY[ball] = 10;
@@ -231,6 +255,10 @@ describe('Dynamic Bodies Integration', () => {
     state.addComponent(box, Body);
     state.addComponent(box, Collider);
     state.addComponent(box, Transform);
+
+    Transform.scaleX[box] = 1;
+    Transform.scaleY[box] = 1;
+    Transform.scaleZ[box] = 1;
 
     Body.type[box] = BodyType.Dynamic;
     Body.posY[box] = 5;

@@ -13,6 +13,7 @@ export class GameBuilder {
   private state: State;
   private options: BuilderOptions;
   private useDefaultPlugins = true;
+  private excludedPlugins: Set<Plugin> = new Set();
   private plugins: Plugin[] = [];
   private systems: System[] = [];
   private components: Map<string, Component> = new Map();
@@ -26,6 +27,13 @@ export class GameBuilder {
 
   withoutDefaultPlugins(): GameBuilder {
     this.useDefaultPlugins = false;
+    return this;
+  }
+
+  withoutPlugins(...plugins: Plugin[]): GameBuilder {
+    for (const plugin of plugins) {
+      this.excludedPlugins.add(plugin);
+    }
     return this;
   }
 
@@ -72,7 +80,9 @@ export class GameBuilder {
   build(): GameRuntime {
     if (this.useDefaultPlugins) {
       for (const plugin of DefaultPlugins) {
-        this.state.registerPlugin(plugin);
+        if (!this.excludedPlugins.has(plugin)) {
+          this.state.registerPlugin(plugin);
+        }
       }
     }
 

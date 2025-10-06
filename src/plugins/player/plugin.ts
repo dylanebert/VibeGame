@@ -1,10 +1,9 @@
 import type { Plugin } from '../../core';
 import { Player } from './components';
-import { PLAYER_DEFAULTS } from './constants';
 import { playerRecipe } from './recipes';
 import {
-  PlayerCameraLinkingSystem,
   PlayerCameraControlSystem,
+  PlayerCameraLinkingSystem,
   PlayerGroundedSystem,
   PlayerMovementSystem,
 } from './systems';
@@ -23,19 +22,19 @@ export const PlayerPlugin: Plugin = {
   config: {
     defaults: {
       player: {
-        speed: PLAYER_DEFAULTS.speed,
-        jumpHeight: PLAYER_DEFAULTS.jumpHeight,
-        rotationSpeed: PLAYER_DEFAULTS.rotationSpeed,
-        canJump: PLAYER_DEFAULTS.canJump,
-        isJumping: PLAYER_DEFAULTS.isJumping,
-        jumpCooldown: PLAYER_DEFAULTS.jumpCooldown,
-        lastGroundedTime: PLAYER_DEFAULTS.lastGroundedTime,
-        jumpBufferTime: PLAYER_DEFAULTS.jumpBufferTime,
-        cameraSensitivity: PLAYER_DEFAULTS.cameraSensitivity,
-        cameraZoomSensitivity: PLAYER_DEFAULTS.cameraZoomSensitivity,
-        cameraEntity: PLAYER_DEFAULTS.cameraEntity,
-        inheritedVelX: PLAYER_DEFAULTS.inheritedVelX,
-        inheritedVelZ: PLAYER_DEFAULTS.inheritedVelZ,
+        speed: 5.3,
+        jumpHeight: 2.3,
+        rotationSpeed: 10,
+        canJump: 1,
+        isJumping: 0,
+        jumpCooldown: 0,
+        lastGroundedTime: 0,
+        jumpBufferTime: -10000,
+        cameraSensitivity: 0.007,
+        cameraZoomSensitivity: 1.5,
+        cameraEntity: 0,
+        inheritedVelX: 0,
+        inheritedVelZ: 0,
       },
     },
   },

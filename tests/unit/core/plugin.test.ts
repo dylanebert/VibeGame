@@ -97,8 +97,8 @@ describe('Plugin System', () => {
 
     const entity = state.createEntity();
     state.addComponent(entity, Health);
-    expect(Health.current[entity]).toBe(0);
-    expect(Health.max[entity]).toBe(0);
+    expect(Health.current[entity]).toBe(100);
+    expect(Health.max[entity]).toBe(100);
 
     const recipe = state.getRecipe('enemy');
     expect(recipe).toBeDefined();

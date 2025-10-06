@@ -1,17 +1,18 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { State, XMLParser, defineQuery } from 'vibegame';
 import {
-  Ambient,
-  Directional,
   MainCamera,
-  Renderer,
   RenderContext,
+  Renderer,
   RenderingPlugin,
+  State,
+  Transform,
+  TransformsPlugin,
+  XMLParser,
+  defineQuery,
+  parseXMLToEntities,
   setCanvasElement,
 } from 'vibegame';
-import { Transform, TransformsPlugin } from 'vibegame';
-import { parseXMLToEntities } from 'vibegame';
 
 describe('Rendering Recipes', () => {
   let state: State;
@@ -27,7 +28,7 @@ describe('Rendering Recipes', () => {
 
   describe('Basic Rendering Setup', () => {
     it('should handle root element with canvas and sky attributes', () => {
-      const xml = `<root canvas="#game-canvas" sky="#87ceeb"><light></light><entity renderer="shape: box"></entity></root>`;
+      const xml = `<root canvas="#game-canvas" sky="#87ceeb"><entity renderer="shape: box"></entity></root>`;
 
       const parsed = XMLParser.parse(xml);
       const rootElement = parsed.root;
@@ -35,38 +36,6 @@ describe('Rendering Recipes', () => {
       expect(rootElement).toBeDefined();
       expect(rootElement.attributes.canvas).toBe('#game-canvas');
       expect(rootElement.attributes.sky).toBe(0x87ceeb);
-
-      const entities = parseXMLToEntities(state, rootElement);
-      expect(entities.length).toBe(2);
-    });
-  });
-
-  describe('Custom Lighting', () => {
-    it('should create separate ambient and directional lights', () => {
-      const xml = `<root><ambient-light sky-color="#ffd4a3" ground-color="#808080" intensity="0.4" /><directional-light color="#ffffff" intensity="1.5" direction-x="-1" direction-y="3" direction-z="-0.5" cast-shadow="1" shadow-map-size="2048" /></root>`;
-
-      const parsed = XMLParser.parse(xml);
-      const entities = parseXMLToEntities(state, parsed.root);
-
-      expect(entities.length).toBe(2);
-
-      const ambientEntity = entities[0].entity;
-      expect(state.hasComponent(ambientEntity, Ambient)).toBe(true);
-      expect(state.hasComponent(ambientEntity, Directional)).toBe(false);
-      expect(Ambient.skyColor[ambientEntity]).toBe(0xffd4a3);
-      expect(Ambient.groundColor[ambientEntity]).toBe(0x808080);
-      expect(Ambient.intensity[ambientEntity]).toBeCloseTo(0.4);
-
-      const directionalEntity = entities[1].entity;
-      expect(state.hasComponent(directionalEntity, Directional)).toBe(true);
-      expect(state.hasComponent(directionalEntity, Ambient)).toBe(false);
-      expect(Directional.color[directionalEntity]).toBe(0xffffff);
-      expect(Directional.intensity[directionalEntity]).toBe(1.5);
-      expect(Directional.directionX[directionalEntity]).toBe(-1);
-      expect(Directional.directionY[directionalEntity]).toBe(3);
-      expect(Directional.directionZ[directionalEntity]).toBe(-0.5);
-      expect(Directional.castShadow[directionalEntity]).toBe(1);
-      expect(Directional.shadowMapSize[directionalEntity]).toBe(2048);
     });
   });
 
@@ -120,37 +89,31 @@ describe('Rendering Recipes', () => {
 
   describe('Shape Types', () => {
     it('should handle shape enums in XML', () => {
-      const xml = `<root><entity renderer="shape: sphere"></entity><entity renderer="shape: box"></entity><entity renderer="shape: cylinder"></entity><entity renderer="shape: plane"></entity></root>`;
+      const xml = `<root><entity renderer="shape: sphere"></entity><entity renderer="shape: box"></entity></root>`;
 
       const parsed = XMLParser.parse(xml);
       const entities = parseXMLToEntities(state, parsed.root);
 
-      expect(entities.length).toBe(4);
+      expect(entities.length).toBe(2);
       expect(Renderer.shape[entities[0].entity]).toBe(1);
       expect(Renderer.shape[entities[1].entity]).toBe(0);
-      expect(Renderer.shape[entities[2].entity]).toBe(2);
-      expect(Renderer.shape[entities[3].entity]).toBe(3);
     });
 
     it('should handle numeric shape values', () => {
-      const xml = `<root><entity renderer="shape: 0"></entity><entity renderer="shape: 1"></entity><entity renderer="shape: 2"></entity><entity renderer="shape: 3"></entity></root>`;
+      const xml = `<root><entity renderer="shape: 0"></entity><entity renderer="shape: 1"></entity></root>`;
 
       const parsed = XMLParser.parse(xml);
       const entities = parseXMLToEntities(state, parsed.root);
 
-      expect(entities.length).toBe(4);
+      expect(entities.length).toBe(2);
       expect(Renderer.shape[entities[0].entity]).toBe(0);
       expect(Renderer.shape[entities[1].entity]).toBe(1);
-      expect(Renderer.shape[entities[2].entity]).toBe(2);
-      expect(Renderer.shape[entities[3].entity]).toBe(3);
     });
 
     it('should use shape enum programmatically', () => {
       const shapes = {
         box: 0,
         sphere: 1,
-        cylinder: 2,
-        plane: 3,
       };
 
       const boxEntity = state.createEntity();
@@ -276,51 +239,6 @@ describe('Rendering Recipes', () => {
       const cameras = defineQuery([MainCamera])(state.world);
       expect(cameras).toContain(camera1);
       expect(cameras).toContain(camera2);
-    });
-  });
-
-  describe('Complex Scenes', () => {
-    it('should create complete scene with multiple elements', () => {
-      const xml = `<root><light></light><entity main-camera="" transform="pos: 0 5 10; euler: -15 0 0" /><entity renderer="shape: box; size: 10 1 10; color: 0x808080" transform="pos: 0 -0.5 0" /><entity renderer="shape: sphere; size: 1; color: 0xff0000" transform="pos: -3 1 0" /><entity renderer="shape: cylinder; size: 1 3 1; color: 0x00ff00" transform="pos: 0 1.5 0" /><entity renderer="shape: box; size: 1.5; color: 0x0000ff" transform="pos: 3 0.75 0" /></root>`;
-
-      const parsed = XMLParser.parse(xml);
-      const entities = parseXMLToEntities(state, parsed.root);
-
-      expect(entities.length).toBe(6);
-
-      const lightEntity = entities[0].entity;
-      expect(state.hasComponent(lightEntity, Ambient)).toBe(true);
-      expect(state.hasComponent(lightEntity, Directional)).toBe(true);
-
-      const cameraEntity = entities[1].entity;
-      expect(state.hasComponent(cameraEntity, MainCamera)).toBe(true);
-      expect(Transform.posY[cameraEntity]).toBe(5);
-      expect(Transform.posZ[cameraEntity]).toBe(10);
-      expect(Transform.eulerX[cameraEntity]).toBe(-15);
-
-      const floorEntity = entities[2].entity;
-      expect(Renderer.shape[floorEntity]).toBe(0);
-      expect(Renderer.sizeX[floorEntity]).toBe(10);
-      expect(Renderer.sizeY[floorEntity]).toBe(1);
-      expect(Renderer.sizeZ[floorEntity]).toBe(10);
-      expect(Renderer.color[floorEntity]).toBe(0x808080);
-
-      const sphereEntity = entities[3].entity;
-      expect(Renderer.shape[sphereEntity]).toBe(1);
-      expect(Renderer.color[sphereEntity]).toBe(0xff0000);
-      expect(Transform.posX[sphereEntity]).toBe(-3);
-
-      const cylinderEntity = entities[4].entity;
-      expect(Renderer.shape[cylinderEntity]).toBe(2);
-      expect(Renderer.sizeY[cylinderEntity]).toBe(3);
-      expect(Renderer.color[cylinderEntity]).toBe(0x00ff00);
-
-      const boxEntity = entities[5].entity;
-      expect(Renderer.shape[boxEntity]).toBe(0);
-      expect(Renderer.sizeX[boxEntity]).toBe(1.5);
-      expect(Renderer.sizeY[boxEntity]).toBe(1.5);
-      expect(Renderer.sizeZ[boxEntity]).toBe(1.5);
-      expect(Renderer.color[boxEntity]).toBe(0x0000ff);
     });
   });
 

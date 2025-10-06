@@ -1,13 +1,16 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { State, defineQuery } from 'vibegame';
 import {
-  Ambient,
-  Directional,
+  AmbientLight,
+  DirectionalLight,
   MainCamera,
   Renderer,
   RenderingPlugin,
+  State,
+  Transform,
+  TransformsPlugin,
+  WorldTransform,
+  defineQuery,
 } from 'vibegame';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame';
 
 describe('Rendering Plugin Integration', () => {
   let state: State;
@@ -158,16 +161,16 @@ describe('Rendering Plugin Integration', () => {
     state.registerPlugin(RenderingPlugin);
 
     const light = state.createEntity();
-    state.addComponent(light, Ambient);
-    state.addComponent(light, Directional);
+    state.addComponent(light, AmbientLight);
+    state.addComponent(light, DirectionalLight);
 
-    Ambient.skyColor[light] = 0x87ceeb;
-    Ambient.groundColor[light] = 0x4a4a4a;
-    Directional.color[light] = 0xffffff;
-    Directional.castShadow[light] = 1;
+    AmbientLight.skyColor[light] = 0x87ceeb;
+    AmbientLight.groundColor[light] = 0x4a4a4a;
+    DirectionalLight.color[light] = 0xffffff;
+    DirectionalLight.castShadow[light] = 1;
 
-    expect(state.hasComponent(light, Ambient)).toBe(true);
-    expect(state.hasComponent(light, Directional)).toBe(true);
+    expect(state.hasComponent(light, AmbientLight)).toBe(true);
+    expect(state.hasComponent(light, DirectionalLight)).toBe(true);
   });
 
   it('should query light entities', () => {
@@ -177,11 +180,11 @@ describe('Rendering Plugin Integration', () => {
     const light2 = state.createEntity();
     const nonLight = state.createEntity();
 
-    state.addComponent(light1, Ambient);
-    state.addComponent(light2, Directional);
+    state.addComponent(light1, AmbientLight);
+    state.addComponent(light2, DirectionalLight);
 
-    const ambients = defineQuery([Ambient])(state.world);
-    const directionals = defineQuery([Directional])(state.world);
+    const ambients = defineQuery([AmbientLight])(state.world);
+    const directionals = defineQuery([DirectionalLight])(state.world);
 
     expect(ambients).toContain(light1);
     expect(directionals).toContain(light2);
@@ -198,14 +201,14 @@ describe('Rendering Plugin Integration', () => {
     state.addComponent(camera, WorldTransform);
 
     const light = state.createEntity();
-    state.addComponent(light, Directional);
+    state.addComponent(light, DirectionalLight);
 
-    Directional.directionX[light] = -1;
-    Directional.directionY[light] = -2;
-    Directional.directionZ[light] = -1;
-    Directional.distance[light] = 30;
+    DirectionalLight.directionX[light] = -1;
+    DirectionalLight.directionY[light] = -2;
+    DirectionalLight.directionZ[light] = -1;
+    DirectionalLight.distance[light] = 30;
 
-    expect(state.hasComponent(light, Directional)).toBe(true);
+    expect(state.hasComponent(light, DirectionalLight)).toBe(true);
     expect(state.hasComponent(camera, MainCamera)).toBe(true);
   });
 });

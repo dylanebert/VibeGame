@@ -166,7 +166,7 @@ describe('Parser Diagnostics', () => {
 
       expect(() => {
         parseXMLToEntities(state, xml.root);
-      }).toThrow(/Valid options: box, sphere, cylinder, plane/);
+      }).toThrow(/Valid options: box, sphere/);
     });
 
     it('should list valid options for collider.shape enum', () => {

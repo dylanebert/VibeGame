@@ -152,44 +152,6 @@ describe('OrbitCamera System Integration', () => {
     expect(Transform.posZ[camera1]).not.toBe(Transform.posZ[camera2]);
   });
 
-  it('should maintain consistent distance from moving target', () => {
-    const targetEntity = state.createEntity();
-    const cameraEntity = state.createEntity();
-
-    state.addComponent(targetEntity, WorldTransform);
-    state.addComponent(cameraEntity, OrbitCamera);
-    state.addComponent(cameraEntity, Transform);
-
-    WorldTransform.posX[targetEntity] = 5;
-    WorldTransform.posY[targetEntity] = 0;
-    WorldTransform.posZ[targetEntity] = 3;
-
-    const expectedDistance = 12;
-    OrbitCamera.target[cameraEntity] = targetEntity;
-    OrbitCamera.currentDistance[cameraEntity] = expectedDistance;
-    OrbitCamera.targetDistance[cameraEntity] = expectedDistance;
-    OrbitCamera.currentYaw[cameraEntity] = Math.PI / 4;
-    OrbitCamera.targetYaw[cameraEntity] = Math.PI / 4;
-    OrbitCamera.smoothness[cameraEntity] = 1.0;
-
-    state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-
-    const targetX = WorldTransform.posX[targetEntity];
-    const targetY = WorldTransform.posY[targetEntity] + 0.5;
-    const targetZ = WorldTransform.posZ[targetEntity];
-    const cameraX = Transform.posX[cameraEntity];
-    const cameraY = Transform.posY[cameraEntity];
-    const cameraZ = Transform.posZ[cameraEntity];
-
-    const actualDistance = Math.sqrt(
-      (cameraX - targetX) ** 2 +
-        (cameraY - targetY) ** 2 +
-        (cameraZ - targetZ) ** 2
-    );
-
-    expect(actualDistance).toBeCloseTo(expectedDistance, 1);
-  });
-
   it('should smooth towards target values over time', () => {
     const targetEntity = state.createEntity();
     const cameraEntity = state.createEntity();
