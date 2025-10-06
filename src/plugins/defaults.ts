@@ -6,6 +6,7 @@ import { AnimationPlugin } from './animation/plugin';
 import { InputPlugin } from './input/plugin';
 import { PhysicsPlugin } from './physics/plugin';
 import { RenderingPlugin } from './rendering/plugin';
+import { PostprocessingPlugin } from './postprocessing/plugin';
 import { OrbitCameraPlugin } from './orbit-camera/plugin';
 import { PlayerPlugin } from './player/plugin';
 import { RespawnPlugin } from './respawn/plugin';
@@ -17,6 +18,7 @@ export const DefaultPlugins: Plugin[] = [
   InputPlugin,
   PhysicsPlugin,
   RenderingPlugin,
+  PostprocessingPlugin,
   OrbitCameraPlugin,
   PlayerPlugin,
   StartupPlugin,

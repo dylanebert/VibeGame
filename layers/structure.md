@@ -47,6 +47,7 @@ vibegame/
 │   │   ├── orbit-camera/  # Orbital camera
 │   │   ├── physics/  # Rapier 3D physics
 │   │   ├── player/  # Player controller
+│   │   ├── postprocessing/  # Post-processing effects
 │   │   ├── recipes/  # XML recipe system
 │   │   ├── rendering/  # Three.js rendering
 │   │   ├── respawn/  # Respawn system
@@ -112,13 +113,14 @@ Optional files:
 3. **orbit-camera** - Orbital camera controller
 4. **physics** - Rapier 3D WASM physics integration
 5. **player** - Player character controller
-6. **recipes** - XML recipe system for declarative entities
-7. **rendering** - Three.js rendering pipeline
-8. **respawn** - Entity respawn system
-9. **startup** - Initialization and setup systems
-10. **transforms** - Transform component hierarchy
-11. **tweening** - Tween-based animations
-12. **defaults** - Bundle of standard plugins
+6. **postprocessing** - Post-processing effects (bloom, dithering, tonemapping)
+7. **recipes** - XML recipe system for declarative entities
+8. **rendering** - Three.js rendering pipeline
+9. **respawn** - Entity respawn system
+10. **startup** - Initialization and setup systems
+11. **transforms** - Transform component hierarchy
+12. **tweening** - Tween-based animations
+13. **defaults** - Bundle of standard plugins
 
 ## Architecture
 

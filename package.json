@@ -47,6 +47,10 @@
       "types": "./dist/plugins/rendering/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./postprocessing": {
+      "types": "./dist/plugins/postprocessing/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./transforms": {
       "types": "./dist/plugins/transforms/index.d.ts",
       "import": "./dist/index.js"

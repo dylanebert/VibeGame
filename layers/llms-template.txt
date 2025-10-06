@@ -627,6 +627,7 @@ GAME
 - **RecipesPlugin** - XML parsing and entity creation
 - **TransformsPlugin** - Position, rotation, scale, hierarchy
 - **RenderingPlugin** - Three.js meshes, lights, camera
+- **PostprocessingPlugin** - Bloom, dithering, tonemapping effects
 - **PhysicsPlugin** - Rapier physics simulation
 - **InputPlugin** - Keyboard, mouse, gamepad input
 - **OrbitCameraPlugin** - Third-person camera
