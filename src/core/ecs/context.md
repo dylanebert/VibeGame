@@ -16,11 +16,14 @@ Entity Component System scheduler and state management. Provides the State class
 ```
 ecs/
 ├── context.md  # This file
+├── components.ts  # Core ECS components
+├── config.ts  # Configuration registry
 ├── constants.ts  # ECS constants and limits
 ├── ordering.ts  # System execution ordering
 ├── scheduler.ts  # Batch scheduler implementation
 ├── state.ts  # World state management
 ├── types.ts  # Core ECS types
+├── utils.ts  # Component field utilities
 └── index.ts  # Module exports
 ```
 
@@ -81,7 +84,7 @@ World container managing entities, components, systems, and plugins. See main co
 ### Exported Types
 
 - `System` - System definition interface
-- `Plugin` - Plugin bundle interface  
+- `Plugin` - Plugin bundle interface
 - `Recipe` - Entity recipe definition
 - `Config` - Configuration interface
 - `GameTime` - Time tracking interface
@@ -107,7 +110,7 @@ const EarlySystem: GAME.System = {
 };
 
 const LateSystem: GAME.System = {
-  group: 'draw', 
+  group: 'draw',
   last: true,
   update: (state) => { /* runs last in draw */ }
 };

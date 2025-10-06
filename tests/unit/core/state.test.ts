@@ -120,4 +120,50 @@ describe('State', () => {
     state.addComponent(entity, MyTestComponent, { value: 42 });
     expect(MyTestComponent.value[entity]).toBe(42);
   });
+
+  it('should apply component defaults when adding component', () => {
+    const TestWithDefaults = defineComponent({
+      value: Types.f32,
+      scale: Types.f32,
+    });
+
+    state.registerComponent('test-with-defaults', TestWithDefaults);
+    state.registerConfig({
+      defaults: {
+        'test-with-defaults': {
+          value: 10,
+          scale: 1,
+        },
+      },
+    });
+
+    const entity = state.createEntity();
+    state.addComponent(entity, TestWithDefaults);
+
+    expect(TestWithDefaults.value[entity]).toBe(10);
+    expect(TestWithDefaults.scale[entity]).toBe(1);
+  });
+
+  it('should allow explicit values to override component defaults', () => {
+    const TestWithDefaults = defineComponent({
+      value: Types.f32,
+      scale: Types.f32,
+    });
+
+    state.registerComponent('test-override', TestWithDefaults);
+    state.registerConfig({
+      defaults: {
+        'test-override': {
+          value: 10,
+          scale: 1,
+        },
+      },
+    });
+
+    const entity = state.createEntity();
+    state.addComponent(entity, TestWithDefaults, { value: 42 });
+
+    expect(TestWithDefaults.value[entity]).toBe(42);
+    expect(TestWithDefaults.scale[entity]).toBe(1);
+  });
 });

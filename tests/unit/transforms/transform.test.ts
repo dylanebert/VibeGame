@@ -64,13 +64,13 @@ describe('Transform Components', () => {
     expect(Transform.rotX[entity]).toBe(0);
     expect(Transform.rotY[entity]).toBe(0);
     expect(Transform.rotZ[entity]).toBe(0);
-    expect(Transform.rotW[entity]).toBe(0);
+    expect(Transform.rotW[entity]).toBe(1);
     expect(Transform.eulerX[entity]).toBe(0);
     expect(Transform.eulerY[entity]).toBe(0);
     expect(Transform.eulerZ[entity]).toBe(0);
-    expect(Transform.scaleX[entity]).toBe(0);
-    expect(Transform.scaleY[entity]).toBe(0);
-    expect(Transform.scaleZ[entity]).toBe(0);
+    expect(Transform.scaleX[entity]).toBe(1);
+    expect(Transform.scaleY[entity]).toBe(1);
+    expect(Transform.scaleZ[entity]).toBe(1);
   });
 
   it('should apply default values when adding component with partial data', () => {
@@ -107,10 +107,10 @@ describe('Transform Components', () => {
     expect(WorldTransform.rotX[entity]).toBe(0);
     expect(WorldTransform.rotY[entity]).toBe(0);
     expect(WorldTransform.rotZ[entity]).toBe(0);
-    expect(WorldTransform.rotW[entity]).toBe(0);
-    expect(WorldTransform.scaleX[entity]).toBe(0);
-    expect(WorldTransform.scaleY[entity]).toBe(0);
-    expect(WorldTransform.scaleZ[entity]).toBe(0);
+    expect(WorldTransform.rotW[entity]).toBe(1);
+    expect(WorldTransform.scaleX[entity]).toBe(1);
+    expect(WorldTransform.scaleY[entity]).toBe(1);
+    expect(WorldTransform.scaleZ[entity]).toBe(1);
   });
 
   it('should create Parent component for hierarchy', () => {
