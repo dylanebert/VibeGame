@@ -63,9 +63,19 @@ vibegame/
 │   ├── runtime.ts  # Game runtime engine
 │   └── index.ts  # Main exports
 ├── examples/  # Example applications
-│   └── hello-world/  # Basic example
+│   ├── hello-world/  # Basic example
+│   │   ├── src/
+│   │   │   └── main.ts
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   └── lorenz/  # Lorenz attractor particle system
 │       ├── src/
-│       │   └── main.ts
+│       │   ├── main.ts
+│       │   ├── plugin.ts
+│       │   ├── components.ts
+│       │   ├── systems.ts
+│       │   └── utils.ts
 │       ├── index.html
 │       ├── package.json
 │       └── vite.config.ts
@@ -147,7 +157,7 @@ Bevy-inspired ECS with explicit update phases:
 - **Vite plugin**: src/vite/index.ts (WASM setup for Rapier physics)
 - **Builder API**: src/builder.ts (fluent builder pattern)
 - **Runtime**: src/runtime.ts (game runtime engine)
-- **Example apps**: examples/*/src/main.ts (demo applications)
+- **Example apps**: examples/\*/src/main.ts (demo applications)
 
 ## Naming Conventions
 
