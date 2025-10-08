@@ -1,7 +1,7 @@
 # Networking Plugin
 
 <!-- LLM:OVERVIEW -->
-Client-instance multiplayer using Colyseus. Each client runs full physics simulation, server stamps snapshots with tick numbers. Delay-buffered interpolation ensures smooth remote entity movement despite variable network timing.
+Client-instance multiplayer using Colyseus. Each client runs full physics simulation, server stamps snapshots with tick numbers. Delay-buffered interpolation ensures smooth remote entity movement despite variable network timing. Supports multiple entities per session using composite keys (sessionId:entityId).
 <!-- /LLM:OVERVIEW -->
 
 ## Architecture
@@ -13,7 +13,8 @@ Client-instance multiplayer using Colyseus. Each client runs full physics simula
 - Local entities: Non-networked
 
 **Server:**
-- Receives position snapshots, stamps with server tick
+- Receives position snapshots with entity IDs, stamps with server tick
+- Keys bodies by composite key (sessionId:entityId) to support multiple entities per session
 - Validates (bounds, NaN checks)
 - Broadcasts via Colyseus auto-sync
 
@@ -71,7 +72,7 @@ networking/
 
 ### State Management
 
-**NetworkState** - `room`, `sessionId`, `sessionIdToEntity` map
+**NetworkState** - `room`, `sessionId`, `compositeKeyToEntity` map (sessionId:entityId → entity)
 **getNetworkState(state)** - Get or create network state
 
 ### Sync Functions

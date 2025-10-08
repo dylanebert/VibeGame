@@ -22,7 +22,7 @@ export const NetworkInitSystem: System = {
     const room = netState.room;
 
     if (!room) {
-      if (netState.sessionIdToEntity.size > 0) {
+      if (netState.compositeKeyToEntity.size > 0) {
         console.log('[Network] No room, cleaning up all remote bodies');
         cleanupMissingBodies(state, netState, new Set());
       }
@@ -46,22 +46,28 @@ export const NetworkSyncSystem: System = {
     if (!room || !room.state?.bodies) return;
 
     const bodies = room.state.bodies as {
-      forEach?: (cb: (body: BodyStateLike, sessionId: string) => void) => void;
+      forEach?: (
+        cb: (body: BodyStateLike, compositeKey: string) => void
+      ) => void;
     };
 
     const forEach = bodies?.forEach;
     if (typeof forEach !== 'function') return;
 
-    const activeSessions = new Set<string>();
+    const activeKeys = new Set<string>();
 
-    forEach.call(bodies, (bodyState: BodyStateLike, sessionId: string) => {
+    forEach.call(bodies, (bodyState: BodyStateLike, compositeKey: string) => {
+      const colonIndex = compositeKey.indexOf(':');
+      if (colonIndex === -1) return;
+      const sessionId = compositeKey.slice(0, colonIndex);
+
       if (sessionId === netState.sessionId) return;
 
-      activeSessions.add(sessionId);
-      syncRemoteBody(state, sessionId, bodyState, netState);
+      activeKeys.add(compositeKey);
+      syncRemoteBody(state, compositeKey, bodyState, netState);
     });
 
-    cleanupMissingBodies(state, netState, activeSessions);
+    cleanupMissingBodies(state, netState, activeKeys);
   },
 };
 
@@ -214,6 +220,7 @@ export const NetworkSendSystem: System = {
 
     for (const entity of entities) {
       const snapshot = {
+        entity,
         posX: Body.posX[entity],
         posY: Body.posY[entity],
         posZ: Body.posZ[entity],
@@ -232,7 +239,7 @@ export const NetworkCleanupSystem: System = {
   dispose(state: State) {
     const netState = getNetworkState(state);
     cleanupMissingBodies(state, netState, new Set());
-    netState.sessionIdToEntity.clear();
+    netState.compositeKeyToEntity.clear();
     netState.sessionId = undefined;
 
     if (netState.room) {

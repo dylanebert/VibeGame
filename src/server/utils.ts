@@ -1,4 +1,5 @@
 export interface PositionSnapshot {
+  entity: number;
   posX: number;
   posY: number;
   posZ: number;

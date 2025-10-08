@@ -1,7 +1,7 @@
 # Server Runtime
 
 <!-- LLM:OVERVIEW -->
-Pure Colyseus relay server with no ECS or physics simulation. Receives position snapshots from clients, validates them, and broadcasts to other clients. Generic body abstraction with no player-specific logic.
+Pure Colyseus relay server with no ECS or physics simulation. Receives position snapshots with entity IDs, validates them, and broadcasts to other clients. Supports multiple entities per session using composite keys.
 <!-- /LLM:OVERVIEW -->
 
 ## Architecture
@@ -14,7 +14,8 @@ Pure Colyseus relay server with no ECS or physics simulation. Receives position 
 
 **Responsibilities:**
 - Accept client connections
-- Receive position snapshots, stamp with tick number
+- Receive position snapshots with entity IDs, stamp with tick number
+- Map bodies by composite key (sessionId:entityId) for multi-entity sessions
 - Validate snapshots (bounds, NaN/Infinity)
 - Broadcast to other clients via Colyseus auto-sync
 
@@ -23,16 +24,18 @@ Pure Colyseus relay server with no ECS or physics simulation. Receives position 
 ```
 server/
 ├── context.md
-├── schemas.ts      # BodyState, GameState (Colyseus schemas)
-├── game-room.ts    # Room lifecycle and message handlers
-├── utils.ts        # Validation and sanitization
-└── index.ts        # createGameServer() API
+├── composite-key.ts # Composite key helpers (internal)
+├── schemas.ts       # BodyState, GameState (Colyseus schemas)
+├── game-room.ts     # Room lifecycle and message handlers
+├── utils.ts         # Validation and sanitization
+└── index.ts         # createGameServer() API
 ```
 
 ## Scope
 
 - Connection lifecycle (join/leave)
-- Position message handling for networked bodies
+- Position message handling with entity IDs
+- Composite key management for multi-entity sessions
 - Basic anti-cheat validation
 - State broadcasting (automatic via Colyseus)
 
@@ -50,13 +53,14 @@ server/
 
 ### GameRoom
 - `onCreate()` - Initialize room and register message handlers
-- `onJoin(client)` - Create body state for client session
-- `onLeave(client)` - Remove body state for client session
+- `onJoin(client)` - Client connection (entities created on first position update)
+- `onLeave(client)` - Remove all entities for session using prefix match
 - `onDispose()` - Cleanup
 
 ### Schemas
-- `BodyState` - Position, rotation, and tick (pos, rot, tick)
-- `GameState` - MapSchema of bodies, serverTick counter
+- `BodyState` - Position, rotation, tick
+- `GameState` - MapSchema of bodies keyed by "sessionId:entityId"
+- `PositionSnapshot` - Client message type with entity ID
 
 ### Validation
 - `isValidSnapshot(snapshot)` - Bounds and NaN checks

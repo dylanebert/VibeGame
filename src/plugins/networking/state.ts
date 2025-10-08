@@ -7,7 +7,7 @@ export function getNetworkState(state: State): NetworkState {
   let netState = stateToNetworkState.get(state);
   if (!netState) {
     netState = {
-      sessionIdToEntity: new Map(),
+      compositeKeyToEntity: new Map(),
     };
     stateToNetworkState.set(state, netState);
   }

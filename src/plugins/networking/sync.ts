@@ -7,18 +7,18 @@ import { hashString } from './utils';
 
 export function syncRemoteBody(
   state: State,
-  sessionId: string,
+  compositeKey: string,
   bodyState: BodyStateLike,
   netState: NetworkState
 ): void {
-  let entity = netState.sessionIdToEntity.get(sessionId);
+  let entity = netState.compositeKeyToEntity.get(compositeKey);
 
   if (!entity) {
     entity = state.createEntity();
-    netState.sessionIdToEntity.set(sessionId, entity);
+    netState.compositeKeyToEntity.set(compositeKey, entity);
 
     state.addComponent(entity, Networked);
-    Networked.sessionId[entity] = hashString(sessionId);
+    Networked.sessionId[entity] = hashString(compositeKey);
 
     state.addComponent(entity, Body);
     Body.type[entity] = BodyType.KinematicPositionBased;
@@ -28,7 +28,7 @@ export function syncRemoteBody(
     initializeSnapshotBuffer(entity, bodyState);
 
     console.log(
-      `[Network] Remote body spawned: ${sessionId} → entity ${entity}`
+      `[Network] Remote body spawned: ${compositeKey} → entity ${entity}`
     );
     return;
   }
@@ -111,23 +111,23 @@ function insertSnapshotIntoBuffer(
 export function cleanupMissingBodies(
   state: State,
   netState: NetworkState,
-  activeSessions: Set<string>
+  activeKeys: Set<string>
 ): void {
   const toRemove: string[] = [];
 
-  for (const [sessionId, entity] of netState.sessionIdToEntity) {
-    if (!activeSessions.has(sessionId)) {
-      toRemove.push(sessionId);
+  for (const [compositeKey, entity] of netState.compositeKeyToEntity) {
+    if (!activeKeys.has(compositeKey)) {
+      toRemove.push(compositeKey);
       if (state.exists(entity)) {
         console.log(
-          `[Network] Remote body destroyed: ${sessionId} → entity ${entity}`
+          `[Network] Remote body destroyed: ${compositeKey} → entity ${entity}`
         );
         state.destroyEntity(entity);
       }
     }
   }
 
-  for (const sessionId of toRemove) {
-    netState.sessionIdToEntity.delete(sessionId);
+  for (const compositeKey of toRemove) {
+    netState.compositeKeyToEntity.delete(compositeKey);
   }
 }

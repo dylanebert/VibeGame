@@ -1,4 +1,5 @@
 import { Client, Room } from 'colyseus';
+import { makeCompositeKey } from './composite-key';
 import { BodyState, GameState } from './schemas';
 import type { PositionSnapshot } from './utils';
 import { isValidSnapshot, normalizeQuaternion, sanitizeNumber } from './utils';
@@ -23,12 +24,13 @@ export class GameRoom extends Room<GameState> {
         return;
       }
 
-      const body = this.state.bodies.get(client.sessionId);
+      const compositeKey = makeCompositeKey(client.sessionId, snapshot.entity);
+      let body = this.state.bodies.get(compositeKey);
+
       if (!body) {
-        console.warn(
-          `[Server] Position update from unknown session ${client.sessionId}`
-        );
-        return;
+        body = new BodyState();
+        this.state.bodies.set(compositeKey, body);
+        console.log(`[Server] Entity created: ${compositeKey}`);
       }
 
       body.posX = sanitizeNumber(snapshot.posX);
@@ -51,21 +53,24 @@ export class GameRoom extends Room<GameState> {
   }
 
   onJoin(client: Client) {
-    const bodyState = new BodyState();
-    bodyState.posX = 0;
-    bodyState.posY = 2;
-    bodyState.posZ = 0;
-    bodyState.rotX = 0;
-    bodyState.rotY = 0;
-    bodyState.rotZ = 0;
-    bodyState.rotW = 1;
-
-    this.state.bodies.set(client.sessionId, bodyState);
     console.log(`[Server] Session joined: ${client.sessionId}`);
   }
 
   onLeave(client: Client) {
-    this.state.bodies.delete(client.sessionId);
+    const toRemove: string[] = [];
+    const prefix = client.sessionId + ':';
+
+    this.state.bodies.forEach((_body, key) => {
+      if (key.startsWith(prefix)) {
+        toRemove.push(key);
+      }
+    });
+
+    for (const key of toRemove) {
+      this.state.bodies.delete(key);
+      console.log(`[Server] Entity removed: ${key}`);
+    }
+
     console.log(`[Server] Session left: ${client.sessionId}`);
   }
 

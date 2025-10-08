@@ -3,7 +3,7 @@ import type { Room } from 'colyseus.js';
 export interface NetworkState {
   room?: Room;
   sessionId?: string;
-  sessionIdToEntity: Map<string, number>;
+  compositeKeyToEntity: Map<string, number>;
 }
 
 export interface BodyStateLike {
