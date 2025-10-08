@@ -1,6 +1,7 @@
 export { NULL_ENTITY, TIME_CONSTANTS } from './constants';
 export { Parent } from './components';
 export { State } from './state';
+export { serializeComponent, deserializeComponent } from './serialization';
 export type {
   ComponentDefaults,
   ComponentEnums,

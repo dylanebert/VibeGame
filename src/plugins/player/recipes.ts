@@ -12,6 +12,7 @@ export const playerRecipe: Recipe = {
     'character-controller',
     'input-state',
     'respawn',
+    'owned',
   ],
   overrides: {
     'body.eulerY': PLAYER_BODY_DEFAULTS.eulerY,

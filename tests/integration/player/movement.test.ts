@@ -6,19 +6,21 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
+  defineQuery,
   initializePhysics,
+  InputButtons,
   InputState,
   OrbitCamera,
   OrbitCameraPlugin,
   PhysicsPlugin,
   Player,
   PlayerPlugin,
+  setButton,
   State,
   TIME_CONSTANTS,
   Transform,
   TransformsPlugin,
   WorldTransform,
-  defineQuery,
 } from 'vibegame';
 
 describe('Player Movement', () => {
@@ -442,7 +444,7 @@ describe('Player Movement', () => {
       expect(speedModified).toBe(true);
       expect(Player.speed[player]).toBe(10);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       Player.isJumping[player] = 1;

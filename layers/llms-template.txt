@@ -467,10 +467,40 @@ const x = GAME.Transform.posX[entity];
 const health = GAME.Health.current[entity];
 ```
 
+## Multiplayer Networking
+
+Client-instance multiplayer with automatic ownership detection:
+
+```typescript
+import * as GAME from 'vibegame';
+import { Client } from 'colyseus.js';
+import { getNetworkState, NetworkingPlugin } from 'vibegame';
+
+const runtime = await GAME.withPlugin(NetworkingPlugin).run();
+const state = runtime.getState();
+
+const client = new Client('ws://localhost:2567');
+const room = await client.joinOrCreate('game');
+
+const netState = getNetworkState(state);
+netState.room = room;
+```
+
+**Server:**
+```typescript
+import { createGameServer } from 'vibegame/server';
+createGameServer({ port: 2567 });
+```
+
+**Architecture:**
+- Each client runs full physics simulation (zero latency)
+- Server is pure relay (no ECS, no physics, no simulation)
+- Local player auto-marked as owned and sent to server
+- Remote players appear as kinematic ghosts
+
 ## Features Not Yet Built-In
 
 ### ❌ Engine Features Not Available
-- **Multiplayer/Networking** - No server sync
 - **Sound/Audio** - No audio system yet
 - **Save/Load** - No persistence system
 - **Inventory** - No item management system built-in (but easily implementable with UI)
@@ -591,16 +621,19 @@ Available in all systems via the `state` parameter:
 - `destroyEntity(entity: number)` - Remove entity
 - `query(...Components): number[]` - Find entities with components
 
-### Component Operations  
-- `addComponent(entity, Component, data?)` - Add component
+### Component Operations
+- `addComponent(entity, Component, data?)` - Add component with automatic defaults from plugin config
 - `removeComponent(entity, Component)` - Remove component
 - `hasComponent(entity, Component): boolean` - Check component
 - `getComponent(name: string): Component | null` - Get by name
 
+**Important**: When adding a component with `state.addComponent(entity, Component)`, default values from the plugin's `config.defaults` are automatically applied. You only need to set properties that differ from the defaults.
+
 ### Time
-- `time.delta: number` - Frame time in seconds
+- `time.deltaTime: number` - Frame time in seconds
 - `time.elapsed: number` - Total time in seconds
-- `time.fixed: number` - Fixed timestep (1/50)
+- `time.fixedDeltaTime: number` - Fixed timestep (1/50 = 0.02)
+- `time.tick: number` - Fixed update counter
 
 ### Physics Helpers
 - `addComponent(entity, ApplyImpulse, {x, y, z})` - One-time push

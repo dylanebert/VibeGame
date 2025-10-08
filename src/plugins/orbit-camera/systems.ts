@@ -1,6 +1,6 @@
+import * as THREE from 'three';
 import { defineQuery, type System } from '../../core';
 import { Transform, WorldTransform } from '../transforms';
-import * as THREE from 'three';
 import { OrbitCamera } from './components';
 import {
   calculateCameraPosition,

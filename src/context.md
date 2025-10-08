@@ -21,6 +21,7 @@ src/
 ├── plugins/  # Plugin modules
 │   ├── animation/
 │   ├── input/
+│   ├── networking/  # Colyseus multiplayer (opt-in)
 │   ├── orbit-camera/
 │   ├── physics/
 │   ├── player/
@@ -31,6 +32,9 @@ src/
 │   ├── transforms/
 │   ├── tweening/
 │   └── defaults.ts  # Default plugin bundle
+├── server/  # Colyseus server runtime
+│   ├── context.md
+│   └── index.ts
 ├── vite/  # Vite plugin
 │   └── index.ts
 ├── builder.ts  # Builder pattern API
@@ -50,6 +54,7 @@ src/
 - **runtime.ts**: Runtime engine
 - **core/index.ts**: Core types and utilities
 - **plugins/*/index.ts**: Individual plugin exports
+- **server/index.ts**: Colyseus server creation
 
 ## Dependencies
 
@@ -147,6 +152,12 @@ Available via `DefaultPlugins` export:
 - `PlayerPlugin` - Character controller
 - `StartupPlugin` - Initialization
 - `RespawnPlugin` - Entity respawning
+
+### Networking (Opt-in)
+
+Multiplayer support via Colyseus:
+- `NetworkingPlugin` - Client-side networking (from `vibegame/networking`)
+- `createGameServer()` - Server creation (from `vibegame/server`)
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->

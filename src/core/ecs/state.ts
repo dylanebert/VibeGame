@@ -9,10 +9,10 @@ import {
   type Component,
   type IWorld,
 } from 'bitecs';
+import { createEntityFromRecipe } from '../recipes/parser';
 import { toKebabCase } from '../utils/naming';
-import { ConfigRegistry } from './config';
-import { setComponentFields } from './utils';
 import { Parent } from './components';
+import { ConfigRegistry } from './config';
 import { TIME_CONSTANTS } from './constants';
 import { Scheduler } from './scheduler';
 import type {
@@ -24,7 +24,7 @@ import type {
   System,
   XMLValue,
 } from './types';
-import { createEntityFromRecipe } from '../recipes/parser';
+import { setComponentFields } from './utils';
 
 export class State {
   public readonly world: IWorld;
@@ -32,16 +32,19 @@ export class State {
   public readonly scheduler = new Scheduler();
   public readonly systems = new Set<System>();
   public readonly config = new ConfigRegistry();
+  public readonly mode: 'client' | 'server';
   private readonly recipes = new Map<string, Recipe>();
   private readonly components = new Map<string, Component>();
   private isDisposed = false;
 
-  constructor() {
+  constructor(mode?: 'client' | 'server') {
+    this.mode = mode ?? 'client';
     this.world = createWorld();
     this.time = {
       deltaTime: 0,
       fixedDeltaTime: TIME_CONSTANTS.FIXED_TIMESTEP,
       elapsed: 0,
+      tick: 0,
     };
 
     this.registerComponent('parent', Parent);
@@ -49,6 +52,14 @@ export class State {
       name: 'entity',
       components: [],
     });
+  }
+
+  get isServer(): boolean {
+    return this.mode === 'server';
+  }
+
+  get isClient(): boolean {
+    return this.mode === 'client';
   }
 
   registerPlugin(plugin: Plugin): void {

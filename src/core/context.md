@@ -10,6 +10,7 @@ Entity Component System foundation with State management and plugin architecture
 - XML parser for declarative entity creation
 - Runtime validation for XML recipes
 - Math utilities for 3D transformations
+- Component serialization utilities
 - Core types and interfaces
 
 ## Layout
@@ -23,6 +24,7 @@ core/
 │   ├── ordering.ts  # System execution order
 │   ├── scheduler.ts  # Batch scheduling
 │   ├── state.ts  # World state
+│   ├── serialization.ts  # Component serialization
 │   ├── types.ts  # Core types
 │   └── index.ts
 ├── xml/  # XML parsing
@@ -52,13 +54,14 @@ core/
 
 ## Scope
 
-- **In-scope**: ECS foundation, XML parsing, recipe validation, math, core types
-- **Out-of-scope**: Game logic, rendering, physics
+- **In-scope**: ECS foundation, XML parsing, recipe validation, math, serialization, core types
+- **Out-of-scope**: Game logic, rendering, physics, networking policy
 
 ## Entry Points
 
 - **index.ts**: Core exports (State, Plugin, System, Component types)
 - **ecs/scheduler.ts**: System scheduling and batches
+- **ecs/serialization.ts**: Component serialization utilities
 - **xml/parser.ts**: XML to ECS entity conversion
 
 ## Dependencies
@@ -91,7 +94,7 @@ The engine uses a semi-fixed timestep model with three execution phases:
 - createEntity(): number
 - destroyEntity(eid: number): void
 - exists(eid: number): boolean
-- addComponent(eid, component, values?): void
+- addComponent(eid, component, values?): void — Adds component with automatic default values from plugin config
 - removeComponent(eid, component): void
 - hasComponent(eid, component): boolean
 - registerPlugin(plugin): void
@@ -112,6 +115,9 @@ The engine uses a semi-fixed timestep model with three execution phases:
 - scheduler: Scheduler
 - systems: Set<System>
 - config: ConfigRegistry
+- mode: 'client' | 'server'
+- isServer: boolean
+- isClient: boolean
 
 ### Types
 
@@ -165,6 +171,12 @@ Linear interpolation
 #### slerp(qa, qb, t): Quaternion
 Quaternion interpolation
 
+#### serializeComponent(component, eid): Record<string, number>
+Serialize component data for an entity to JSON-compatible object
+
+#### deserializeComponent(component, eid, data): void
+Deserialize JSON data into component for an entity
+
 ### Constants
 
 - NULL_ENTITY: 4294967295
@@ -198,9 +210,12 @@ const Health = GAME.defineComponent({
 const state = new GAME.State();
 const entity = state.createEntity();
 
-// Add component with initial values
+// Add component with defaults from plugin config
+state.addComponent(entity, Health);
+
+// Or override defaults
 state.addComponent(entity, Health, {
-  current: 100,
+  current: 50,
   max: 100
 });
 
@@ -306,5 +321,36 @@ const customParser: GAME.Parser = (entity, element, state) => {
 state.registerConfig({
   parsers: { 'my-tag': customParser }
 });
+```
+
+### Serializing Components
+
+```typescript
+import * as GAME from 'vibegame';
+
+const Transform = GAME.defineComponent({
+  posX: GAME.Types.f32,
+  posY: GAME.Types.f32,
+  posZ: GAME.Types.f32,
+});
+
+const state = new GAME.State();
+const entity = state.createEntity();
+
+state.addComponent(entity, Transform, {
+  posX: 10,
+  posY: 20,
+  posZ: 30,
+});
+
+// Serialize to JSON-compatible object
+const data = GAME.serializeComponent(Transform, entity);
+// { posX: 10, posY: 20, posZ: 30 }
+
+// Deserialize into another entity
+const entity2 = state.createEntity();
+state.addComponent(entity2, Transform);
+GAME.deserializeComponent(Transform, entity2, data);
+// entity2 now has same transform values
 ```
 <!-- /LLM:EXAMPLES -->

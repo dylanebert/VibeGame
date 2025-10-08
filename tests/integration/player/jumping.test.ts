@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS } from 'vibegame';
-import { InputState } from 'vibegame';
+import { InputState, InputButtons, setButton } from 'vibegame';
 import { OrbitCameraPlugin } from 'vibegame';
 import {
   Body,
@@ -110,13 +110,13 @@ describe('Player Jumping', () => {
       waitForGrounded(player);
 
       const startY = Body.posY[player];
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
 
       let maxHeight = startY;
       for (let i = 0; i < 60; i++) {
         state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
         maxHeight = Math.max(maxHeight, Body.posY[player]);
-        InputState.jump[player] = 0;
+        setButton(player, InputButtons.JUMP, false);
       }
 
       const heightReached = maxHeight - startY;
@@ -134,7 +134,7 @@ describe('Player Jumping', () => {
       expect(CharacterController.grounded[player]).toBe(0);
 
       const startY = Body.posY[player];
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
 
       for (let i = 0; i < 5; i++) {
         state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
@@ -149,12 +149,12 @@ describe('Player Jumping', () => {
 
       waitForGrounded(player);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
       const firstJumpVel = CharacterMovement.velocityY[player];
       expect(firstJumpVel).toBeGreaterThan(0);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(Player.canJump[player]).toBe(0);
@@ -167,11 +167,11 @@ describe('Player Jumping', () => {
 
       waitForGrounded(player);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       const initialVelocity = CharacterMovement.velocityY[player];
-      InputState.jump[player] = 0;
+      setButton(player, InputButtons.JUMP, false);
 
       const velocities: number[] = [initialVelocity];
       const groundedStates: number[] = [0];
@@ -199,9 +199,9 @@ describe('Player Jumping', () => {
         state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
       }
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-      InputState.jump[player] = 0;
+      setButton(player, InputButtons.JUMP, false);
 
       // Jump buffer should be set (not at default -10000)
       // With 50Hz physics, the timing may be different
@@ -230,7 +230,7 @@ describe('Player Jumping', () => {
 
       waitForGrounded(player);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(Player.jumpBufferTime[player]).toBe(-10000);
@@ -278,7 +278,7 @@ describe('Player Jumping', () => {
       expect(leftPlatform).toBe(true);
       expect(CharacterController.grounded[player]).toBe(0);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(CharacterMovement.velocityY[player]).toBeGreaterThan(0);
@@ -290,7 +290,7 @@ describe('Player Jumping', () => {
 
       Player.lastGroundedTime[player] = -1000;
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(CharacterMovement.velocityY[player]).toBeLessThanOrEqual(0);
@@ -308,7 +308,7 @@ describe('Player Jumping', () => {
 
       CharacterController.grounded[player] = 0;
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(CharacterMovement.velocityY[player]).toBeGreaterThan(5);
@@ -325,7 +325,7 @@ describe('Player Jumping', () => {
 
       expect(CharacterController.grounded[player]).toBe(0);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(CharacterMovement.velocityY[player]).toBeLessThanOrEqual(0);
@@ -347,8 +347,8 @@ describe('Player Jumping', () => {
       waitForGrounded(normalPlayer);
       waitForGrounded(lowGravPlayer);
 
-      InputState.jump[normalPlayer] = 1;
-      InputState.jump[lowGravPlayer] = 1;
+      setButton(normalPlayer, InputButtons.JUMP, true);
+      setButton(lowGravPlayer, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       const normalVel = CharacterMovement.velocityY[normalPlayer];
@@ -386,8 +386,8 @@ describe('Player Jumping', () => {
       const shortStartY = Body.posY[shortJumper];
       const tallStartY = Body.posY[tallJumper];
 
-      InputState.jump[shortJumper] = 1;
-      InputState.jump[tallJumper] = 1;
+      setButton(shortJumper, InputButtons.JUMP, true);
+      setButton(tallJumper, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       let shortMaxHeight = shortStartY;
@@ -417,7 +417,7 @@ describe('Player Jumping', () => {
       expect(Player.isJumping[player]).toBe(0);
       expect(Player.canJump[player]).toBe(1);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(Player.isJumping[player]).toBe(1);
@@ -430,7 +430,7 @@ describe('Player Jumping', () => {
 
       waitForGrounded(player);
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       expect(Player.canJump[player]).toBe(0);
@@ -452,9 +452,9 @@ describe('Player Jumping', () => {
 
       const initialY = Body.posY[player];
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-      InputState.jump[player] = 0;
+      setButton(player, InputButtons.JUMP, false);
 
       expect(Player.isJumping[player]).toBe(1);
       expect(Player.canJump[player]).toBe(0);
@@ -472,9 +472,9 @@ describe('Player Jumping', () => {
 
       const secondJumpY = Body.posY[player];
 
-      InputState.jump[player] = 1;
+      setButton(player, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-      InputState.jump[player] = 0;
+      setButton(player, InputButtons.JUMP, false);
 
       expect(Player.isJumping[player]).toBe(1);
       expect(CharacterMovement.velocityY[player]).toBeGreaterThan(0);
@@ -496,9 +496,9 @@ describe('Player Jumping', () => {
       for (let jumpAttempt = 0; jumpAttempt < 5; jumpAttempt++) {
         const beforeJumpY = Body.posY[player];
 
-        InputState.jump[player] = 1;
+        setButton(player, InputButtons.JUMP, true);
         state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-        InputState.jump[player] = 0;
+        setButton(player, InputButtons.JUMP, false);
 
         expect(Player.isJumping[player]).toBe(1);
         expect(Player.canJump[player]).toBe(0);

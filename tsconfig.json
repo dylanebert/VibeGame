@@ -12,7 +12,9 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "useDefineForClassFields": true,
+    "useDefineForClassFields": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -26,7 +28,9 @@
     "paths": {
       "vibegame": ["./src/index.ts"],
       "vibegame/defaults": ["./src/plugins/defaults.ts"],
-      "vibegame/core/validation": ["./src/core/validation/index.ts"]
+      "vibegame/core/validation": ["./src/core/validation/index.ts"],
+      "vibegame/server": ["./src/server/index.ts"],
+      "vibegame/networking": ["./src/plugins/networking/index.ts"]
     }
   },
   "include": ["src/**/*", "tests/**/*"],

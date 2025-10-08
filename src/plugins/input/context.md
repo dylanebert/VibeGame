@@ -1,15 +1,15 @@
 # Input Plugin
 
 <!-- LLM:OVERVIEW -->
-Focus-aware input handling for mouse, keyboard, and gamepad with buffered actions. Keyboard input only responds when canvas has focus.
+Tick-based deterministic input handling with bitmask buttons for multiplayer-ready input recording and replay.
 <!-- /LLM:OVERVIEW -->
 
 ## Purpose
 
 - Capture and normalize input events
-- Provide unified input state with focus management
-- Handle mouse movement and wheel
-- Support gamepad input
+- Provide tick-indexed input commands
+- Support input recording and replay
+- Enable deterministic physics simulation
 
 ## Layout
 
@@ -20,92 +20,80 @@ input/
 ├── plugin.ts  # Plugin definition
 ├── components.ts  # InputState component
 ├── systems.ts  # InputSystem
-├── utils.ts  # Input event handlers
+├── utils.ts  # Event handlers, circular buffer, helpers
 └── config.ts  # Input configuration
 ```
 
 ## Scope
 
-- **In-scope**: Browser input events, gamepad API
-- **Out-of-scope**: Touch input, gestures
+- **In-scope**: Keyboard, mouse, scroll input; deterministic recording
+- **Out-of-scope**: Touch input, gamepad (not yet implemented)
 
 ## Entry Points
 
 - **plugin.ts**: InputPlugin definition
-- **systems.ts**: InputSystem for state updates
-- **utils.ts**: Event handler utilities
+- **systems.ts**: InputSystem for tick-based sampling
+- **utils.ts**: Event handling, buffering, button helpers
 
 ## Dependencies
 
-- **Internal**: Core ECS
-- **External**: Browser DOM/Gamepad APIs
+- **Internal**: Core ECS (tick counter)
+- **External**: Browser DOM APIs
 
 ## Components
 
-- **InputState**: Current input state (keys, mouse, gamepad)
+- **InputState**: Tick-indexed input with button bitmasks
 
 ## Systems
 
-- **InputSystem**: Updates input state each frame
+- **InputSystem**: Samples input each frame, stores in circular buffer
 
 ## Utilities
 
 - **setTargetCanvas**: Register canvas for focus-based input
-- **consumeJump**: Consume jump input
-- **consumePrimary/Secondary**: Consume action inputs
-- **handleMouseMove/Down/Up/Wheel**: Mouse handlers
+- **InputBuffer**: 256-frame circular buffer for replay
+- **Test helpers**: setJump, getJump, etc.
 
 <!-- LLM:REFERENCE -->
 ### Components
 
 #### InputState
+- tick: ui32 - Frame number
+- buttons: ui16 - Bitmask (JUMP=0x01, PRIMARY=0x02, LEFT_MOUSE=0x200, etc.)
 - moveX: f32 - Horizontal axis (-1 left, 1 right)
 - moveY: f32 - Forward/backward (-1 back, 1 forward)
-- moveZ: f32 - Vertical axis (-1 down, 1 up)
-- lookX: f32 - Mouse delta X
-- lookY: f32 - Mouse delta Y
+- lookDeltaX: f32 - Mouse delta X
+- lookDeltaY: f32 - Mouse delta Y
 - scrollDelta: f32 - Mouse wheel delta
-- jump: ui8 - Jump available (0/1)
-- primaryAction: ui8 - Primary action (0/1)
-- secondaryAction: ui8 - Secondary action (0/1)
-- leftMouse: ui8 - Left button (0/1)
-- rightMouse: ui8 - Right button (0/1)
-- middleMouse: ui8 - Middle button (0/1)
-- jumpBufferTime: f32
-- primaryBufferTime: f32
-- secondaryBufferTime: f32
+
+#### InputButtons
+Constants for button bitmasks:
+- JUMP: 0x0001
+- PRIMARY: 0x0002
+- SECONDARY: 0x0004
+- LEFT_MOUSE: 0x0200
+- RIGHT_MOUSE: 0x0400
 
 ### Systems
 
 #### InputSystem
 - Group: simulation
-- Updates InputState components with current input data
+- Samples raw input → creates InputCommand → updates InputState components
+- Stores commands in global circular buffer
 
 ### Functions
 
 #### setTargetCanvas(canvas: HTMLCanvasElement | null): void
 Registers canvas for focus-based keyboard input
 
-#### consumeJump(): boolean
-Consumes buffered jump input
+#### getGlobalInputBuffer(): InputBuffer
+Returns the global input recording buffer
 
-#### consumePrimary(): boolean
-Consumes buffered primary action
+#### setButton(eid: number, button: number, value: boolean): void
+Helper to set a button bit in InputState
 
-#### consumeSecondary(): boolean
-Consumes buffered secondary action
-
-#### handleMouseMove(event: MouseEvent): void
-Processes mouse movement
-
-#### handleMouseDown(event: MouseEvent): void
-Processes mouse button press
-
-#### handleMouseUp(event: MouseEvent): void
-Processes mouse button release
-
-#### handleWheel(event: WheelEvent): void
-Processes mouse wheel
+#### getButton(eid: number, button: number): boolean
+Helper to read a button bit from InputState
 
 ### Constants
 
@@ -116,17 +104,7 @@ Default input mappings and sensitivity settings
 <!-- LLM:EXAMPLES -->
 ## Examples
 
-### Basic Plugin Registration
-
-```typescript
-import * as GAME from 'vibegame';
-
-GAME
-  .withPlugin(GAME.InputPlugin)
-  .run();
-```
-
-### Reading Input in a Custom System
+### Reading Input with Bitmasks
 
 ```typescript
 import * as GAME from 'vibegame';
@@ -135,68 +113,49 @@ const playerQuery = GAME.defineQuery([GAME.Player, GAME.InputState]);
 const PlayerControlSystem: GAME.System = {
   update: (state) => {
     const players = playerQuery(state.world);
-    
+
     for (const player of players) {
-      // Read movement axes
       const moveX = GAME.InputState.moveX[player];
       const moveY = GAME.InputState.moveY[player];
-      
-      // Check for jump
-      if (GAME.InputState.jump[player]) {
-        // Jump is available this frame
-      }
-      
-      // Check mouse buttons
-      if (GAME.InputState.leftMouse[player]) {
-        // Left mouse is held
+
+      const isJumping = (GAME.InputState.buttons[player] & GAME.InputButtons.JUMP) !== 0;
+      const isLeftMouseDown = (GAME.InputState.buttons[player] & GAME.InputButtons.LEFT_MOUSE) !== 0;
+
+      if (isJumping) {
+        velocity.y = JUMP_FORCE;
       }
     }
   }
 };
 ```
 
-### Consuming Buffered Actions
+### Recording and Replaying Input
 
 ```typescript
 import * as GAME from 'vibegame';
 
-const CombatSystem: GAME.System = {
-  update: (state) => {
-    // Consume jump if available (prevents double consumption)
-    if (GAME.consumeJump()) {
-      // Perform jump
-      velocity.y = JUMP_FORCE;
-    }
-    
-    // Consume primary action
-    if (GAME.consumePrimary()) {
-      // Fire weapon
-      spawnProjectile();
-    }
-  }
-};
+const buffer = GAME.getGlobalInputBuffer();
+
+// After gameplay, extract recording
+const recording = buffer.getRange(0, state.time.tick);
+
+// Later, replay by setting InputState directly
+for (const command of recording) {
+  GAME.InputState.tick[player] = command.tick;
+  GAME.InputState.buttons[player] = command.buttons;
+  GAME.InputState.moveX[player] = command.moveX;
+  GAME.InputState.moveY[player] = command.moveY;
+  state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+}
 ```
 
-### Custom Input Mappings
+### Button Helpers
 
 ```typescript
-import * as GAME from 'vibegame';
+import { setButton, getButton, InputButtons } from 'vibegame';
 
-// Modify before starting the game
-GAME.INPUT_CONFIG.mappings.jump = ['Space', 'KeyX'];
-GAME.INPUT_CONFIG.mappings.moveForward = ['KeyW', 'KeyZ', 'ArrowUp'];
-GAME.INPUT_CONFIG.mouseSensitivity.look = 0.3;
-
-GAME.run();
-```
-
-### Manual Event Handling
-
-```typescript
-import * as GAME from 'vibegame';
-
-// Use the exported handlers directly if needed
-canvas.addEventListener('mousedown', GAME.handleMouseDown);
-canvas.addEventListener('mouseup', GAME.handleMouseUp);
+// Use helpers instead of direct bitmask manipulation
+setButton(player, InputButtons.JUMP, true);
+expect(getButton(player, InputButtons.JUMP)).toBe(true);
 ```
 <!-- /LLM:EXAMPLES -->

@@ -2,18 +2,19 @@ import { defineQuery, Parent, type System } from '../../core';
 import { AnimatedCharacter } from '../animation';
 import { HasAnimator } from '../animation/components';
 import { InputState } from '../input';
+import { Owned } from '../networking';
 import { OrbitCamera } from '../orbit-camera';
 import {
   Body,
   CharacterController,
   CharacterMovement,
   Collider,
-} from '../physics';
+} from '../physics/components';
+import { Player } from '../player/components';
 import {
-  Player,
   PLAYER_BODY_DEFAULTS,
   PLAYER_COLLIDER_DEFAULTS,
-} from '../player';
+} from '../player/constants';
 import { AmbientLight, DirectionalLight, MainCamera } from '../rendering';
 import { Respawn } from '../respawn';
 import { Transform } from '../transforms';
@@ -104,6 +105,7 @@ export const PlayerStartupSystem: System = {
       state.addComponent(entity, CharacterController);
       state.addComponent(entity, InputState);
       state.addComponent(entity, Respawn);
+      state.addComponent(entity, Owned);
     }
   },
 };

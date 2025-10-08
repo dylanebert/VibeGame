@@ -21,6 +21,7 @@ ecs/
 ├── constants.ts  # ECS constants and limits
 ├── ordering.ts  # System execution ordering
 ├── scheduler.ts  # Batch scheduler implementation
+├── serialization.ts  # Component serialization
 ├── state.ts  # World state management
 ├── types.ts  # Core ECS types
 ├── utils.ts  # Component field utilities
@@ -36,6 +37,7 @@ ecs/
 
 - **state.ts**: State class for world management
 - **scheduler.ts**: Scheduler for system batches
+- **serialization.ts**: Component serialization utilities
 - **types.ts**: Plugin, System, Component interfaces
 
 ## Dependencies
@@ -75,10 +77,15 @@ Each frame executes systems in three distinct phases:
 #### State
 World container managing entities, components, systems, and plugins. See main core/context.md for full API.
 
+### Exported Functions
+
+- `serializeComponent(component, eid)` - Serialize component to JSON object
+- `deserializeComponent(component, eid, data)` - Deserialize JSON into component
+
 ### Exported Constants
 
 - `NULL_ENTITY: 4294967295` - Invalid entity ID
-- `TIME_CONSTANTS.FIXED_TIMESTEP: 1/60` - Fixed update rate
+- `TIME_CONSTANTS.FIXED_TIMESTEP: 1/50` - Fixed update rate (20ms)
 - `TIME_CONSTANTS.DEFAULT_DELTA: 1/144` - Default frame delta
 
 ### Exported Types
@@ -87,7 +94,7 @@ World container managing entities, components, systems, and plugins. See main co
 - `Plugin` - Plugin bundle interface
 - `Recipe` - Entity recipe definition
 - `Config` - Configuration interface
-- `GameTime` - Time tracking interface
+- `GameTime` - Time tracking interface (deltaTime, fixedDeltaTime, elapsed, tick)
 - `Parser` - XML tag parser function type
 - `ComponentDefaults` - Default values mapping
 - `ComponentEnums` - Enum value mappings

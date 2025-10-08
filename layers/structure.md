@@ -9,6 +9,7 @@ VibeGame - A vibe coding game engine using ECS architecture with bitECS, featuri
 - Runtime: Bun/Node.js
 - Language: TypeScript 5.6
 - Physics: Rapier 3D WASM
+- Networking: Colyseus 0.16
 - Build: Vite 5.4 with TypeScript declarations
 
 ## Commands
@@ -44,6 +45,7 @@ vibegame/
 │   ├── plugins/  # Plugin modules
 │   │   ├── animation/  # Animation system
 │   │   ├── input/  # Input handling
+│   │   ├── networking/  # Colyseus multiplayer
 │   │   ├── orbit-camera/  # Orbital camera
 │   │   ├── physics/  # Rapier 3D physics
 │   │   ├── player/  # Player controller
@@ -55,6 +57,12 @@ vibegame/
 │   │   ├── transforms/  # Transform hierarchy
 │   │   ├── tweening/  # Tween animations
 │   │   └── defaults.ts  # Default plugin bundle
+│   ├── server/  # Colyseus server runtime
+│   │   ├── context.md  # Server module context
+│   │   ├── schemas.ts  # Network state schemas
+│   │   ├── game-room.ts  # Game room definition
+│   │   ├── utils.ts  # Server utilities
+│   │   └── index.ts  # Server API
 │   ├── vite/  # Vite plugins
 │   │   ├── index.ts  # Plugin exports
 │   │   ├── console-plugin.ts  # Console forwarding
@@ -69,14 +77,21 @@ vibegame/
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   └── lorenz/  # Lorenz attractor particle system
+│   ├── lorenz/  # Lorenz attractor particle system
+│   │   ├── src/
+│   │   │   ├── main.ts
+│   │   │   ├── plugin.ts
+│   │   │   ├── components.ts
+│   │   │   ├── systems.ts
+│   │   │   └── utils.ts
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   └── multiplayer-hello/  # Multiplayer networking demo
 │       ├── src/
-│       │   ├── main.ts
-│       │   ├── plugin.ts
-│       │   ├── components.ts
-│       │   ├── systems.ts
-│       │   └── utils.ts
-│       ├── index.html
+│       │   ├── client.ts
+│       │   └── server.ts
+│       ├── context.md
 │       ├── package.json
 │       └── vite.config.ts
 ├── layers/
@@ -121,17 +136,18 @@ Optional files:
 
 1. **animation** - Animation mixer and clip management
 2. **input** - Mouse, keyboard, gamepad input handling
-3. **orbit-camera** - Orbital camera controller
-4. **physics** - Rapier 3D WASM physics integration
-5. **player** - Player character controller
-6. **postprocessing** - Post-processing effects (bloom, dithering, tonemapping)
-7. **recipes** - XML recipe system for declarative entities
-8. **rendering** - Three.js rendering pipeline
-9. **respawn** - Entity respawn system
-10. **startup** - Initialization and setup systems
-11. **transforms** - Transform component hierarchy
-12. **tweening** - Tween-based animations
-13. **defaults** - Bundle of standard plugins
+3. **networking** - Client-instance multiplayer with Colyseus (generic body networking)
+4. **orbit-camera** - Orbital camera controller
+5. **physics** - Rapier 3D WASM physics integration
+6. **player** - Player character controller
+7. **postprocessing** - Post-processing effects (bloom, dithering, tonemapping)
+8. **recipes** - XML recipe system for declarative entities
+9. **rendering** - Three.js rendering pipeline
+10. **respawn** - Entity respawn system
+11. **startup** - Initialization and setup systems
+12. **transforms** - Transform component hierarchy
+13. **tweening** - Tween-based animations
+14. **defaults** - Bundle of standard plugins (excludes networking)
 
 ## Architecture
 
@@ -154,6 +170,7 @@ Bevy-inspired ECS with explicit update phases:
 - **Package entry**: src/index.ts (namespace API with builder pattern)
 - **Core module**: src/core/index.ts (ECS foundation, types, utilities)
 - **Plugin modules**: src/plugins/\*/index.ts (individual plugin exports)
+- **Server runtime**: src/server/index.ts (Colyseus server creation)
 - **Vite plugin**: src/vite/index.ts (WASM setup for Rapier physics)
 - **Builder API**: src/builder.ts (fluent builder pattern)
 - **Runtime**: src/runtime.ts (game runtime engine)

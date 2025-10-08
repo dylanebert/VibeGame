@@ -1,7 +1,7 @@
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { ActiveEvents } from '@dimforge/rapier3d-compat';
 import type { State, System } from '../../core';
-import { defineQuery, TIME_CONSTANTS } from '../../core';
+import { defineQuery, NULL_ENTITY, TIME_CONSTANTS } from '../../core';
 import { Transform, WorldTransform } from '../transforms';
 import {
   ApplyAngularImpulse,
@@ -92,12 +92,37 @@ function getPhysicsContext(state: State): PhysicsContext {
 }
 
 let rapierEngineInitialized = false;
+let rapierInitPromise: Promise<void> | null = null;
 
 export async function initializePhysics(): Promise<void> {
-  if (!rapierEngineInitialized) {
-    await RAPIER.init();
-    rapierEngineInitialized = true;
+  if (rapierEngineInitialized) {
+    return;
   }
+
+  if (!rapierInitPromise) {
+    rapierInitPromise = RAPIER.init()
+      .then(() => {
+        rapierEngineInitialized = true;
+      })
+      .catch((error) => {
+        rapierInitPromise = null;
+        throw error;
+      });
+  }
+
+  await rapierInitPromise;
+}
+
+function ensureRapierReady(): boolean {
+  if (rapierEngineInitialized) {
+    return true;
+  }
+
+  if (!rapierInitPromise) {
+    void initializePhysics();
+  }
+
+  return false;
 }
 
 export const PhysicsWorldSystem: System = {
@@ -105,7 +130,9 @@ export const PhysicsWorldSystem: System = {
   first: true,
   update: (state) => {
     const context = getPhysicsContext(state);
+
     if (context.physicsWorld) return;
+    if (!ensureRapierReady()) return;
 
     const worldEntities = physicsWorldQuery(state.world);
     if (worldEntities.length === 0) {
@@ -133,7 +160,9 @@ export const PhysicsWorldSystem: System = {
     if (context) {
       if (context.physicsWorld) {
         context.physicsWorld.free();
+        context.physicsWorld = null;
       }
+      context.worldEntity = null;
       context.entityToRigidbody.clear();
       context.entityToCollider.clear();
       context.entityToCharacterController.clear();
@@ -148,6 +177,7 @@ export const PhysicsInitializationSystem: System = {
   after: [PhysicsWorldSystem],
   update: (state) => {
     const context = getPhysicsContext(state);
+    if (!ensureRapierReady()) return;
     const worldRapier = context.physicsWorld;
     if (!worldRapier) return;
 
@@ -367,6 +397,39 @@ function createColliderForEntity(
   context.colliderToEntity.set(collider.handle, entity);
 }
 
+function configureCharacterControllerFromComponents(
+  entity: number,
+  controller: RAPIER.KinematicCharacterController
+): void {
+  controller.setMaxSlopeClimbAngle(CharacterController.maxSlope[entity]);
+  controller.setMinSlopeSlideAngle(CharacterController.maxSlide[entity]);
+  controller.setNormalNudgeFactor(0.0001);
+
+  if (CharacterController.snapDist[entity] > 0) {
+    controller.enableSnapToGround(CharacterController.snapDist[entity]);
+  } else {
+    controller.disableSnapToGround();
+  }
+
+  controller.enableAutostep(
+    CharacterController.maxStepHeight[entity],
+    CharacterController.minStepWidth[entity],
+    !!CharacterController.autoStep[entity]
+  );
+
+  controller.setUp(
+    new RAPIER.Vector3(
+      CharacterController.upX[entity],
+      CharacterController.upY[entity],
+      CharacterController.upZ[entity]
+    )
+  );
+
+  controller.setApplyImpulsesToDynamicBodies(true);
+  controller.setCharacterMass(70);
+  controller.setSlideEnabled(true);
+}
+
 function createCharacterControllerForEntity(
   entity: number,
   worldRapier: RAPIER.World,
@@ -375,30 +438,73 @@ function createCharacterControllerForEntity(
   const controller = worldRapier.createCharacterController(
     CharacterController.offset[entity]
   );
-  controller.setMaxSlopeClimbAngle(CharacterController.maxSlope[entity]);
-  controller.setMinSlopeSlideAngle(CharacterController.maxSlide[entity]);
-  controller.setNormalNudgeFactor(0.0001);
-  if (CharacterController.snapDist[entity] > 0) {
-    controller.enableSnapToGround(CharacterController.snapDist[entity]);
-  } else {
-    controller.disableSnapToGround();
-  }
-  controller.enableAutostep(
-    CharacterController.maxStepHeight[entity],
-    CharacterController.minStepWidth[entity],
-    !!CharacterController.autoStep[entity]
-  );
-  controller.setUp(
-    new RAPIER.Vector3(
-      CharacterController.upX[entity],
-      CharacterController.upY[entity],
-      CharacterController.upZ[entity]
-    )
-  );
-  controller.setApplyImpulsesToDynamicBodies(true);
-  controller.setCharacterMass(70);
-  controller.setSlideEnabled(true);
+  configureCharacterControllerFromComponents(entity, controller);
   context.entityToCharacterController.set(entity, controller);
+
+  CharacterController.grounded[entity] = 0;
+  CharacterController.platform[entity] = NULL_ENTITY;
+  CharacterController.platformVelX[entity] = 0;
+  CharacterController.platformVelY[entity] = 0;
+  CharacterController.platformVelZ[entity] = 0;
+  CharacterController.moveX[entity] = 0;
+  CharacterController.moveY[entity] = 0;
+  CharacterController.moveZ[entity] = 0;
+}
+
+function resetCharacterControllerForEntity(
+  state: State,
+  entity: number,
+  context: PhysicsContext
+): void {
+  if (!state.hasComponent(entity, CharacterController)) return;
+  const worldRapier = context.physicsWorld;
+  if (!worldRapier) return;
+
+  const existing = context.entityToCharacterController.get(entity);
+  if (existing) {
+    worldRapier.removeCharacterController(existing);
+  }
+
+  const controller = worldRapier.createCharacterController(
+    CharacterController.offset[entity]
+  );
+  configureCharacterControllerFromComponents(entity, controller);
+  context.entityToCharacterController.set(entity, controller);
+
+  CharacterController.grounded[entity] = 0;
+  CharacterController.platform[entity] = NULL_ENTITY;
+  CharacterController.platformVelX[entity] = 0;
+  CharacterController.platformVelY[entity] = 0;
+  CharacterController.platformVelZ[entity] = 0;
+  CharacterController.moveX[entity] = 0;
+  CharacterController.moveY[entity] = 0;
+  CharacterController.moveZ[entity] = 0;
+
+  if (state.hasComponent(entity, CharacterMovement)) {
+    if (CharacterMovement.velocityY[entity] > 0) {
+      CharacterMovement.velocityY[entity] = 0;
+    }
+    CharacterMovement.actualMoveX[entity] = 0;
+    CharacterMovement.actualMoveY[entity] = 0;
+    CharacterMovement.actualMoveZ[entity] = 0;
+  }
+}
+
+function clearControllersReferencingEntity(
+  state: State,
+  context: PhysicsContext,
+  platformEntity: number
+): void {
+  const controllers = characterControllerQuery(state.world);
+  for (let i = 0; i < controllers.length; i++) {
+    const controllerEntity = controllers[i];
+    if (
+      CharacterController.platform[controllerEntity] === platformEntity &&
+      state.hasComponent(controllerEntity, CharacterController)
+    ) {
+      resetCharacterControllerForEntity(state, controllerEntity, context);
+    }
+  }
 }
 
 export const PhysicsCleanupSystem: System = {
@@ -406,11 +512,13 @@ export const PhysicsCleanupSystem: System = {
   after: [PhysicsInitializationSystem],
   update: (state) => {
     const context = getPhysicsContext(state);
+    if (!ensureRapierReady()) return;
     const worldRapier = context.physicsWorld;
     if (!worldRapier) return;
 
     for (const [entity, collider] of context.entityToCollider) {
       if (!state.hasComponent(entity, Collider)) {
+        clearControllersReferencingEntity(state, context, entity);
         worldRapier.removeCollider(collider, false);
         context.entityToCollider.delete(entity);
         context.colliderToEntity.delete(collider.handle);
@@ -419,6 +527,7 @@ export const PhysicsCleanupSystem: System = {
 
     for (const [entity, body] of context.entityToRigidbody) {
       if (!state.hasComponent(entity, Body)) {
+        clearControllersReferencingEntity(state, context, entity);
         worldRapier.removeRigidBody(body);
         context.entityToRigidbody.delete(entity);
       }
@@ -438,6 +547,7 @@ export const CharacterMovementSystem: System = {
   after: [PhysicsCleanupSystem],
   update: (state) => {
     const context = getPhysicsContext(state);
+    if (!ensureRapierReady()) return;
     if (!context.physicsWorld || context.worldEntity === null) return;
 
     const gravityY = PhysicsWorld.gravityY[context.worldEntity];
@@ -585,6 +695,7 @@ export const PhysicsStepSystem: System = {
   after: [TeleportationSystem],
   update: (state) => {
     const context = getPhysicsContext(state);
+    if (!ensureRapierReady()) return;
     const worldRapier = context.physicsWorld;
     if (!worldRapier) return;
 
@@ -658,6 +769,7 @@ export const PhysicsRapierSyncSystem: System = {
   after: [PhysicsStepSystem],
   update: (state) => {
     const context = getPhysicsContext(state);
+    if (!ensureRapierReady()) return;
 
     for (const [entity, body] of context.entityToRigidbody) {
       if (state.hasComponent(entity, Body)) {

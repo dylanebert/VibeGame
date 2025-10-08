@@ -1,5 +1,5 @@
 import { defineQuery, type System } from '../../core';
-import { InputState } from '../input';
+import { InputState, InputButtons } from '../input';
 import { OrbitCamera } from '../orbit-camera';
 import { Body, CharacterController, CharacterMovement } from '../physics';
 import { Transform } from '../transforms';
@@ -51,7 +51,7 @@ export const PlayerMovementSystem: System = {
         : null;
       const jumpVelocity = handleJump(
         entity,
-        InputState.jump[entity],
+        InputState.buttons[entity] & InputButtons.JUMP ? 1 : 0,
         state.time.elapsed * 1000,
         platform
       );
@@ -195,10 +195,11 @@ export const PlayerCameraControlSystem: System = {
 
       const sensitivity = Player.cameraSensitivity[entity];
       const zoomSensitivity = Player.cameraZoomSensitivity[entity];
-      const lookX = InputState.lookX[entity];
-      const lookY = InputState.lookY[entity];
+      const lookX = InputState.lookDeltaX[entity];
+      const lookY = InputState.lookDeltaY[entity];
       const scrollDelta = InputState.scrollDelta[entity];
-      const rightMouseHeld = InputState.rightMouse[entity] === 1;
+      const rightMouseHeld =
+        (InputState.buttons[entity] & InputButtons.RIGHT_MOUSE) !== 0;
 
       if (rightMouseHeld) {
         OrbitCamera.targetYaw[cameraEntity] -= lookX * sensitivity;

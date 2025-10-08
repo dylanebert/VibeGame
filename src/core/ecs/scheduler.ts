@@ -10,12 +10,16 @@ export class Scheduler {
   private lastSystemsSize = 0;
 
   getAccumulator(): number {
-    return this.accumulator;
+    return Math.min(Math.max(this.accumulator, 0), 1);
   }
 
   step(state: State, deltaTime = TIME_CONSTANTS.DEFAULT_DELTA) {
     const fixedDeltaTime = TIME_CONSTANTS.FIXED_TIMESTEP;
-    const mutableTime = state.time as { deltaTime: number; elapsed: number };
+    const mutableTime = state.time as {
+      deltaTime: number;
+      elapsed: number;
+      tick: number;
+    };
 
     mutableTime.deltaTime = deltaTime;
     mutableTime.elapsed += deltaTime;
@@ -27,6 +31,7 @@ export class Scheduler {
       mutableTime.deltaTime = fixedDeltaTime;
       this.runSystemGroup(state, 'fixed');
       this.accumulator -= fixedDeltaTime;
+      mutableTime.tick++;
     }
 
     mutableTime.deltaTime = deltaTime;

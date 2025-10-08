@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import { State, TIME_CONSTANTS, XMLParser, defineQuery } from 'vibegame';
 import { DefaultPlugins } from 'vibegame/defaults';
-import { InputState } from 'vibegame';
+import { InputButtons, setButton, getButton } from 'vibegame';
 import {
   Body,
   CharacterController,
@@ -58,14 +58,14 @@ describe('E2E: Player Jump Mechanics', () => {
     expect(Player.jumpCooldown[playerEntity]).toBe(0);
 
     // Input should be zero
-    expect(InputState.jump[playerEntity]).toBe(0);
+    expect(getButton(playerEntity, InputButtons.JUMP) ? 1 : 0).toBe(0);
 
     // Simulate a few steps without any input
     for (let i = 0; i < 10; i++) {
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
       // Jump input should remain 0
-      expect(InputState.jump[playerEntity]).toBe(0);
+      expect(getButton(playerEntity, InputButtons.JUMP) ? 1 : 0).toBe(0);
 
       // Player should not start jumping
       if (i > 5) {
@@ -111,9 +111,9 @@ describe('E2E: Player Jump Mechanics', () => {
     const groundedY = Body.posY[playerEntity];
 
     // Trigger jump
-    InputState.jump[playerEntity] = 1;
+    setButton(playerEntity, InputButtons.JUMP, true);
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-    InputState.jump[playerEntity] = 0;
+    setButton(playerEntity, InputButtons.JUMP, false);
 
     // Should be jumping now
     expect(Player.isJumping[playerEntity]).toBe(1);
@@ -193,9 +193,9 @@ describe('E2E: Player Jump Mechanics', () => {
       console.log(`Before jump Y: ${beforeJumpY}`);
 
       // Trigger jump
-      InputState.jump[playerEntity] = 1;
+      setButton(playerEntity, InputButtons.JUMP, true);
       state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-      InputState.jump[playerEntity] = 0;
+      setButton(playerEntity, InputButtons.JUMP, false);
 
       console.log(
         `After jump trigger - isJumping: ${Player.isJumping[playerEntity]}, canJump: ${Player.canJump[playerEntity]}, velocityY: ${CharacterMovement.velocityY[playerEntity]}`
@@ -285,7 +285,7 @@ describe('E2E: Player Jump Mechanics', () => {
     }
 
     // Jump
-    InputState.jump[playerEntity] = 1;
+    setButton(playerEntity, InputButtons.JUMP, true);
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
     // Should have cooldown set

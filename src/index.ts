@@ -7,6 +7,7 @@ export { DefaultPlugins } from './plugins/defaults';
 export * from './core';
 export * from './plugins/animation';
 export * from './plugins/input';
+export * from './plugins/networking';
 export * from './plugins/orbit-camera';
 export * from './plugins/physics';
 export * from './plugins/player';

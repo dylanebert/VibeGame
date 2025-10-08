@@ -88,6 +88,8 @@ export function expandShorthands(
 function valueToString(value: XMLValue): string {
   if (typeof value === 'string') {
     return value;
+  } else if (Array.isArray(value)) {
+    return value.join(' ');
   } else if (typeof value === 'object' && value !== null && 'x' in value) {
     const vec = value as Record<string, number>;
     if ('w' in vec) {

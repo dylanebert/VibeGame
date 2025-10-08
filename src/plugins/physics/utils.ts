@@ -429,6 +429,8 @@ export function detectPlatformContinuous(
   const shapeVel = new RAPIER.Vector3(0, -1, 0);
   const colliderShape = collider.shape;
 
+  const selfHandle = collider.handle;
+
   const hit = physicsWorld.castShape(
     shapePos,
     shapeRot,
@@ -441,7 +443,7 @@ export function detectPlatformContinuous(
     undefined,
     undefined,
     undefined,
-    (otherCollider: RAPIER.Collider) => otherCollider.handle !== collider.handle
+    (otherCollider: RAPIER.Collider) => otherCollider.handle !== selfHandle
   );
 
   if (hit) {
@@ -535,12 +537,14 @@ export function applyCharacterMovement(
       deltaTime
   );
 
+  const selfHandle = collider.handle;
+
   controller.computeColliderMovement(
     collider,
     desiredTranslation,
     RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
     undefined,
-    (otherCollider: RAPIER.Collider) => otherCollider.handle !== collider.handle
+    (otherCollider: RAPIER.Collider) => otherCollider.handle !== selfHandle
   );
 
   const correctedMovement = controller.computedMovement();
@@ -614,15 +618,16 @@ export function interpolateTransforms(state: State, alpha: number): void {
         `[interpolateTransforms] Entity ${entity} does not have the required components`
       );
 
-    Transform.posX[entity] =
-      InterpolatedTransform.prevPosX[entity] * (1 - alpha) +
-      InterpolatedTransform.posX[entity] * alpha;
+    const prevPosX = InterpolatedTransform.prevPosX[entity];
+    const prevPosZ = InterpolatedTransform.prevPosZ[entity];
+    const currPosX = InterpolatedTransform.posX[entity];
+    const currPosZ = InterpolatedTransform.posZ[entity];
+
+    Transform.posX[entity] = prevPosX * (1 - alpha) + currPosX * alpha;
     Transform.posY[entity] =
       InterpolatedTransform.prevPosY[entity] * (1 - alpha) +
       InterpolatedTransform.posY[entity] * alpha;
-    Transform.posZ[entity] =
-      InterpolatedTransform.prevPosZ[entity] * (1 - alpha) +
-      InterpolatedTransform.posZ[entity] * alpha;
+    Transform.posZ[entity] = prevPosZ * (1 - alpha) + currPosZ * alpha;
 
     const prevW = InterpolatedTransform.prevRotW[entity];
     const prevX = InterpolatedTransform.prevRotX[entity];

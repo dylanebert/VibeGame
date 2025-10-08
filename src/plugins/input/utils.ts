@@ -1,7 +1,63 @@
-import { InputState } from './components';
-import { INPUT_CONFIG } from './config';
+import { InputState, InputButtons } from './components';
 
-interface InputData {
+export interface InputCommand {
+  tick: number;
+  buttons: number;
+  moveX: number;
+  moveY: number;
+  lookDeltaX: number;
+  lookDeltaY: number;
+  scrollDelta: number;
+}
+
+export class InputBuffer {
+  private static readonly BUFFER_SIZE = 256;
+  private commands: Array<InputCommand | null>;
+
+  constructor() {
+    this.commands = new Array(InputBuffer.BUFFER_SIZE).fill(null);
+  }
+
+  set(tick: number, command: InputCommand): void {
+    const index = tick % InputBuffer.BUFFER_SIZE;
+    this.commands[index] = { ...command };
+  }
+
+  get(tick: number): InputCommand | null {
+    const index = tick % InputBuffer.BUFFER_SIZE;
+    const command = this.commands[index];
+    return command?.tick === tick ? command : null;
+  }
+
+  has(tick: number): boolean {
+    return this.get(tick) !== null;
+  }
+
+  getRange(startTick: number, endTick: number): InputCommand[] {
+    const commands: InputCommand[] = [];
+    for (let tick = startTick; tick <= endTick; tick++) {
+      const command = this.get(tick);
+      if (command) commands.push(command);
+    }
+    return commands;
+  }
+
+  clear(): void {
+    this.commands.fill(null);
+  }
+
+  getLatestTick(): number {
+    let maxTick = -1;
+    for (const command of this.commands) {
+      if (command && command.tick > maxTick) {
+        maxTick = command.tick;
+      }
+    }
+    return maxTick;
+  }
+}
+
+interface RawInput {
   keys: Set<string>;
   mouseButtons: Set<number>;
   mouseDeltaX: number;
@@ -9,14 +65,7 @@ interface InputData {
   scrollDelta: number;
 }
 
-interface BufferedAction {
-  lastPressTime: number;
-  lastReleaseTime: number;
-  lastConsumeTime: number;
-  isPressed: boolean;
-}
-
-const inputData: InputData = {
+const rawInput: RawInput = {
   keys: new Set(),
   mouseButtons: new Set(),
   mouseDeltaX: 0,
@@ -24,142 +73,66 @@ const inputData: InputData = {
   scrollDelta: 0,
 };
 
-const bufferedActions = {
-  jump: {
-    lastPressTime: 0,
-    lastReleaseTime: 0,
-    lastConsumeTime: 0,
-    isPressed: false,
-  },
-  primary: {
-    lastPressTime: 0,
-    lastReleaseTime: 0,
-    lastConsumeTime: 0,
-    isPressed: false,
-  },
-  secondary: {
-    lastPressTime: 0,
-    lastReleaseTime: 0,
-    lastConsumeTime: 0,
-    isPressed: false,
-  },
-};
-
 let targetCanvas: HTMLCanvasElement | null = null;
 let canvasHasFocus = false;
 
-export function handleKeyDown(event: KeyboardEvent): void {
+function handleKeyDown(event: KeyboardEvent): void {
   if (!canvasHasFocus) return;
-
-  inputData.keys.add(event.code);
-
-  if (event.code === 'Space') {
-    event.preventDefault();
-    if (!bufferedActions.jump.isPressed) {
-      bufferedActions.jump.lastPressTime = performance.now();
-      bufferedActions.jump.isPressed = true;
-    }
-  }
+  rawInput.keys.add(event.code);
+  if (event.code === 'Space') event.preventDefault();
 }
 
-export function handleKeyUp(event: KeyboardEvent): void {
+function handleKeyUp(event: KeyboardEvent): void {
   if (!canvasHasFocus) return;
-
-  inputData.keys.delete(event.code);
-
-  if (event.code === 'Space') {
-    bufferedActions.jump.lastReleaseTime = performance.now();
-    bufferedActions.jump.isPressed = false;
-  }
+  rawInput.keys.delete(event.code);
 }
 
-export function handleMouseDown(event: MouseEvent): void {
-  inputData.mouseButtons.add(event.button);
-
-  if (event.button === 0 && !bufferedActions.primary.isPressed) {
-    bufferedActions.primary.lastPressTime = performance.now();
-    bufferedActions.primary.isPressed = true;
-  } else if (event.button === 2) {
-    event.preventDefault();
-    if (!bufferedActions.secondary.isPressed) {
-      bufferedActions.secondary.lastPressTime = performance.now();
-      bufferedActions.secondary.isPressed = true;
-    }
-  }
+function handleMouseDown(event: MouseEvent): void {
+  rawInput.mouseButtons.add(event.button);
+  if (event.button === 2) event.preventDefault();
 }
 
-export function handleMouseUp(event: MouseEvent): void {
-  inputData.mouseButtons.delete(event.button);
-
-  if (event.button === 0) {
-    bufferedActions.primary.lastReleaseTime = performance.now();
-    bufferedActions.primary.isPressed = false;
-  } else if (event.button === 2) {
-    bufferedActions.secondary.lastReleaseTime = performance.now();
-    bufferedActions.secondary.isPressed = false;
-  }
+function handleMouseUp(event: MouseEvent): void {
+  rawInput.mouseButtons.delete(event.button);
 }
 
-export function handleMouseMove(event: MouseEvent): void {
-  inputData.mouseDeltaX += event.movementX;
-  inputData.mouseDeltaY += event.movementY;
+function handleMouseMove(event: MouseEvent): void {
+  rawInput.mouseDeltaX += event.movementX;
+  rawInput.mouseDeltaY += event.movementY;
 }
 
-export function handleWheel(event: WheelEvent): void {
-  inputData.scrollDelta += event.deltaY * INPUT_CONFIG.mouseSensitivity.scroll;
+function handleWheel(event: WheelEvent): void {
+  rawInput.scrollDelta += event.deltaY * 0.01;
   event.preventDefault();
 }
 
-export function handleContextMenu(event: Event): void {
+function handleContextMenu(event: Event): void {
   event.preventDefault();
 }
 
 function handleMouseDownDelegated(event: MouseEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
+  if (event.target === targetCanvas) {
     handleMouseDown(event);
     if (document.activeElement !== targetCanvas) {
-      targetCanvas.focus();
+      targetCanvas?.focus();
     }
   }
 }
 
 function handleMouseUpDelegated(event: MouseEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
-    handleMouseUp(event);
-  }
+  if (event.target === targetCanvas) handleMouseUp(event);
 }
 
 function handleMouseMoveDelegated(event: MouseEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
-    handleMouseMove(event);
-  }
+  if (event.target === targetCanvas) handleMouseMove(event);
 }
 
 function handleWheelDelegated(event: WheelEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
-    handleWheel(event);
-  }
+  if (event.target === targetCanvas) handleWheel(event);
 }
 
 function handleContextMenuDelegated(event: Event): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
-    handleContextMenu(event);
-  }
+  if (event.target === targetCanvas) handleContextMenu(event);
 }
 
 function handleFocus(): void {
@@ -168,7 +141,7 @@ function handleFocus(): void {
 
 function handleBlur(): void {
   canvasHasFocus = false;
-  clearAllInput();
+  clearRawInput();
 }
 
 export function setTargetCanvas(canvas: HTMLCanvasElement | null): void {
@@ -184,7 +157,6 @@ export function setTargetCanvas(canvas: HTMLCanvasElement | null): void {
       targetCanvas.tabIndex === -1 ? 0 : targetCanvas.tabIndex;
     targetCanvas.addEventListener('focus', handleFocus);
     targetCanvas.addEventListener('blur', handleBlur);
-
     if (document.activeElement === targetCanvas) {
       canvasHasFocus = true;
     }
@@ -224,131 +196,84 @@ export function cleanupEventListeners(): void {
   setTargetCanvas(null);
 }
 
-export function getMovementAxis(
+function isKeyPressed(keys: readonly string[]): boolean {
+  return keys.some((key) => rawInput.keys.has(key));
+}
+
+function getAxisValue(
   positiveKeys: readonly string[],
   negativeKeys: readonly string[]
 ): number {
   let value = 0;
-
-  for (const key of positiveKeys) {
-    if (inputData.keys.has(key)) value += 1;
-  }
-  for (const key of negativeKeys) {
-    if (inputData.keys.has(key)) value -= 1;
-  }
-
+  if (isKeyPressed(positiveKeys)) value += 1;
+  if (isKeyPressed(negativeKeys)) value -= 1;
   return value;
 }
 
-export function canConsumeAction(
-  action: BufferedAction,
-  bufferWindow: number
-): boolean {
-  const currentTime = performance.now();
+export function sampleInput(
+  tick: number,
+  keyMappings: {
+    moveForward: readonly string[];
+    moveBackward: readonly string[];
+    moveLeft: readonly string[];
+    moveRight: readonly string[];
+    moveUp: readonly string[];
+    moveDown: readonly string[];
+    jump: readonly string[];
+  },
+  lookSensitivity: number
+): InputCommand {
+  let buttons = 0;
 
-  if (action.lastPressTime <= action.lastConsumeTime) {
-    return false;
+  if (isKeyPressed(keyMappings.jump)) buttons |= InputButtons.JUMP;
+  if (isKeyPressed(keyMappings.moveForward))
+    buttons |= InputButtons.MOVE_FORWARD;
+  if (isKeyPressed(keyMappings.moveBackward))
+    buttons |= InputButtons.MOVE_BACKWARD;
+  if (isKeyPressed(keyMappings.moveLeft)) buttons |= InputButtons.MOVE_LEFT;
+  if (isKeyPressed(keyMappings.moveRight)) buttons |= InputButtons.MOVE_RIGHT;
+  if (isKeyPressed(keyMappings.moveUp)) buttons |= InputButtons.MOVE_UP;
+  if (isKeyPressed(keyMappings.moveDown)) buttons |= InputButtons.MOVE_DOWN;
+
+  if (rawInput.mouseButtons.has(0)) {
+    buttons |= InputButtons.LEFT_MOUSE | InputButtons.PRIMARY;
   }
-  const timeSincePress = currentTime - action.lastPressTime;
-  return timeSincePress <= bufferWindow;
-}
-
-export function consumeAction(action: BufferedAction): boolean {
-  if (canConsumeAction(action, INPUT_CONFIG.bufferWindow)) {
-    action.lastConsumeTime = performance.now();
-    return true;
+  if (rawInput.mouseButtons.has(2)) {
+    buttons |= InputButtons.RIGHT_MOUSE | InputButtons.SECONDARY;
   }
-  return false;
-}
+  if (rawInput.mouseButtons.has(1)) buttons |= InputButtons.MIDDLE_MOUSE;
 
-export function updateInputState(eid: number): void {
-  const sensitivity = INPUT_CONFIG.mouseSensitivity;
-
-  InputState.moveX[eid] = getMovementAxis(
-    INPUT_CONFIG.mappings.moveRight,
-    INPUT_CONFIG.mappings.moveLeft
-  );
-  InputState.moveY[eid] = getMovementAxis(
-    INPUT_CONFIG.mappings.moveForward,
-    INPUT_CONFIG.mappings.moveBackward
-  );
-  InputState.moveZ[eid] = getMovementAxis(
-    INPUT_CONFIG.mappings.moveUp,
-    INPUT_CONFIG.mappings.moveDown
-  );
-
-  InputState.lookX[eid] = inputData.mouseDeltaX * sensitivity.look;
-  InputState.lookY[eid] = inputData.mouseDeltaY * sensitivity.look;
-  InputState.scrollDelta[eid] = inputData.scrollDelta;
-
-  InputState.jump[eid] = canConsumeAction(
-    bufferedActions.jump,
-    INPUT_CONFIG.bufferWindow
-  )
-    ? 1
-    : 0;
-  InputState.primaryAction[eid] = canConsumeAction(
-    bufferedActions.primary,
-    INPUT_CONFIG.bufferWindow
-  )
-    ? 1
-    : 0;
-  InputState.secondaryAction[eid] = canConsumeAction(
-    bufferedActions.secondary,
-    INPUT_CONFIG.bufferWindow
-  )
-    ? 1
-    : 0;
-
-  InputState.leftMouse[eid] = inputData.mouseButtons.has(0) ? 1 : 0;
-  InputState.rightMouse[eid] = inputData.mouseButtons.has(2) ? 1 : 0;
-  InputState.middleMouse[eid] = inputData.mouseButtons.has(1) ? 1 : 0;
-
-  InputState.jumpBufferTime[eid] = bufferedActions.jump.lastPressTime;
-  InputState.primaryBufferTime[eid] = bufferedActions.primary.lastPressTime;
-  InputState.secondaryBufferTime[eid] = bufferedActions.secondary.lastPressTime;
+  return {
+    tick,
+    buttons,
+    moveX: getAxisValue(keyMappings.moveRight, keyMappings.moveLeft),
+    moveY: getAxisValue(keyMappings.moveForward, keyMappings.moveBackward),
+    lookDeltaX: rawInput.mouseDeltaX * lookSensitivity,
+    lookDeltaY: rawInput.mouseDeltaY * lookSensitivity,
+    scrollDelta: rawInput.scrollDelta,
+  };
 }
 
 export function resetFrameDeltas(): void {
-  inputData.mouseDeltaX = 0;
-  inputData.mouseDeltaY = 0;
-  inputData.scrollDelta = 0;
+  rawInput.mouseDeltaX = 0;
+  rawInput.mouseDeltaY = 0;
+  rawInput.scrollDelta = 0;
 }
 
-export function clearAllInput(): void {
-  inputData.keys.clear();
-  inputData.mouseButtons.clear();
+export function clearRawInput(): void {
+  rawInput.keys.clear();
+  rawInput.mouseButtons.clear();
   resetFrameDeltas();
-
-  const now = performance.now();
-  bufferedActions.jump = {
-    lastPressTime: 0,
-    lastReleaseTime: now,
-    lastConsumeTime: now,
-    isPressed: false,
-  };
-  bufferedActions.primary = {
-    lastPressTime: 0,
-    lastReleaseTime: now,
-    lastConsumeTime: now,
-    isPressed: false,
-  };
-  bufferedActions.secondary = {
-    lastPressTime: 0,
-    lastReleaseTime: now,
-    lastConsumeTime: now,
-    isPressed: false,
-  };
 }
 
-export function consumeJump(): boolean {
-  return consumeAction(bufferedActions.jump);
+export function setButton(eid: number, button: number, value: boolean): void {
+  if (value) {
+    InputState.buttons[eid] |= button;
+  } else {
+    InputState.buttons[eid] &= ~button;
+  }
 }
 
-export function consumePrimary(): boolean {
-  return consumeAction(bufferedActions.primary);
-}
-
-export function consumeSecondary(): boolean {
-  return consumeAction(bufferedActions.secondary);
+export function getButton(eid: number, button: number): boolean {
+  return (InputState.buttons[eid] & button) !== 0;
 }

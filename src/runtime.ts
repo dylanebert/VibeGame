@@ -1,11 +1,11 @@
 import type { BuilderOptions } from './builder';
 import type { State } from './core';
 import { TIME_CONSTANTS, XMLParser, XMLValueParser } from './core';
-import { initializePhysics } from './plugins/physics';
-import { parseXMLToEntities } from './core';
-import { RenderContext, setCanvasElement } from './plugins/rendering';
-import { setTargetCanvas } from './plugins/input';
+import { parseXMLToEntities } from './core/recipes/parser';
 import { registerRuntime, unregisterRuntime } from './core/runtime-manager';
+import { setTargetCanvas } from './plugins/input';
+import { initializePhysics } from './plugins/physics/systems';
+import { RenderContext, setCanvasElement } from './plugins/rendering';
 
 export class GameRuntime {
   private state: State;

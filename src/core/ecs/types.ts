@@ -72,4 +72,5 @@ export interface GameTime {
   deltaTime: number;
   fixedDeltaTime: number;
   elapsed: number;
+  tick: number;
 }

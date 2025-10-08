@@ -10,7 +10,7 @@
 - **Body position is authoritative**: For entities with a Body component, the physics position/rotation overwrites Transform values
 - **One-way sync**: Body → Transform (never Transform → Body except via teleportation)
 - **Scale inheritance**: Collider dimensions are multiplied by Transform scale at creation time
-- **Initialization delay**: Rapier bodies aren't created until the next fixed update after entity creation
+- **Phase separation**: Rapier resources created in setup group, simulation runs in fixed group
 
 ### Fixed Timestep Execution
 - **Fixed update rate**: Physics runs at 50Hz (1/50 second intervals), not every frame
@@ -158,11 +158,12 @@ physics/
 
 ### Systems
 
+**Fixed Group (Topology & Simulation)**
 - PhysicsWorldSystem - Initializes physics world
-- PhysicsInitializationSystem - Creates bodies and colliders
-- PhysicsCleanupSystem - Removes physics on entity destroy
-- CharacterMovementSystem - Character controller with full velocity inheritance (linear + angular)
-- CollisionEventCleanupSystem - Clears collision events
+- PhysicsInitializationSystem - Creates bodies and colliders based on components
+- PhysicsCleanupSystem - Removes physics resources when components removed
+- CollisionEventCleanupSystem - Clears collision events (setup group)
+- CharacterMovementSystem - Character controller with velocity inheritance
 - ApplyForcesSystem - Applies forces
 - ApplyTorquesSystem - Applies torques
 - ApplyImpulsesSystem - Applies impulses
@@ -172,6 +173,8 @@ physics/
 - KinematicMovementSystem - Kinematic movement
 - PhysicsStepSystem - Steps simulation
 - PhysicsRapierSyncSystem - Syncs Rapier to ECS
+
+**Simulation Group (Rendering)**
 - PhysicsInterpolationSystem - Interpolates for rendering
 
 ### Functions
@@ -270,8 +273,7 @@ state.addComponent(entity, GAME.Collider, {
   restitution: 0.3
 });
 
-// Note: Physics body won't exist until next fixed update
-// Transform will be overwritten by Body position after initialization
+// Physics resources created in setup group before simulation
 ```
 
 ##### Moving Physics Bodies

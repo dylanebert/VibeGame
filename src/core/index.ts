@@ -12,7 +12,14 @@ export {
   type IWorld,
 } from 'bitecs';
 
-export { NULL_ENTITY, Parent, State, TIME_CONSTANTS } from './ecs';
+export {
+  NULL_ENTITY,
+  Parent,
+  State,
+  TIME_CONSTANTS,
+  serializeComponent,
+  deserializeComponent,
+} from './ecs';
 export type {
   ComponentDefaults,
   ComponentEnums,
