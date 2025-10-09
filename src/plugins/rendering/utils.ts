@@ -27,17 +27,21 @@ function createThreeCamera(entity: number): THREE.PerspectiveCamera {
 export { createThreeCamera };
 
 export function findAvailableInstanceSlot(
-  mesh: THREE.InstancedMesh,
-  matrix: THREE.Matrix4
+  context: RenderingContext,
+  poolId: number
 ): number | null {
-  const maxCount = mesh.count;
-  for (let i = 0; i < maxCount; i++) {
-    mesh.getMatrixAt(i, matrix);
-    if (
-      matrix.elements[0] === 0 &&
-      matrix.elements[5] === 0 &&
-      matrix.elements[10] === 0
-    ) {
+  const mesh = context.meshPools.get(poolId);
+  if (!mesh) return 0;
+
+  const usedSlots = new Set<number>();
+  for (const [, instanceInfo] of context.entityInstances) {
+    if (instanceInfo.poolId === poolId) {
+      usedSlots.add(instanceInfo.instanceId);
+    }
+  }
+
+  for (let i = 0; i < mesh.count; i++) {
+    if (!usedSlots.has(i)) {
       return i;
     }
   }

@@ -1,16 +1,16 @@
+import * as THREE from 'three';
 import type { State } from '../../core';
 import { defineQuery } from '../../core';
-import * as THREE from 'three';
 import { WorldTransform } from '../transforms';
 import { MainCamera, Renderer } from './components';
 import {
   findAvailableInstanceSlot,
   initializeInstancedMesh,
-  resizeInstancedMesh,
-  RendererShape,
-  SHADOW_CONFIG,
   MAX_TOTAL_INSTANCES,
   PERFORMANCE_WARNING_THRESHOLD,
+  RendererShape,
+  resizeInstancedMesh,
+  SHADOW_CONFIG,
   type RenderingContext,
 } from './utils';
 
@@ -48,7 +48,8 @@ export function updateInstance(
   let instanceInfo = context.entityInstances.get(entity);
 
   if (!instanceInfo) {
-    let instanceId = findAvailableInstanceSlot(mesh, matrix);
+    const shapeId = Renderer.shape[entity];
+    let instanceId = findAvailableInstanceSlot(context, shapeId);
 
     if (instanceId === null) {
       if (context.totalInstanceCount >= MAX_TOTAL_INSTANCES) {
@@ -58,7 +59,6 @@ export function updateInstance(
         );
       }
 
-      const shapeId = Renderer.shape[entity];
       const geometry = context.geometries.get(shapeId);
       if (!geometry) return mesh;
 
@@ -70,11 +70,11 @@ export function updateInstance(
       );
       context.meshPools.set(shapeId, mesh);
 
-      instanceId = findAvailableInstanceSlot(mesh, matrix);
+      instanceId = findAvailableInstanceSlot(context, shapeId);
       if (instanceId === null) return mesh;
     }
 
-    instanceInfo = { poolId: Renderer.shape[entity], instanceId };
+    instanceInfo = { poolId: shapeId, instanceId };
     context.entityInstances.set(entity, instanceInfo);
     context.totalInstanceCount++;
 
