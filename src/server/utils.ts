@@ -37,20 +37,10 @@ export function normalizeQuaternion(quat: {
 }
 
 export function isValidSnapshot(snapshot: PositionSnapshot): boolean {
-  const MAX_POS = 1000;
-
   if (
     !isFinite(snapshot.posX) ||
     !isFinite(snapshot.posY) ||
     !isFinite(snapshot.posZ)
-  ) {
-    return false;
-  }
-
-  if (
-    Math.abs(snapshot.posX) > MAX_POS ||
-    Math.abs(snapshot.posY) > MAX_POS ||
-    Math.abs(snapshot.posZ) > MAX_POS
   ) {
     return false;
   }

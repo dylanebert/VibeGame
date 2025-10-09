@@ -8,7 +8,11 @@ import {
 import { Networked, Owned } from './components';
 import { NetworkMessages, RENDER_DELAY_TICKS } from './constants';
 import { getNetworkState } from './state';
-import { cleanupMissingBodies, syncRemoteBody } from './sync';
+import {
+  handleIncomingStructuralUpdate,
+  sendStructuralUpdates,
+  syncRemoteBody,
+} from './sync';
 import type { BodyStateLike } from './types';
 
 const ownedQuery = defineQuery([Owned, Body]);
@@ -23,8 +27,15 @@ export const NetworkInitSystem: System = {
 
     if (!room) {
       if (netState.compositeKeyToEntity.size > 0) {
-        console.log('[Network] No room, cleaning up all remote bodies');
-        cleanupMissingBodies(state, netState, new Set());
+        console.log('[Network] No room, cleaning up all remote entities');
+        for (const entity of netState.compositeKeyToEntity.values()) {
+          if (state.exists(entity)) {
+            state.destroyEntity(entity);
+          }
+          netState.initializedEntities.delete(entity);
+        }
+        netState.compositeKeyToEntity.clear();
+        netState.remoteEntities.clear();
       }
       netState.sessionId = undefined;
       return;
@@ -33,7 +44,24 @@ export const NetworkInitSystem: System = {
     if (netState.sessionId !== room.sessionId) {
       netState.sessionId = room.sessionId;
       console.log(`[Network] Connected as ${room.sessionId}`);
+
+      room.onStateChange.once(() => {
+        console.log('[Network] Initial state synchronized');
+      });
     }
+  },
+};
+
+export const NetworkStructuralSendSystem: System = {
+  group: 'setup',
+  after: [NetworkInitSystem],
+  update(state: State) {
+    const netState = getNetworkState(state);
+    const room = netState.room;
+    if (!room) return;
+
+    const ownedEntities = ownedQuery(state.world);
+    sendStructuralUpdates(state, netState, room, ownedEntities);
   },
 };
 
@@ -43,31 +71,87 @@ export const NetworkSyncSystem: System = {
   update(state: State) {
     const netState = getNetworkState(state);
     const room = netState.room;
-    if (!room || !room.state?.bodies) return;
-
-    const bodies = room.state.bodies as {
-      forEach?: (
-        cb: (body: BodyStateLike, compositeKey: string) => void
-      ) => void;
-    };
-
-    const forEach = bodies?.forEach;
-    if (typeof forEach !== 'function') return;
+    if (!room || !room.state) return;
 
     const activeKeys = new Set<string>();
 
-    forEach.call(bodies, (bodyState: BodyStateLike, compositeKey: string) => {
-      const colonIndex = compositeKey.indexOf(':');
-      if (colonIndex === -1) return;
-      const sessionId = compositeKey.slice(0, colonIndex);
+    if (room.state.structures) {
+      const structures = room.state.structures as {
+        forEach?: (
+          cb: (structural: { data: string }, compositeKey: string) => void
+        ) => void;
+      };
 
-      if (sessionId === netState.sessionId) return;
+      if (typeof structures.forEach === 'function') {
+        structures.forEach(
+          (structural: { data: string }, compositeKey: string) => {
+            const colonIndex = compositeKey.indexOf(':');
+            if (colonIndex === -1) return;
+            const sessionId = compositeKey.slice(0, colonIndex);
 
-      activeKeys.add(compositeKey);
-      syncRemoteBody(state, compositeKey, bodyState, netState);
-    });
+            if (sessionId === netState.sessionId) return;
 
-    cleanupMissingBodies(state, netState, activeKeys);
+            activeKeys.add(compositeKey);
+
+            if (netState.remoteEntities.has(compositeKey)) return;
+
+            try {
+              const data = JSON.parse(structural.data);
+              handleIncomingStructuralUpdate(state, netState, {
+                ...data,
+                sessionId,
+              });
+            } catch (error) {
+              console.warn(
+                `[Network] Failed to parse structural data for ${compositeKey}:`,
+                error
+              );
+            }
+          }
+        );
+      }
+    }
+
+    if (room.state.bodies) {
+      const bodies = room.state.bodies as {
+        forEach?: (
+          cb: (body: BodyStateLike, compositeKey: string) => void
+        ) => void;
+      };
+
+      const forEach = bodies?.forEach;
+      if (typeof forEach !== 'function') return;
+
+      forEach.call(bodies, (bodyState: BodyStateLike, compositeKey: string) => {
+        const colonIndex = compositeKey.indexOf(':');
+        if (colonIndex === -1) return;
+        const sessionId = compositeKey.slice(0, colonIndex);
+
+        if (sessionId === netState.sessionId) return;
+
+        syncRemoteBody(state, compositeKey, bodyState, netState);
+      });
+    }
+
+    const toRemove: string[] = [];
+    for (const compositeKey of netState.remoteEntities) {
+      if (!activeKeys.has(compositeKey)) {
+        toRemove.push(compositeKey);
+        const entity = netState.compositeKeyToEntity.get(compositeKey);
+        if (entity !== undefined && state.exists(entity)) {
+          console.log(
+            `[Network] Remote entity destroyed: ${compositeKey} → entity ${entity}`
+          );
+          state.destroyEntity(entity);
+          netState.initializedEntities.delete(entity);
+        }
+      }
+    }
+
+    for (const compositeKey of toRemove) {
+      netState.compositeKeyToEntity.delete(compositeKey);
+      netState.remoteEntities.delete(compositeKey);
+    }
   },
 };
 
@@ -238,8 +322,15 @@ export const NetworkSendSystem: System = {
 export const NetworkCleanupSystem: System = {
   dispose(state: State) {
     const netState = getNetworkState(state);
-    cleanupMissingBodies(state, netState, new Set());
+    for (const entity of netState.compositeKeyToEntity.values()) {
+      if (state.exists(entity)) {
+        state.destroyEntity(entity);
+      }
+      netState.initializedEntities.delete(entity);
+    }
     netState.compositeKeyToEntity.clear();
+    netState.remoteEntities.clear();
+    netState.initializedEntities.clear();
     netState.sessionId = undefined;
 
     if (netState.room) {

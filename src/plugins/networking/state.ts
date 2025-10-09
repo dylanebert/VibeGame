@@ -8,6 +8,8 @@ export function getNetworkState(state: State): NetworkState {
   if (!netState) {
     netState = {
       compositeKeyToEntity: new Map(),
+      initializedEntities: new Set(),
+      remoteEntities: new Set(),
     };
     stateToNetworkState.set(state, netState);
   }

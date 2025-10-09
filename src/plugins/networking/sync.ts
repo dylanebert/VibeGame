@@ -1,34 +1,109 @@
+import type { Room } from 'colyseus.js';
 import type { State } from '../../core';
+import {
+  deserializeComponent,
+  serializeComponent,
+} from '../../core/ecs/serialization';
 import { Body, BodyType } from '../physics';
-import { Renderer } from '../rendering';
 import { Networked } from './components';
-import type { BodyStateLike, NetworkState } from './types';
+import { NetworkMessages } from './constants';
+import type { BodyStateLike, NetworkState, StructuralUpdate } from './types';
 import { hashString } from './utils';
 
-export function syncRemoteBody(
+export function handleIncomingStructuralUpdate(
   state: State,
-  compositeKey: string,
-  bodyState: BodyStateLike,
-  netState: NetworkState
+  netState: NetworkState,
+  data: StructuralUpdate
 ): void {
+  const compositeKey = `${data.sessionId}:${data.entity}`;
   let entity = netState.compositeKeyToEntity.get(compositeKey);
 
   if (!entity) {
     entity = state.createEntity();
     netState.compositeKeyToEntity.set(compositeKey, entity);
+    netState.remoteEntities.add(compositeKey);
 
     state.addComponent(entity, Networked);
     Networked.sessionId[entity] = hashString(compositeKey);
+    initializeSnapshotBuffer(entity);
 
     state.addComponent(entity, Body);
     Body.type[entity] = BodyType.KinematicPositionBased;
 
-    state.addComponent(entity, Renderer);
+    console.log(
+      `[Network] Remote entity spawned: ${compositeKey} → entity ${entity}`
+    );
+  }
 
-    initializeSnapshotBuffer(entity, bodyState);
+  for (const [componentName, componentData] of Object.entries(
+    data.components
+  )) {
+    const Component = state.getComponent(componentName);
+    if (!Component) {
+      console.warn(
+        `[Network] Unknown component in structural update: ${componentName}`
+      );
+      continue;
+    }
+
+    if (!state.hasComponent(entity, Component)) {
+      state.addComponent(entity, Component);
+    }
+
+    if (Object.keys(componentData).length > 0) {
+      deserializeComponent(Component, entity, componentData);
+    }
 
     console.log(
-      `[Network] Remote body spawned: ${compositeKey} → entity ${entity}`
+      `[Network] Applied component ${componentName} to entity ${entity}`
+    );
+  }
+
+  if (state.hasComponent(entity, Body)) {
+    Body.type[entity] = BodyType.KinematicPositionBased;
+  }
+}
+
+function initializeSnapshotBuffer(entity: number): void {
+  Networked.tick0[entity] = 0;
+  Networked.posX0[entity] = 0;
+  Networked.posY0[entity] = 0;
+  Networked.posZ0[entity] = 0;
+  Networked.rotX0[entity] = 0;
+  Networked.rotY0[entity] = 0;
+  Networked.rotZ0[entity] = 0;
+  Networked.rotW0[entity] = 1;
+
+  Networked.tick1[entity] = 0;
+  Networked.posX1[entity] = 0;
+  Networked.posY1[entity] = 0;
+  Networked.posZ1[entity] = 0;
+  Networked.rotX1[entity] = 0;
+  Networked.rotY1[entity] = 0;
+  Networked.rotZ1[entity] = 0;
+  Networked.rotW1[entity] = 1;
+
+  Networked.tick2[entity] = 0;
+  Networked.posX2[entity] = 0;
+  Networked.posY2[entity] = 0;
+  Networked.posZ2[entity] = 0;
+  Networked.rotX2[entity] = 0;
+  Networked.rotY2[entity] = 0;
+  Networked.rotZ2[entity] = 0;
+  Networked.rotW2[entity] = 1;
+}
+
+export function syncRemoteBody(
+  _state: State,
+  compositeKey: string,
+  bodyState: BodyStateLike,
+  netState: NetworkState
+): void {
+  const entity = netState.compositeKeyToEntity.get(compositeKey);
+
+  if (!entity) {
+    console.debug(
+      `[Network] Received body update for unknown entity: ${compositeKey}. Waiting for structural update.`
     );
     return;
   }
@@ -39,40 +114,6 @@ export function syncRemoteBody(
   if (serverTick <= latestTick) return;
 
   insertSnapshotIntoBuffer(entity, bodyState, serverTick);
-}
-
-function initializeSnapshotBuffer(
-  entity: number,
-  bodyState: BodyStateLike
-): void {
-  const tick = bodyState.tick ?? 0;
-
-  Networked.tick0[entity] = tick;
-  Networked.posX0[entity] = bodyState.posX;
-  Networked.posY0[entity] = bodyState.posY;
-  Networked.posZ0[entity] = bodyState.posZ;
-  Networked.rotX0[entity] = bodyState.rotX;
-  Networked.rotY0[entity] = bodyState.rotY;
-  Networked.rotZ0[entity] = bodyState.rotZ;
-  Networked.rotW0[entity] = bodyState.rotW;
-
-  Networked.tick1[entity] = tick;
-  Networked.posX1[entity] = bodyState.posX;
-  Networked.posY1[entity] = bodyState.posY;
-  Networked.posZ1[entity] = bodyState.posZ;
-  Networked.rotX1[entity] = bodyState.rotX;
-  Networked.rotY1[entity] = bodyState.rotY;
-  Networked.rotZ1[entity] = bodyState.rotZ;
-  Networked.rotW1[entity] = bodyState.rotW;
-
-  Networked.tick2[entity] = tick;
-  Networked.posX2[entity] = bodyState.posX;
-  Networked.posY2[entity] = bodyState.posY;
-  Networked.posZ2[entity] = bodyState.posZ;
-  Networked.rotX2[entity] = bodyState.rotX;
-  Networked.rotY2[entity] = bodyState.rotY;
-  Networked.rotZ2[entity] = bodyState.rotZ;
-  Networked.rotW2[entity] = bodyState.rotW;
 }
 
 function insertSnapshotIntoBuffer(
@@ -108,26 +149,39 @@ function insertSnapshotIntoBuffer(
   Networked.rotW2[entity] = bodyState.rotW;
 }
 
-export function cleanupMissingBodies(
+const NETWORKED_COMPONENTS = ['body', 'renderer'];
+
+export function sendStructuralUpdates(
   state: State,
   netState: NetworkState,
-  activeKeys: Set<string>
+  room: Room,
+  ownedEntities: number[]
 ): void {
-  const toRemove: string[] = [];
+  for (const entity of ownedEntities) {
+    if (netState.initializedEntities.has(entity)) continue;
 
-  for (const [compositeKey, entity] of netState.compositeKeyToEntity) {
-    if (!activeKeys.has(compositeKey)) {
-      toRemove.push(compositeKey);
-      if (state.exists(entity)) {
-        console.log(
-          `[Network] Remote body destroyed: ${compositeKey} → entity ${entity}`
-        );
-        state.destroyEntity(entity);
-      }
+    const components: Record<string, Record<string, number>> = {};
+
+    for (const componentName of NETWORKED_COMPONENTS) {
+      const Component = state.getComponent(componentName);
+      if (!Component) continue;
+
+      if (!state.hasComponent(entity, Component)) continue;
+
+      const serialized = serializeComponent(Component, entity);
+      components[componentName] = serialized;
     }
-  }
 
-  for (const compositeKey of toRemove) {
-    netState.compositeKeyToEntity.delete(compositeKey);
+    room.send(NetworkMessages.STRUCTURAL_UPDATE, {
+      entity,
+      components,
+    });
+
+    netState.initializedEntities.add(entity);
+
+    console.log(
+      `[Network] Sent structural update for entity ${entity} with components:`,
+      Object.keys(components)
+    );
   }
 }

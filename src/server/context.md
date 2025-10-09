@@ -1,7 +1,7 @@
 # Server Runtime
 
 <!-- LLM:OVERVIEW -->
-Pure Colyseus relay server with no ECS or physics simulation. Receives position snapshots with entity IDs, validates them, and broadcasts to other clients. Supports multiple entities per session using composite keys.
+Pure Colyseus relay server with no ECS or physics simulation. Receives structural updates and position snapshots with entity IDs, validates them, and broadcasts to other clients via MapSchema. Supports multiple entities per session using composite keys.
 <!-- /LLM:OVERVIEW -->
 
 ## Architecture
@@ -14,10 +14,12 @@ Pure Colyseus relay server with no ECS or physics simulation. Receives position 
 
 **Responsibilities:**
 - Accept client connections
-- Receive position snapshots with entity IDs, stamp with tick number
-- Map bodies by composite key (sessionId:entityId) for multi-entity sessions
+- Receive structural updates (component data) and position snapshots with entity IDs
+- Stamp position updates with tick number
+- Map state by composite key (sessionId:entityId) for multi-entity sessions
 - Validate snapshots (bounds, NaN/Infinity)
-- Broadcast to other clients via Colyseus auto-sync
+- Broadcast to other clients via Colyseus MapSchema auto-sync
+- Clean up all session entities on disconnect
 
 ## Layout
 
@@ -34,10 +36,11 @@ server/
 ## Scope
 
 - Connection lifecycle (join/leave)
+- Structural update message handling (component data)
 - Position message handling with entity IDs
 - Composite key management for multi-entity sessions
 - Basic anti-cheat validation
-- State broadcasting (automatic via Colyseus)
+- State broadcasting via MapSchema (automatic via Colyseus)
 
 ## Entry Points
 
@@ -53,13 +56,14 @@ server/
 
 ### GameRoom
 - `onCreate()` - Initialize room and register message handlers
-- `onJoin(client)` - Client connection (entities created on first position update)
-- `onLeave(client)` - Remove all entities for session using prefix match
+- `onJoin(client)` - Client connection
+- `onLeave(client)` - Remove all bodies and structures for session using prefix match
 - `onDispose()` - Cleanup
 
 ### Schemas
 - `BodyState` - Position, rotation, tick
-- `GameState` - MapSchema of bodies keyed by "sessionId:entityId"
+- `StructuralState` - Serialized component data
+- `GameState` - MapSchemas for bodies and structures, keyed by "sessionId:entityId"
 - `PositionSnapshot` - Client message type with entity ID
 
 ### Validation

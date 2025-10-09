@@ -4,6 +4,8 @@ export interface NetworkState {
   room?: Room;
   sessionId?: string;
   compositeKeyToEntity: Map<string, number>;
+  initializedEntities: Set<number>;
+  remoteEntities: Set<string>;
 }
 
 export interface BodyStateLike {
@@ -15,4 +17,10 @@ export interface BodyStateLike {
   rotY: number;
   rotZ: number;
   rotW: number;
+}
+
+export interface StructuralUpdate {
+  sessionId: string;
+  entity: number;
+  components: Record<string, Record<string, number>>;
 }

@@ -13,10 +13,17 @@ Client-instance multiplayer using Colyseus. Each client runs full physics simula
 - Local entities: Non-networked
 
 **Server:**
-- Receives position snapshots with entity IDs, stamps with server tick
-- Keys bodies by composite key (sessionId:entityId) to support multiple entities per session
+- Receives structural updates (components) and position snapshots with entity IDs
+- Stamps position updates with server tick
+- Keys by composite key (sessionId:entityId) for multi-entity sessions
 - Validates (bounds, NaN checks)
-- Broadcasts via Colyseus auto-sync
+- Broadcasts via Colyseus MapSchema auto-sync
+
+**Iterative State Observation:**
+- Clients observe server MapSchema state every frame
+- Entity lifecycle (create/update/delete) driven by what exists in server state
+- Self-healing: missed updates corrected on next frame
+- Consistent pattern for all state changes
 
 **Snapshot Interpolation:**
 - 3-snapshot ring buffer stores recent server states with tick timestamps
@@ -35,7 +42,7 @@ networking/
 ├── types.ts        # NetworkState, BodyStateLike
 ├── state.ts        # NetworkState management
 ├── utils.ts        # String hashing
-├── sync.ts         # Remote body snapshot storage
+├── sync.ts         # Structural updates, snapshot buffer management
 ├── systems.ts      # Init, Sync, Interpolation, Send, Cleanup
 ├── plugin.ts       # Plugin definition
 └── index.ts        # Public exports
@@ -44,10 +51,11 @@ networking/
 ## Scope
 
 - Network any entity marked with Owned component
+- Send structural updates (components) once per owned entity
 - Send owned entity positions to server at fixed rate
-- Receive server snapshots, insert into 3-snapshot buffer
+- Observe server state, create/update/destroy remote entities iteratively
+- Insert position snapshots into 3-snapshot buffer
 - Interpolate with delay buffer at fixed rate
-- Create/destroy remote entities as kinematic bodies
 
 ## Dependencies
 
@@ -64,25 +72,28 @@ networking/
 
 ### Systems
 
-**NetworkInitSystem** (setup, first) - Connection management
-**NetworkSyncSystem** (setup) - Receives snapshots, inserts into ring buffer
-**NetworkBufferConsumeSystem** (fixed, before KinematicMovementSystem) - Interpolates between snapshots using auto-incrementing local render tick
+**NetworkInitSystem** (setup, first) - Connection management, offline cleanup
+**NetworkStructuralSendSystem** (setup) - Sends structural updates for new owned entities
+**NetworkSyncSystem** (setup) - Observes server state, creates/destroys remote entities, inserts snapshots
+**NetworkBufferConsumeSystem** (fixed, before KinematicMovementSystem) - Interpolates between snapshots
 **NetworkSendSystem** (fixed, after PhysicsRapierSyncSystem) - Sends owned positions
 **NetworkCleanupSystem** (dispose) - Disconnect cleanup
 
 ### State Management
 
-**NetworkState** - `room`, `sessionId`, `compositeKeyToEntity` map (sessionId:entityId → entity)
+**NetworkState** - `room`, `sessionId`, `compositeKeyToEntity`, `remoteEntities`, `initializedEntities`
 **getNetworkState(state)** - Get or create network state
 
 ### Sync Functions
 
+**handleIncomingStructuralUpdate** - Create/update remote entity from structural data
 **syncRemoteBody** - Insert snapshot into ring buffer
-**cleanupMissingBodies** - Destroy entities for disconnected sessions
+**sendStructuralUpdates** - Send component data for new owned entities
 
 ### Types
 
 **BodyStateLike** - Position, rotation, tick
+**StructuralUpdate** - Entity component data for network spawning
 **NetworkState** - Network state container
 <!-- /LLM:REFERENCE -->
 
@@ -114,8 +125,9 @@ createGameServer({ port: 2567 });
 
 - Zero latency for local gameplay
 - Smooth remote movement via delay-buffered interpolation
+- Self-healing state synchronization
+- Consistent iterative pattern for all entity lifecycle events
 - Minimal server CPU (relay only, no simulation)
-- Handles variable network timing
+- Handles variable network timing and packet loss
 - Physics plugin unaware of networking
 - Clean ECS integration via kinematic components
-- No duplicate kinematic movements

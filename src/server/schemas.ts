@@ -11,6 +11,11 @@ export class BodyState extends Schema {
   @type('number') rotW = 1;
 }
 
+export class StructuralState extends Schema {
+  @type('string') data = '';
+}
+
 export class GameState extends Schema {
   @type({ map: BodyState }) bodies = new MapSchema<BodyState>();
+  @type({ map: StructuralState }) structures = new MapSchema<StructuralState>();
 }

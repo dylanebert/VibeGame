@@ -5,6 +5,7 @@ import {
   NetworkCleanupSystem,
   NetworkInitSystem,
   NetworkSendSystem,
+  NetworkStructuralSendSystem,
   NetworkSyncSystem,
 } from './systems';
 
@@ -15,6 +16,7 @@ export const NetworkingPlugin: Plugin = {
   },
   systems: [
     NetworkInitSystem,
+    NetworkStructuralSendSystem,
     NetworkSyncSystem,
     NetworkBufferConsumeSystem,
     NetworkSendSystem,
