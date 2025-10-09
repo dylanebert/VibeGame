@@ -10,10 +10,6 @@ async function main() {
   const runtime = await GAME.withPlugin(NetworkingPlugin).run();
   const state = runtime.getState();
 
-  console.log(`[Client] Runtime mode: ${state.mode}`);
-  console.log(`[Client] Is client: ${state.isClient}`);
-  console.log(`[Client] Is server: ${state.isServer}`);
-
   if (ONLINE_MODE) {
     console.log('[Client] Attempting to connect to server...');
     await connectToServer(state);

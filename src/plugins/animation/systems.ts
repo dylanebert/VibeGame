@@ -1,6 +1,7 @@
 import { defineQuery, type System } from '../../core';
 import { NULL_ENTITY } from '../../core';
 import {
+  Body,
   CharacterController,
   CharacterMovement,
   InterpolatedTransform,
@@ -78,23 +79,42 @@ export const AnimatedCharacterUpdateSystem: System = {
 
       const posY = InterpolatedTransform.posY[player];
       const prevPosY = InterpolatedTransform.prevPosY[player];
-      const isGrounded = CharacterController.grounded[player] === 1;
+
+      const isGrounded = state.hasComponent(player, Body)
+        ? Body.grounded[player] === 1
+        : state.hasComponent(player, CharacterController)
+          ? CharacterController.grounded[player] === 1
+          : false;
 
       let isMoving = false;
+      let speed = 1.0;
+
       if (state.hasComponent(player, InputState)) {
         const inputX = InputState.moveX[player];
         const inputY = InputState.moveY[player];
         isMoving = Math.abs(inputX) > 0.1 || Math.abs(inputY) > 0.1;
+
+        if (state.hasComponent(player, CharacterMovement) && isMoving) {
+          const moveX = CharacterMovement.actualMoveX[player];
+          const moveZ = CharacterMovement.actualMoveZ[player];
+          speed = Math.sqrt(moveX * moveX + moveZ * moveZ) / fixedDeltaTime;
+        }
+      } else {
+        const posX = InterpolatedTransform.posX[player];
+        const posZ = InterpolatedTransform.posZ[player];
+        const prevPosX = InterpolatedTransform.prevPosX[player];
+        const prevPosZ = InterpolatedTransform.prevPosZ[player];
+
+        const deltaX = posX - prevPosX;
+        const deltaZ = posZ - prevPosZ;
+        const horizontalSpeed =
+          Math.sqrt(deltaX * deltaX + deltaZ * deltaZ) / fixedDeltaTime;
+
+        isMoving = horizontalSpeed > 0.1;
+        speed = horizontalSpeed;
       }
 
       const verticalVelocity = (posY - prevPosY) / fixedDeltaTime;
-
-      let speed = 1.0;
-      if (state.hasComponent(player, CharacterMovement) && isMoving) {
-        const moveX = CharacterMovement.actualMoveX[player];
-        const moveZ = CharacterMovement.actualMoveZ[player];
-        speed = Math.sqrt(moveX * moveX + moveZ * moveZ) / fixedDeltaTime;
-      }
 
       const prevState = AnimatedCharacter.animationState[character];
       let currentState = prevState;

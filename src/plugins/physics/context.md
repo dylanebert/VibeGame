@@ -100,6 +100,7 @@ physics/
 - eulerX, eulerY, eulerZ: f32
 - velX, velY, velZ: f32
 - rotVelX, rotVelY, rotVelZ: f32
+- grounded: ui8 (0)
 
 #### Collider
 - shape: ui8 - ColliderShape enum (Box)

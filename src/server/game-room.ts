@@ -30,7 +30,6 @@ export class GameRoom extends Room<GameState> {
       if (!body) {
         body = new BodyState();
         this.state.bodies.set(compositeKey, body);
-        console.log(`[Server] Entity created: ${compositeKey}`);
       }
 
       body.posX = sanitizeNumber(snapshot.posX);
@@ -49,6 +48,10 @@ export class GameRoom extends Room<GameState> {
       body.rotZ = normalized.z;
       body.rotW = normalized.w;
       body.tick = this.serverTick;
+
+      if (snapshot.grounded !== undefined) {
+        body.grounded = sanitizeNumber(snapshot.grounded);
+      }
     });
 
     this.onMessage('structural', (client, data) => {
@@ -58,7 +61,6 @@ export class GameRoom extends Room<GameState> {
       if (!structural) {
         structural = new StructuralState();
         this.state.structures.set(compositeKey, structural);
-        console.log(`[Server] Structural state created: ${compositeKey}`);
       }
 
       structural.data = JSON.stringify({
@@ -84,7 +86,6 @@ export class GameRoom extends Room<GameState> {
 
     for (const key of toRemove) {
       this.state.bodies.delete(key);
-      console.log(`[Server] Body removed: ${key}`);
     }
 
     const toRemoveStructural: string[] = [];
@@ -96,7 +97,6 @@ export class GameRoom extends Room<GameState> {
 
     for (const key of toRemoveStructural) {
       this.state.structures.delete(key);
-      console.log(`[Server] Structural state removed: ${key}`);
     }
 
     console.log(`[Server] Session left: ${client.sessionId}`);

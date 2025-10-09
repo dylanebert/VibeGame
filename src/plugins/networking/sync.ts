@@ -29,10 +29,6 @@ export function handleIncomingStructuralUpdate(
 
     state.addComponent(entity, Body);
     Body.type[entity] = BodyType.KinematicPositionBased;
-
-    console.log(
-      `[Network] Remote entity spawned: ${compositeKey} → entity ${entity}`
-    );
   }
 
   for (const [componentName, componentData] of Object.entries(
@@ -53,10 +49,6 @@ export function handleIncomingStructuralUpdate(
     if (Object.keys(componentData).length > 0) {
       deserializeComponent(Component, entity, componentData);
     }
-
-    console.log(
-      `[Network] Applied component ${componentName} to entity ${entity}`
-    );
   }
 
   if (state.hasComponent(entity, Body)) {
@@ -147,6 +139,8 @@ function insertSnapshotIntoBuffer(
   Networked.rotY2[entity] = bodyState.rotY;
   Networked.rotZ2[entity] = bodyState.rotZ;
   Networked.rotW2[entity] = bodyState.rotW;
+
+  Body.grounded[entity] = bodyState.grounded;
 }
 
 export function sendStructuralUpdates(
@@ -178,10 +172,5 @@ export function sendStructuralUpdates(
     });
 
     netState.initializedEntities.add(entity);
-
-    console.log(
-      `[Network] Sent structural update for entity ${entity} with components:`,
-      Object.keys(components)
-    );
   }
 }

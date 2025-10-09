@@ -9,6 +9,7 @@ export class BodyState extends Schema {
   @type('number') rotY = 0;
   @type('number') rotZ = 0;
   @type('number') rotW = 1;
+  @type('number') grounded = 0;
 }
 
 export class StructuralState extends Schema {

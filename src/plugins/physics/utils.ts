@@ -594,6 +594,7 @@ export function applyCharacterMovement(
 
   const grounded = controller.computedGrounded() ? 1 : 0;
   CharacterController.grounded[entity] = grounded;
+  Body.grounded[entity] = grounded;
 
   if (grounded) {
     CharacterController.platform[entity] = detectPlatformContinuous(

@@ -467,10 +467,40 @@ const x = GAME.Transform.posX[entity];
 const health = GAME.Health.current[entity];
 ```
 
+## Multiplayer Networking
+
+Client-instance multiplayer with automatic ownership detection:
+
+```typescript
+import * as GAME from 'vibegame';
+import { Client } from 'colyseus.js';
+import { getNetworkState, NetworkingPlugin } from 'vibegame';
+
+const runtime = await GAME.withPlugin(NetworkingPlugin).run();
+const state = runtime.getState();
+
+const client = new Client('ws://localhost:2567');
+const room = await client.joinOrCreate('game');
+
+const netState = getNetworkState(state);
+netState.room = room;
+```
+
+**Server:**
+```typescript
+import { createGameServer } from 'vibegame/server';
+createGameServer({ port: 2567 });
+```
+
+**Architecture:**
+- Each client runs full physics simulation (zero latency)
+- Server is pure relay (no ECS, no physics, no simulation)
+- Local player auto-marked as owned and sent to server
+- Remote players appear as kinematic ghosts
+
 ## Features Not Yet Built-In
 
 ### ❌ Engine Features Not Available
-- **Multiplayer/Networking** - No server sync
 - **Sound/Audio** - No audio system yet
 - **Save/Load** - No persistence system
 - **Inventory** - No item management system built-in (but easily implementable with UI)
@@ -591,11 +621,13 @@ Available in all systems via the `state` parameter:
 - `destroyEntity(entity: number)` - Remove entity
 - `query(...Components): number[]` - Find entities with components
 
-### Component Operations  
-- `addComponent(entity, Component, data?)` - Add component
+### Component Operations
+- `addComponent(entity, Component, data?)` - Add component with automatic defaults from plugin config
 - `removeComponent(entity, Component)` - Remove component
 - `hasComponent(entity, Component): boolean` - Check component
 - `getComponent(name: string): Component | null` - Get by name
+
+**Important**: When adding a component with `state.addComponent(entity, Component)`, default values from the plugin's `config.defaults` are automatically applied. You only need to set properties that differ from the defaults.
 
 ### Time
 - `time.deltaTime: number` - Frame time in seconds
@@ -692,6 +724,8 @@ Tag component (no properties)
 #### AnimatedCharacterUpdateSystem
 - Group: simulation
 - Updates character animation based on movement and physics state
+- Uses Body.grounded for ground detection (works with both local and networked entities)
+- Movement detection: InputState + CharacterMovement for local players, velocity calculation from InterpolatedTransform for networked players
 
 #### Examples
 
@@ -849,6 +883,43 @@ import { setButton, getButton, InputButtons } from 'vibegame';
 setButton(player, InputButtons.JUMP, true);
 expect(getButton(player, InputButtons.JUMP)).toBe(true);
 ```
+
+### Networking
+
+Client-instance multiplayer using Colyseus. Each client runs full physics simulation, server stamps snapshots with tick numbers. Delay-buffered interpolation ensures smooth remote entity movement despite variable network timing. Supports multiple entities per session using composite keys (sessionId:entityId).
+
+## API Reference
+
+### Components
+
+**Owned** - Tag component marking entities to send to server
+**Networked** - 3-snapshot ring buffer (tick0-2, pos0-2, rot0-2), localRenderTick tracks client interpolation position
+
+### Systems
+
+**NetworkInitSystem** (setup, first) - Connection management, offline cleanup
+**NetworkStructuralSendSystem** (setup) - Sends structural updates for new owned entities
+**NetworkSyncSystem** (setup) - Observes server state, creates/destroys remote entities, inserts snapshots
+**NetworkBufferConsumeSystem** (fixed, before KinematicMovementSystem) - Interpolates between snapshots
+**NetworkSendSystem** (fixed, after PhysicsRapierSyncSystem) - Sends owned positions
+**NetworkCleanupSystem** (dispose) - Disconnect cleanup
+
+### State Management
+
+**NetworkState** - `room`, `sessionId`, `compositeKeyToEntity`, `remoteEntities`, `initializedEntities`
+**getNetworkState(state)** - Get or create network state
+
+### Sync Functions
+
+**handleIncomingStructuralUpdate** - Create/update remote entity from structural data
+**syncRemoteBody** - Insert snapshot into ring buffer
+**sendStructuralUpdates** - Send component data for new owned entities
+
+### Types
+
+**BodyStateLike** - Position, rotation, tick
+**StructuralUpdate** - Entity component data for network spawning
+**NetworkState** - Network state container
 
 ### Orbit Camera
 
@@ -1015,6 +1086,7 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 - eulerX, eulerY, eulerZ: f32
 - velX, velY, velZ: f32
 - rotVelX, rotVelY, rotVelZ: f32
+- grounded: ui8 (0)
 
 #### Collider
 - shape: ui8 - ColliderShape enum (Box)
@@ -1073,11 +1145,12 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 
 ### Systems
 
+**Fixed Group (Topology & Simulation)**
 - PhysicsWorldSystem - Initializes physics world
-- PhysicsInitializationSystem - Creates bodies and colliders
-- PhysicsCleanupSystem - Removes physics on entity destroy
-- CharacterMovementSystem - Character controller with full velocity inheritance (linear + angular)
-- CollisionEventCleanupSystem - Clears collision events
+- PhysicsInitializationSystem - Creates bodies and colliders based on components
+- PhysicsCleanupSystem - Removes physics resources when components removed
+- CollisionEventCleanupSystem - Clears collision events (setup group)
+- CharacterMovementSystem - Character controller with velocity inheritance
 - ApplyForcesSystem - Applies forces
 - ApplyTorquesSystem - Applies torques
 - ApplyImpulsesSystem - Applies impulses
@@ -1087,6 +1160,8 @@ const switchTarget = (state, cameraEntity, newTargetEntity) => {
 - KinematicMovementSystem - Kinematic movement
 - PhysicsStepSystem - Steps simulation
 - PhysicsRapierSyncSystem - Syncs Rapier to ECS
+
+**Simulation Group (Rendering)**
 - PhysicsInterpolationSystem - Interpolates for rendering
 
 ### Functions
@@ -1185,8 +1260,7 @@ state.addComponent(entity, GAME.Collider, {
   restitution: 0.3
 });
 
-// Note: Physics body won't exist until next fixed update
-// Transform will be overwritten by Body position after initialization
+// Physics resources created in setup group before simulation
 ```
 
 ##### Moving Physics Bodies

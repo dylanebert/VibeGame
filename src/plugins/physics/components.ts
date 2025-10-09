@@ -47,6 +47,8 @@ export const Body = defineComponent({
   rotVelX: Types.f32,
   rotVelY: Types.f32,
   rotVelZ: Types.f32,
+
+  grounded: Types.ui8,
 });
 
 export const Collider = defineComponent({

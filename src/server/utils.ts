@@ -7,6 +7,7 @@ export interface PositionSnapshot {
   rotY: number;
   rotZ: number;
   rotW: number;
+  grounded?: number;
 }
 
 export function sanitizeNumber(value: number): number {

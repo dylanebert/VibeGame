@@ -61,10 +61,10 @@ server/
 - `onDispose()` - Cleanup
 
 ### Schemas
-- `BodyState` - Position, rotation, tick
+- `BodyState` - Position, rotation, tick, grounded
 - `StructuralState` - Serialized component data
 - `GameState` - MapSchemas for bodies and structures, keyed by "sessionId:entityId"
-- `PositionSnapshot` - Client message type with entity ID
+- `PositionSnapshot` - Client message type with entity ID and optional grounded state
 
 ### Validation
 - `isValidSnapshot(snapshot)` - Bounds and NaN checks

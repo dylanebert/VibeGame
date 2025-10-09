@@ -27,7 +27,6 @@ export const NetworkInitSystem: System = {
 
     if (!room) {
       if (netState.compositeKeyToEntity.size > 0) {
-        console.log('[Network] No room, cleaning up all remote entities');
         for (const entity of netState.compositeKeyToEntity.values()) {
           if (state.exists(entity)) {
             state.destroyEntity(entity);
@@ -43,11 +42,6 @@ export const NetworkInitSystem: System = {
 
     if (netState.sessionId !== room.sessionId) {
       netState.sessionId = room.sessionId;
-      console.log(`[Network] Connected as ${room.sessionId}`);
-
-      room.onStateChange.once(() => {
-        console.log('[Network] Initial state synchronized');
-      });
     }
   },
 };
@@ -139,9 +133,6 @@ export const NetworkSyncSystem: System = {
         toRemove.push(compositeKey);
         const entity = netState.compositeKeyToEntity.get(compositeKey);
         if (entity !== undefined && state.exists(entity)) {
-          console.log(
-            `[Network] Remote entity destroyed: ${compositeKey} → entity ${entity}`
-          );
           state.destroyEntity(entity);
           netState.initializedEntities.delete(entity);
         }
@@ -312,6 +303,7 @@ export const NetworkSendSystem: System = {
         rotY: Body.rotY[entity],
         rotZ: Body.rotZ[entity],
         rotW: Body.rotW[entity],
+        grounded: Body.grounded[entity],
       };
 
       room.send(NetworkMessages.POSITION_UPDATE, snapshot);
@@ -334,7 +326,6 @@ export const NetworkCleanupSystem: System = {
     netState.sessionId = undefined;
 
     if (netState.room) {
-      console.log('[Network] Disconnecting from room');
       netState.room.leave();
       netState.room = undefined;
     }

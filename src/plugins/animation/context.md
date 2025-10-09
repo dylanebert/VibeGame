@@ -37,7 +37,7 @@ animation/
 
 ## Dependencies
 
-- **Internal**: Core ECS, transforms (Transform), rendering (Renderer), physics (CharacterController, InterpolatedTransform), recipes (Parent)
+- **Internal**: Core ECS, transforms (Transform), rendering (Renderer), physics (Body, CharacterController, InterpolatedTransform, CharacterMovement), input (InputState), recipes (Parent)
 - **External**: None (purely procedural)
 
 <!-- LLM:REFERENCE -->
@@ -68,6 +68,8 @@ Tag component (no properties)
 #### AnimatedCharacterUpdateSystem
 - Group: simulation
 - Updates character animation based on movement and physics state
+- Uses Body.grounded for ground detection (works with both local and networked entities)
+- Movement detection: InputState + CharacterMovement for local players, velocity calculation from InterpolatedTransform for networked players
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->

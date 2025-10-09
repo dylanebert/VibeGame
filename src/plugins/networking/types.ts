@@ -17,6 +17,7 @@ export interface BodyStateLike {
   rotY: number;
   rotZ: number;
   rotW: number;
+  grounded: number;
 }
 
 export interface StructuralUpdate {
