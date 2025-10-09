@@ -19,6 +19,7 @@ export const PlayerPlugin: Plugin = {
   components: {
     Player,
   },
+  networked: [Player],
   config: {
     defaults: {
       player: {

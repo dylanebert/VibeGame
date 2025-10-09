@@ -57,6 +57,28 @@ networking/
 - Insert position snapshots into 3-snapshot buffer
 - Interpolate with delay buffer at fixed rate
 
+### Component Networking
+
+**Plugins declare networked components** in their definition. Only explicitly declared components are synchronized across the network.
+
+**Currently networked:**
+- **body** (PhysicsPlugin) - Position and rotation for interpolation
+- **renderer** (RenderingPlugin) - Visual appearance (shape, size, color)
+- **animated-character** (AnimationPlugin) - Animation state for remote players
+
+**To network a custom component**, add it to your plugin's `networked` field using component references:
+
+```typescript
+import type { Plugin } from 'vibegame';
+import { MyComponent } from './components';
+
+export const MyPlugin: Plugin = {
+  components: { MyComponent },
+  networked: [MyComponent],  // Type-safe component reference
+  // ... other plugin fields
+};
+```
+
 ## Dependencies
 
 - External: Colyseus client SDK (colyseus.js)

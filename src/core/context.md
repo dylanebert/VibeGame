@@ -104,6 +104,8 @@ The engine uses a semi-fixed timestep model with three execution phases:
 - registerConfig(config): void
 - getRecipe(name): Recipe | undefined
 - getComponent(name): Component | undefined
+- getComponentNames(): string[]
+- getNetworkedComponentNames(): string[]
 - getParser(tag): Parser | undefined
 - step(deltaTime?): void
 - dispose(): void
@@ -136,6 +138,7 @@ The engine uses a semi-fixed timestep model with three execution phases:
 - recipes?: Recipe[]
 - components?: Record<string, Component>
 - config?: Config
+- networked?: Component[]
 
 #### Recipe
 - name: string
@@ -276,6 +279,7 @@ import * as GAME from 'vibegame';
 const HealthPlugin: GAME.Plugin = {
   components: { Health },
   systems: [DamageSystem, RegenerationSystem],
+  networked: [Health],
   recipes: [{
     name: 'enemy',
     components: ['health', 'transform'],

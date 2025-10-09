@@ -35,6 +35,7 @@ export class State {
   public readonly mode: 'client' | 'server';
   private readonly recipes = new Map<string, Recipe>();
   private readonly components = new Map<string, Component>();
+  private readonly networked = new Set<string>();
   private isDisposed = false;
 
   constructor(mode?: 'client' | 'server') {
@@ -81,6 +82,14 @@ export class State {
     if (plugin.config) {
       this.registerConfig(plugin.config);
     }
+    if (plugin.networked) {
+      for (const component of plugin.networked) {
+        const componentName = this.getComponentName(component);
+        if (componentName) {
+          this.networked.add(componentName);
+        }
+      }
+    }
   }
 
   registerSystem(system: System): void {
@@ -124,6 +133,10 @@ export class State {
 
   getComponentNames(): string[] {
     return Array.from(this.components.keys());
+  }
+
+  getNetworkedComponentNames(): string[] {
+    return Array.from(this.networked);
   }
 
   private getComponentName(component: Component): string | undefined {

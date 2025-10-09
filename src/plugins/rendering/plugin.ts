@@ -27,6 +27,7 @@ export const RenderingPlugin: Plugin = {
     AmbientLight,
     DirectionalLight,
   },
+  networked: [Renderer],
   config: {
     defaults: {
       ambientLight: {

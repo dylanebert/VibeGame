@@ -66,6 +66,7 @@ export interface Plugin {
   readonly recipes?: readonly Recipe[];
   readonly components?: Record<string, Component>;
   readonly config?: Config;
+  readonly networked?: readonly Component[];
 }
 
 export interface GameTime {

@@ -149,20 +149,20 @@ function insertSnapshotIntoBuffer(
   Networked.rotW2[entity] = bodyState.rotW;
 }
 
-const NETWORKED_COMPONENTS = ['body', 'renderer'];
-
 export function sendStructuralUpdates(
   state: State,
   netState: NetworkState,
   room: Room,
   ownedEntities: number[]
 ): void {
+  const networkedComponentNames = state.getNetworkedComponentNames();
+
   for (const entity of ownedEntities) {
     if (netState.initializedEntities.has(entity)) continue;
 
     const components: Record<string, Record<string, number>> = {};
 
-    for (const componentName of NETWORKED_COMPONENTS) {
+    for (const componentName of networkedComponentNames) {
       const Component = state.getComponent(componentName);
       if (!Component) continue;
 
