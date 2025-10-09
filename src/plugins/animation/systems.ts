@@ -1,4 +1,4 @@
-import { defineQuery, type System } from '../../core';
+import { defineQuery, type System, type State } from '../../core';
 import { NULL_ENTITY } from '../../core';
 import {
   Body,
@@ -62,6 +62,39 @@ export const AnimatedCharacterInitializationSystem: System = {
         entity,
         'rightLeg'
       );
+    }
+  },
+};
+
+function destroyBodyParts(state: State, character: number): void {
+  const bodyParts = [
+    AnimatedCharacter.headEntity[character],
+    AnimatedCharacter.torsoEntity[character],
+    AnimatedCharacter.leftArmEntity[character],
+    AnimatedCharacter.rightArmEntity[character],
+    AnimatedCharacter.leftLegEntity[character],
+    AnimatedCharacter.rightLegEntity[character],
+  ];
+
+  for (const part of bodyParts) {
+    if (part !== NULL_ENTITY && state.exists(part)) {
+      state.destroyEntity(part);
+    }
+  }
+}
+
+export const AnimatedCharacterCleanupSystem: System = {
+  group: 'simulation',
+  update(state) {
+    const characters = animatedCharacterQuery(state.world);
+
+    for (const character of characters) {
+      const player = Parent.entity[character];
+
+      if (player !== NULL_ENTITY && !state.exists(player)) {
+        destroyBodyParts(state, character);
+        state.destroyEntity(character);
+      }
     }
   },
 };

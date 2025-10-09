@@ -7,9 +7,11 @@ export function getNetworkState(state: State): NetworkState {
   let netState = stateToNetworkState.get(state);
   if (!netState) {
     netState = {
-      compositeKeyToEntity: new Map(),
+      networkIdToEntity: new Map(),
+      entityToNetworkId: new Map(),
       initializedEntities: new Set(),
       remoteEntities: new Set(),
+      pendingNetworkIdRequests: new Set(),
     };
     stateToNetworkState.set(state, netState);
   }

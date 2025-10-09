@@ -136,7 +136,7 @@ Optional files:
 
 1. **animation** - Animation mixer and clip management
 2. **input** - Mouse, keyboard, gamepad input handling
-3. **networking** - Client-instance multiplayer with Colyseus (generic body networking)
+3. **networking** - Hybrid multiplayer with Colyseus (server-authoritative by default, client-authority opt-in)
 4. **orbit-camera** - Orbital camera controller
 5. **physics** - Rapier 3D WASM physics integration
 6. **player** - Player character controller

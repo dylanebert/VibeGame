@@ -10,6 +10,7 @@ Procedural character animation with body parts that respond to movement states.
 - Procedurally animate based on movement states
 - Handle walk cycles, jumping, falling, and landing animations
 - Synchronize animations with physics state
+- Automatically clean up body parts when characters are destroyed
 
 ## Layout
 
@@ -32,7 +33,7 @@ animation/
 ## Entrypoints
 
 - **plugin.ts**: AnimationPlugin definition with systems and components
-- **systems.ts**: AnimatedCharacterInitializationSystem (setup batch), AnimatedCharacterUpdateSystem (simulation batch)
+- **systems.ts**: AnimatedCharacterInitializationSystem (setup batch), AnimatedCharacterCleanupSystem (simulation batch), AnimatedCharacterUpdateSystem (simulation batch)
 - **index.ts**: Public exports (AnimatedCharacter, HasAnimator, AnimationPlugin)
 
 ## Dependencies
@@ -65,6 +66,10 @@ Tag component (no properties)
 - Group: setup
 - Creates body part entities for AnimatedCharacter components
 
+#### AnimatedCharacterCleanupSystem
+- Group: simulation
+- Checks if parent player entity exists; destroys character and body parts if parent is gone
+
 #### AnimatedCharacterUpdateSystem
 - Group: simulation
 - Updates character animation based on movement and physics state
@@ -80,14 +85,10 @@ Tag component (no properties)
 ```typescript
 import * as GAME from 'vibegame';
 
-// Add animated character to a player entity
 const player = state.createEntity();
 state.addComponent(player, GAME.AnimatedCharacter);
 state.addComponent(player, GAME.CharacterController);
 state.addComponent(player, GAME.Transform);
-
-// The AnimatedCharacterInitializationSystem will automatically
-// create body parts in the next setup phase
 ```
 
 ### Accessing Animation State
@@ -101,7 +102,7 @@ const MySystem: GAME.System = {
     const characters = characterQuery(state.world);
     for (const entity of characters) {
       const animState = GAME.AnimatedCharacter.animationState[entity];
-      if (animState === 2) { // JUMPING
+      if (animState === 2) {
         console.log('Character is jumping!');
       }
     }
@@ -112,8 +113,7 @@ const MySystem: GAME.System = {
 ### XML Declaration
 
 ```xml
-<!-- Player entity with animated character -->
-<entity 
+<entity
   animated-character
   character-controller
   transform="pos: 0 2 0"

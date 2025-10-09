@@ -1,13 +1,30 @@
 import { Server } from 'colyseus';
 import { createServer } from 'http';
-import { GameRoom } from './game-room';
+import { readFileSync } from 'fs';
+import { GameRoom, setWorldXML } from './game-room';
 
 export interface ServerOptions {
   port?: number;
+  worldXML?: string;
+  worldFile?: string;
 }
 
 export function createGameServer(options: ServerOptions = {}): Server {
   const port = options.port ?? 2567;
+
+  let worldXML = options.worldXML;
+  if (options.worldFile && !worldXML) {
+    try {
+      worldXML = readFileSync(options.worldFile, 'utf-8');
+      console.log(`[Server] Loaded world from file: ${options.worldFile}`);
+    } catch (error) {
+      console.error(`[Server] Failed to load world file: ${options.worldFile}`, error);
+    }
+  }
+
+  if (worldXML) {
+    setWorldXML(worldXML);
+  }
 
   const gameServer = new Server({
     server: createServer(),
@@ -22,5 +39,7 @@ export function createGameServer(options: ServerOptions = {}): Server {
 }
 
 export { GameRoom } from './game-room';
+export type { GameRoomOptions } from './game-room';
+export { ServerPlugins } from './plugins';
 export { BodyState, GameState } from './schemas';
 export type { PositionSnapshot } from './utils';

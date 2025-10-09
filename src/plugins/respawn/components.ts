@@ -9,3 +9,5 @@ export const Respawn = defineComponent({
   eulerY: Types.f32,
   eulerZ: Types.f32,
 });
+
+export const Respawning = defineComponent({});

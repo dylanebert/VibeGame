@@ -79,7 +79,7 @@ export const PhysicsPlugin: Plugin = {
     SetLinearVelocity,
     SetAngularVelocity,
   },
-  networked: [Body],
+  networked: [Body, Collider],
   config: {
     defaults: {
       body: {

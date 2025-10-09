@@ -37,6 +37,8 @@ export default defineConfig({
         'colyseus.js',
         'http',
         'express',
+        'jsdom',
+        'fs',
         '@colyseus/schema',
         '@colyseus/monitor',
         '@colyseus/core',

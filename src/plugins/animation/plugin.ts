@@ -2,12 +2,14 @@ import { NULL_ENTITY, type Plugin } from '../../core';
 import { AnimatedCharacter, HasAnimator } from './components';
 import {
   AnimatedCharacterInitializationSystem,
+  AnimatedCharacterCleanupSystem,
   AnimatedCharacterUpdateSystem,
 } from './systems';
 
 export const AnimationPlugin: Plugin = {
   systems: [
     AnimatedCharacterInitializationSystem,
+    AnimatedCharacterCleanupSystem,
     AnimatedCharacterUpdateSystem,
   ],
   components: {

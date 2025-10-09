@@ -1,4 +1,9 @@
-export { Networked, Owned } from './components';
+export {
+  ClientAuthority,
+  NetworkIdentity,
+  RemoteSnapshot,
+  ServerAuthority,
+} from './components';
 export { NetworkMessages } from './constants';
 export { NetworkingPlugin } from './plugin';
 export { getNetworkState } from './state';

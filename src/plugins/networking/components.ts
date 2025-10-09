@@ -1,8 +1,14 @@
 import { defineComponent, Types } from 'bitecs';
 
-export const Owned = defineComponent();
+export const NetworkIdentity = defineComponent({
+  networkId: Types.ui32,
+});
 
-export const Networked = defineComponent({
+export const ClientAuthority = defineComponent({});
+
+export const ServerAuthority = defineComponent({});
+
+export const RemoteSnapshot = defineComponent({
   sessionId: Types.ui32,
   localRenderTick: Types.f32,
 

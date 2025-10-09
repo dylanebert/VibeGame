@@ -1,11 +1,15 @@
 import { defineQuery, type State, type System } from '../../core';
 import { lerp, slerp } from '../../core/math/utils';
-import { Body, KinematicMove, KinematicRotate } from '../physics';
+import { Body, KinematicMove, KinematicRotate, PhysicsWorld } from '../physics';
 import {
   KinematicMovementSystem,
   PhysicsRapierSyncSystem,
 } from '../physics/systems';
-import { Networked, Owned } from './components';
+import {
+  ClientAuthority,
+  NetworkIdentity,
+  RemoteSnapshot,
+} from './components';
 import { NetworkMessages, RENDER_DELAY_TICKS } from './constants';
 import { getNetworkState } from './state';
 import {
@@ -15,8 +19,18 @@ import {
 } from './sync';
 import type { BodyStateLike } from './types';
 
-const ownedQuery = defineQuery([Owned, Body]);
-const networkedQuery = defineQuery([Networked]);
+const clientAuthorityQuery = defineQuery([
+  NetworkIdentity,
+  ClientAuthority,
+  Body,
+]);
+const remoteSnapshotQuery = defineQuery([NetworkIdentity, RemoteSnapshot]);
+const physicsWorldQuery = defineQuery([PhysicsWorld]);
+const allBodiesQuery = defineQuery([Body]);
+
+function isPhysicsInitialized(state: State): boolean {
+  return physicsWorldQuery(state.world).length > 0;
+}
 
 export const NetworkInitSystem: System = {
   group: 'setup',
@@ -26,15 +40,17 @@ export const NetworkInitSystem: System = {
     const room = netState.room;
 
     if (!room) {
-      if (netState.compositeKeyToEntity.size > 0) {
-        for (const entity of netState.compositeKeyToEntity.values()) {
+      if (netState.networkIdToEntity.size > 0) {
+        for (const entity of netState.networkIdToEntity.values()) {
           if (state.exists(entity)) {
             state.destroyEntity(entity);
           }
           netState.initializedEntities.delete(entity);
         }
-        netState.compositeKeyToEntity.clear();
+        netState.networkIdToEntity.clear();
+        netState.entityToNetworkId.clear();
         netState.remoteEntities.clear();
+        netState.pendingNetworkIdRequests.clear();
       }
       netState.sessionId = undefined;
       return;
@@ -43,19 +59,61 @@ export const NetworkInitSystem: System = {
     if (netState.sessionId !== room.sessionId) {
       netState.sessionId = room.sessionId;
     }
+
+    room.onMessage(
+      'network-id-assigned',
+      ({
+        localEntity,
+        networkId,
+      }: {
+        localEntity: number;
+        networkId: number;
+      }) => {
+        if (state.hasComponent(localEntity, ClientAuthority)) {
+          NetworkIdentity.networkId[localEntity] = networkId;
+          netState.entityToNetworkId.set(localEntity, networkId);
+          netState.networkIdToEntity.set(networkId, localEntity);
+          netState.pendingNetworkIdRequests.delete(localEntity);
+          console.log(
+            `[Client] Received network ID ${networkId} for owned entity ${localEntity}`
+          );
+        }
+      }
+    );
+  },
+};
+
+export const NetworkAuthorityCleanupSystem: System = {
+  group: 'setup',
+  after: [NetworkInitSystem],
+  update(state: State) {
+    const netState = getNetworkState(state);
+    if (!netState.room) return;
+
+    for (const entity of allBodiesQuery(state.world)) {
+      const hasClientAuth = state.hasComponent(entity, ClientAuthority);
+      const hasRemote = state.hasComponent(entity, RemoteSnapshot);
+
+      if (!hasClientAuth && !hasRemote) {
+        console.log(
+          `[Network] Destroying orphaned body ${entity} (no authority when connected)`
+        );
+        state.destroyEntity(entity);
+      }
+    }
   },
 };
 
 export const NetworkStructuralSendSystem: System = {
   group: 'setup',
-  after: [NetworkInitSystem],
+  after: [NetworkAuthorityCleanupSystem],
   update(state: State) {
     const netState = getNetworkState(state);
     const room = netState.room;
     if (!room) return;
 
-    const ownedEntities = ownedQuery(state.world);
-    sendStructuralUpdates(state, netState, room, ownedEntities);
+    const clientAuthorityEntities = clientAuthorityQuery(state.world);
+    sendStructuralUpdates(state, netState, room, clientAuthorityEntities);
   },
 };
 
@@ -67,37 +125,42 @@ export const NetworkSyncSystem: System = {
     const room = netState.room;
     if (!room || !room.state) return;
 
-    const activeKeys = new Set<string>();
+    if (!isPhysicsInitialized(state)) return;
+
+    const activeNetworkIds = new Set<number>();
 
     if (room.state.structures) {
       const structures = room.state.structures as {
         forEach?: (
-          cb: (structural: { data: string }, compositeKey: string) => void
+          cb: (
+            structural: { networkId: number; owner: string; data: string },
+            key: string
+          ) => void
         ) => void;
       };
 
       if (typeof structures.forEach === 'function') {
         structures.forEach(
-          (structural: { data: string }, compositeKey: string) => {
-            const colonIndex = compositeKey.indexOf(':');
-            if (colonIndex === -1) return;
-            const sessionId = compositeKey.slice(0, colonIndex);
+          (
+            structural: { networkId: number; owner: string; data: string },
+            _key: string
+          ) => {
+            const networkId = structural.networkId;
+            if (structural.owner === netState.sessionId) return;
 
-            if (sessionId === netState.sessionId) return;
+            activeNetworkIds.add(networkId);
 
-            activeKeys.add(compositeKey);
-
-            if (netState.remoteEntities.has(compositeKey)) return;
+            if (netState.remoteEntities.has(networkId)) return;
 
             try {
               const data = JSON.parse(structural.data);
               handleIncomingStructuralUpdate(state, netState, {
-                ...data,
-                sessionId,
+                networkId,
+                components: data.components,
               });
             } catch (error) {
               console.warn(
-                `[Network] Failed to parse structural data for ${compositeKey}:`,
+                `[Network] Failed to parse structural data for network ID ${networkId}:`,
                 error
               );
             }
@@ -109,39 +172,45 @@ export const NetworkSyncSystem: System = {
     if (room.state.bodies) {
       const bodies = room.state.bodies as {
         forEach?: (
-          cb: (body: BodyStateLike, compositeKey: string) => void
+          cb: (
+            body: BodyStateLike & { networkId: number; owner: string },
+            key: string
+          ) => void
         ) => void;
       };
 
       const forEach = bodies?.forEach;
       if (typeof forEach !== 'function') return;
 
-      forEach.call(bodies, (bodyState: BodyStateLike, compositeKey: string) => {
-        const colonIndex = compositeKey.indexOf(':');
-        if (colonIndex === -1) return;
-        const sessionId = compositeKey.slice(0, colonIndex);
-
-        if (sessionId === netState.sessionId) return;
-
-        syncRemoteBody(state, compositeKey, bodyState, netState);
-      });
+      forEach.call(
+        bodies,
+        (
+          bodyState: BodyStateLike & { networkId: number; owner: string },
+          _key: string
+        ) => {
+          const networkId = bodyState.networkId;
+          if (bodyState.owner === netState.sessionId) return;
+          syncRemoteBody(state, networkId, bodyState, netState);
+        }
+      );
     }
 
-    const toRemove: string[] = [];
-    for (const compositeKey of netState.remoteEntities) {
-      if (!activeKeys.has(compositeKey)) {
-        toRemove.push(compositeKey);
-        const entity = netState.compositeKeyToEntity.get(compositeKey);
+    const toRemove: number[] = [];
+    for (const networkId of netState.remoteEntities) {
+      if (!activeNetworkIds.has(networkId)) {
+        toRemove.push(networkId);
+        const entity = netState.networkIdToEntity.get(networkId);
         if (entity !== undefined && state.exists(entity)) {
           state.destroyEntity(entity);
           netState.initializedEntities.delete(entity);
+          netState.entityToNetworkId.delete(entity);
         }
       }
     }
 
-    for (const compositeKey of toRemove) {
-      netState.compositeKeyToEntity.delete(compositeKey);
-      netState.remoteEntities.delete(compositeKey);
+    for (const networkId of toRemove) {
+      netState.networkIdToEntity.delete(networkId);
+      netState.remoteEntities.delete(networkId);
     }
   },
 };
@@ -153,28 +222,33 @@ export const NetworkBufferConsumeSystem: System = {
     const netState = getNetworkState(state);
     if (!netState.room) return;
 
-    for (const entity of networkedQuery(state.world)) {
-      const tick2 = Networked.tick2[entity];
+    if (!isPhysicsInitialized(state)) return;
+
+    for (const entity of remoteSnapshotQuery(state.world)) {
+      const tick2 = RemoteSnapshot.tick2[entity];
       if (tick2 === 0) continue;
 
-      const tick0 = Networked.tick0[entity];
-      const tick1 = Networked.tick1[entity];
+      const tick0 = RemoteSnapshot.tick0[entity];
+      const tick1 = RemoteSnapshot.tick1[entity];
 
-      if (Networked.localRenderTick[entity] === 0) {
-        Networked.localRenderTick[entity] = Math.max(
+      if (RemoteSnapshot.localRenderTick[entity] === 0) {
+        RemoteSnapshot.localRenderTick[entity] = Math.max(
           tick0,
           tick2 - RENDER_DELAY_TICKS
         );
       }
 
-      Networked.localRenderTick[entity] += 1;
+      RemoteSnapshot.localRenderTick[entity] += 1;
 
-      if (Networked.localRenderTick[entity] < tick0) {
-        Networked.localRenderTick[entity] = tick0;
+      if (RemoteSnapshot.localRenderTick[entity] < tick0) {
+        RemoteSnapshot.localRenderTick[entity] = tick0;
       }
 
-      const renderTick = Math.min(Networked.localRenderTick[entity], tick2);
-      Networked.localRenderTick[entity] = renderTick;
+      const renderTick = Math.min(
+        RemoteSnapshot.localRenderTick[entity],
+        tick2
+      );
+      RemoteSnapshot.localRenderTick[entity] = renderTick;
 
       let t = 0;
       let fromIdx: 0 | 1 | 2 = 1;
@@ -249,33 +323,33 @@ function getSnapshot(
 ): [number, number, number, number, number, number, number] {
   if (index === 0) {
     return [
-      Networked.posX0[entity],
-      Networked.posY0[entity],
-      Networked.posZ0[entity],
-      Networked.rotX0[entity],
-      Networked.rotY0[entity],
-      Networked.rotZ0[entity],
-      Networked.rotW0[entity],
+      RemoteSnapshot.posX0[entity],
+      RemoteSnapshot.posY0[entity],
+      RemoteSnapshot.posZ0[entity],
+      RemoteSnapshot.rotX0[entity],
+      RemoteSnapshot.rotY0[entity],
+      RemoteSnapshot.rotZ0[entity],
+      RemoteSnapshot.rotW0[entity],
     ];
   } else if (index === 1) {
     return [
-      Networked.posX1[entity],
-      Networked.posY1[entity],
-      Networked.posZ1[entity],
-      Networked.rotX1[entity],
-      Networked.rotY1[entity],
-      Networked.rotZ1[entity],
-      Networked.rotW1[entity],
+      RemoteSnapshot.posX1[entity],
+      RemoteSnapshot.posY1[entity],
+      RemoteSnapshot.posZ1[entity],
+      RemoteSnapshot.rotX1[entity],
+      RemoteSnapshot.rotY1[entity],
+      RemoteSnapshot.rotZ1[entity],
+      RemoteSnapshot.rotW1[entity],
     ];
   } else {
     return [
-      Networked.posX2[entity],
-      Networked.posY2[entity],
-      Networked.posZ2[entity],
-      Networked.rotX2[entity],
-      Networked.rotY2[entity],
-      Networked.rotZ2[entity],
-      Networked.rotW2[entity],
+      RemoteSnapshot.posX2[entity],
+      RemoteSnapshot.posY2[entity],
+      RemoteSnapshot.posZ2[entity],
+      RemoteSnapshot.rotX2[entity],
+      RemoteSnapshot.rotY2[entity],
+      RemoteSnapshot.rotZ2[entity],
+      RemoteSnapshot.rotW2[entity],
     ];
   }
 }
@@ -290,12 +364,15 @@ export const NetworkSendSystem: System = {
     const room = netState.room;
     if (!room) return;
 
-    const entities = ownedQuery(state.world);
+    const entities = clientAuthorityQuery(state.world);
     if (entities.length === 0) return;
 
     for (const entity of entities) {
+      const networkId = NetworkIdentity.networkId[entity];
+      if (networkId === 0) continue;
+
       const snapshot = {
-        entity,
+        networkId,
         posX: Body.posX[entity],
         posY: Body.posY[entity],
         posZ: Body.posZ[entity],
@@ -314,15 +391,17 @@ export const NetworkSendSystem: System = {
 export const NetworkCleanupSystem: System = {
   dispose(state: State) {
     const netState = getNetworkState(state);
-    for (const entity of netState.compositeKeyToEntity.values()) {
+    for (const entity of netState.networkIdToEntity.values()) {
       if (state.exists(entity)) {
         state.destroyEntity(entity);
       }
       netState.initializedEntities.delete(entity);
     }
-    netState.compositeKeyToEntity.clear();
+    netState.networkIdToEntity.clear();
+    netState.entityToNetworkId.clear();
     netState.remoteEntities.clear();
     netState.initializedEntities.clear();
+    netState.pendingNetworkIdRequests.clear();
     netState.sessionId = undefined;
 
     if (netState.room) {

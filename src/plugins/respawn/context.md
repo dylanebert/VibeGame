@@ -1,7 +1,7 @@
 # Respawn Plugin
 
 <!-- LLM:OVERVIEW -->
-Automatic respawn system that resets entities when falling below Y=-100.
+Signal-based respawn system. Respawning flag component coordinates entity reset across plugins (respawn position, physics velocities, player state). Triggered by fall detection or network events.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -11,9 +11,8 @@ respawn/
 ├── context.md  # This file
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
-├── components.ts  # Respawn component
-├── systems.ts  # RespawnSystem
-└── utils.ts  # Respawn utilities
+├── components.ts  # Respawn, Respawning components
+└── systems.ts  # RespawnTriggerSystem, RespawnPositionSystem, RespawnCleanupSystem
 ```
 
 ## Scope
@@ -38,11 +37,22 @@ respawn/
 - posX, posY, posZ: f32 - Spawn position
 - eulerX, eulerY, eulerZ: f32 - Spawn rotation (degrees)
 
+#### Respawning
+- Flag component triggering entity reset across all plugins
+
 ### Systems
 
-#### RespawnSystem
+#### RespawnTriggerSystem
 - Group: simulation
-- Resets entities when Y < -100
+- Adds Respawning flag when entity Y < -100
+
+#### RespawnPositionSystem
+- Group: simulation
+- Resets Transform and Body position/rotation from Respawn data
+
+#### RespawnCleanupSystem
+- Group: simulation
+- Removes Respawning flag after all reset systems process
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->

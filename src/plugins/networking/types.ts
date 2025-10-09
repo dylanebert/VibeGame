@@ -3,9 +3,11 @@ import type { Room } from 'colyseus.js';
 export interface NetworkState {
   room?: Room;
   sessionId?: string;
-  compositeKeyToEntity: Map<string, number>;
+  networkIdToEntity: Map<number, number>;
+  entityToNetworkId: Map<number, number>;
   initializedEntities: Set<number>;
-  remoteEntities: Set<string>;
+  remoteEntities: Set<number>;
+  pendingNetworkIdRequests: Set<number>;
 }
 
 export interface BodyStateLike {
@@ -21,7 +23,6 @@ export interface BodyStateLike {
 }
 
 export interface StructuralUpdate {
-  sessionId: string;
-  entity: number;
+  networkId: number;
   components: Record<string, Record<string, number>>;
 }

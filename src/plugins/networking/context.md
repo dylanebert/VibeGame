@@ -1,21 +1,42 @@
 # Networking Plugin
 
 <!-- LLM:OVERVIEW -->
-Client-instance multiplayer using Colyseus. Each client runs full physics simulation, server stamps snapshots with tick numbers. Delay-buffered interpolation ensures smooth remote entity movement despite variable network timing. Supports multiple entities per session using composite keys (sessionId:entityId).
+Hybrid multiplayer using Colyseus with emergent state synchronization. Server-authoritative by default, client-owned entities opt-in via ClientAuthority. Server parses world XML and spawns entities, clients spawn their own ClientAuthority entities. Delay-buffered interpolation for smooth movement.
 <!-- /LLM:OVERVIEW -->
 
 ## Architecture
 
-**Client-Instance Model:**
-- Each client runs complete physics simulation with zero latency
-- Owned entities: Full physics, sent to server
+**Authority Model:**
+- Server entities: Server-authoritative, created by server from world XML
+- Client-owned entities: ClientAuthority component, full local physics with server relay
+- Client-local entities: No authority component, exist only on client (not networked)
 - Remote entities: Kinematic ghosts, interpolated from server snapshots
-- Local entities: Non-networked
+- Orphan cleanup: Bodies without ClientAuthority or RemoteSnapshot destroyed when connected
+- Offline: All entities work locally without networking
+
+**Entity Creation Semantics (Roblox-like):**
+- Server creates entity → Automatically networked (ServerAuthority added by server)
+- Client creates entity (default) → Local only, not networked
+- Client creates entity with ClientAuthority → Networked to server and other clients
+
+**Room Initialization:**
+- Room starts immediately in active state
+- Server parses world XML and spawns server-authoritative entities on creation
+- Clients connect and receive server state via continuous observation
+- Clients spawn their own ClientAuthority entities (e.g., player)
+- Continuous observation of server state creates/updates/destroys remote entities
+- Self-healing every frame eliminates race conditions
+
+**Network ID System:**
+- Server assigns globally unique network IDs to all entities
+- Clients request network IDs before sending entity data
+- Bidirectional mapping: networkId ↔ localEntity
+- Decouples network identity from local ECS entity IDs
 
 **Server:**
-- Receives structural updates (components) and position snapshots with entity IDs
+- Receives structural updates and position snapshots with network IDs
 - Stamps position updates with server tick
-- Keys by composite key (sessionId:entityId) for multi-entity sessions
+- Keys by network ID for collision-free entity identification
 - Validates (bounds, NaN checks)
 - Broadcasts via Colyseus MapSchema auto-sync
 
@@ -37,25 +58,26 @@ Client-instance multiplayer using Colyseus. Each client runs full physics simula
 ```
 networking/
 ├── context.md
-├── components.ts   # Owned, Networked
-├── constants.ts    # Message type constants
+├── components.ts   # NetworkIdentity, ClientAuthority, ServerAuthority, RemoteSnapshot
+├── constants.ts    # Message types, delays, timeouts
 ├── types.ts        # NetworkState, BodyStateLike
 ├── state.ts        # NetworkState management
 ├── utils.ts        # String hashing
 ├── sync.ts         # Structural updates, snapshot buffer management
-├── systems.ts      # Init, Sync, Interpolation, Send, Cleanup
+├── systems.ts      # Init, AuthorityCleanup, StructuralSend, Sync, BufferConsume, Send, Cleanup
 ├── plugin.ts       # Plugin definition
 └── index.ts        # Public exports
 ```
 
 ## Scope
 
-- Network any entity marked with Owned component
-- Send structural updates (components) once per owned entity
-- Send owned entity positions to server at fixed rate
-- Observe server state, create/update/destroy remote entities iteratively
+- Emergent state synchronization via continuous observation
+- Network client-owned entities with ClientAuthority component
+- Server-authoritative shared entities (default for physics bodies)
+- Observe server state, create/update/destroy remote entities
 - Insert position snapshots into 3-snapshot buffer
 - Interpolate with delay buffer at fixed rate
+- Offline mode without networking
 
 ### Component Networking
 
@@ -89,34 +111,37 @@ export const MyPlugin: Plugin = {
 
 ### Components
 
-**Owned** - Tag component marking entities to send to server
-**Networked** - 3-snapshot ring buffer (tick0-2, pos0-2, rot0-2), localRenderTick tracks client interpolation position
+**NetworkIdentity** - Stores server-assigned network ID for entity
+**ClientAuthority** - Marks entity as client-owned (full local physics, sent to server)
+**ServerAuthority** - Marks entity as server-authoritative (interpolated from server)
+**RemoteSnapshot** - 3-snapshot ring buffer for interpolation (tick0-2, pos0-2, rot0-2)
 
 ### Systems
 
-**NetworkInitSystem** (setup, first) - Connection management, offline cleanup
-**NetworkStructuralSendSystem** (setup) - Sends structural updates for new owned entities
+**NetworkInitSystem** (setup, first) - Connection management, network ID assignment, offline cleanup
+**NetworkAuthorityCleanupSystem** (setup) - Destroys orphaned bodies without authority when connected
+**NetworkStructuralSendSystem** (setup) - Requests network IDs, sends client-owned entity updates
 **NetworkSyncSystem** (setup) - Observes server state, creates/destroys remote entities, inserts snapshots
-**NetworkBufferConsumeSystem** (fixed, before KinematicMovementSystem) - Interpolates between snapshots
-**NetworkSendSystem** (fixed, after PhysicsRapierSyncSystem) - Sends owned positions
+**NetworkBufferConsumeSystem** (fixed, before KinematicMovementSystem) - Interpolates remote entities
+**NetworkSendSystem** (fixed, after PhysicsRapierSyncSystem) - Sends client-owned positions
 **NetworkCleanupSystem** (dispose) - Disconnect cleanup
 
 ### State Management
 
-**NetworkState** - `room`, `sessionId`, `compositeKeyToEntity`, `remoteEntities`, `initializedEntities`
+**NetworkState** - `room`, `sessionId`, `networkIdToEntity`, `entityToNetworkId`, `remoteEntities`, `initializedEntities`, `pendingNetworkIdRequests`
 **getNetworkState(state)** - Get or create network state
 
 ### Sync Functions
 
-**handleIncomingStructuralUpdate** - Create/update remote entity from structural data
-**syncRemoteBody** - Insert snapshot into ring buffer
-**sendStructuralUpdates** - Send component data for new owned entities
+**handleIncomingStructuralUpdate** - Create/update remote entity from structural data using network ID
+**syncRemoteBody** - Insert snapshot into ring buffer using network ID
+**sendStructuralUpdates** - Request network IDs and send component data for new owned entities
 
 ### Types
 
 **BodyStateLike** - Position, rotation, tick
-**StructuralUpdate** - Entity component data for network spawning
-**NetworkState** - Network state container
+**StructuralUpdate** - Entity component data with network ID
+**NetworkState** - Network state container with bidirectional network ID mapping
 <!-- /LLM:REFERENCE -->
 
 ## Usage

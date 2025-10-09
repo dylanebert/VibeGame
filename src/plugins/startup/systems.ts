@@ -2,7 +2,7 @@ import { defineQuery, Parent, type System } from '../../core';
 import { AnimatedCharacter } from '../animation';
 import { HasAnimator } from '../animation/components';
 import { InputState } from '../input';
-import { Owned } from '../networking';
+import { ClientAuthority, NetworkIdentity } from '../networking';
 import { OrbitCamera } from '../orbit-camera';
 import {
   Body,
@@ -105,7 +105,11 @@ export const PlayerStartupSystem: System = {
       state.addComponent(entity, CharacterController);
       state.addComponent(entity, InputState);
       state.addComponent(entity, Respawn);
-      state.addComponent(entity, Owned);
+
+      state.addComponent(entity, NetworkIdentity);
+      NetworkIdentity.networkId[entity] = 0;
+
+      state.addComponent(entity, ClientAuthority);
     }
   },
 };

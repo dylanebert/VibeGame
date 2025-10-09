@@ -1,6 +1,8 @@
 import { MapSchema, Schema, type } from '@colyseus/schema';
 
 export class BodyState extends Schema {
+  @type('number') networkId = 0;
+  @type('string') owner = 'server';
   @type('number') tick = 0;
   @type('number') posX = 0;
   @type('number') posY = 0;
@@ -13,6 +15,8 @@ export class BodyState extends Schema {
 }
 
 export class StructuralState extends Schema {
+  @type('number') networkId = 0;
+  @type('string') owner = 'server';
   @type('string') data = '';
 }
 

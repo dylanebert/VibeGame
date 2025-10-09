@@ -1,6 +1,12 @@
 import type { Plugin } from '../../core';
-import { Networked, Owned } from './components';
 import {
+  ClientAuthority,
+  NetworkIdentity,
+  RemoteSnapshot,
+  ServerAuthority,
+} from './components';
+import {
+  NetworkAuthorityCleanupSystem,
   NetworkBufferConsumeSystem,
   NetworkCleanupSystem,
   NetworkInitSystem,
@@ -11,11 +17,14 @@ import {
 
 export const NetworkingPlugin: Plugin = {
   components: {
-    Owned,
-    Networked,
+    NetworkIdentity,
+    ClientAuthority,
+    ServerAuthority,
+    RemoteSnapshot,
   },
   systems: [
     NetworkInitSystem,
+    NetworkAuthorityCleanupSystem,
     NetworkStructuralSendSystem,
     NetworkSyncSystem,
     NetworkBufferConsumeSystem,

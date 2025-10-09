@@ -1,10 +1,23 @@
 import type { Plugin } from '../../core';
-import { Respawn } from './components';
-import { RespawnSystem } from './systems';
+import { Respawn, Respawning } from './components';
+import {
+  RespawnCleanupSystem,
+  RespawnPhysicsSystem,
+  RespawnPlayerSystem,
+  RespawnPositionSystem,
+  RespawnTriggerSystem,
+} from './systems';
 
 export const RespawnPlugin: Plugin = {
   components: {
     Respawn,
+    Respawning,
   },
-  systems: [RespawnSystem],
+  systems: [
+    RespawnTriggerSystem,
+    RespawnPositionSystem,
+    RespawnPhysicsSystem,
+    RespawnPlayerSystem,
+    RespawnCleanupSystem,
+  ],
 };

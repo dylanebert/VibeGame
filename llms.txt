@@ -886,40 +886,44 @@ expect(getButton(player, InputButtons.JUMP)).toBe(true);
 
 ### Networking
 
-Client-instance multiplayer using Colyseus. Each client runs full physics simulation, server stamps snapshots with tick numbers. Delay-buffered interpolation ensures smooth remote entity movement despite variable network timing. Supports multiple entities per session using composite keys (sessionId:entityId).
+Hybrid multiplayer using Colyseus with room initialization protocol. Shared entities default to server authority, client-owned entities opt-in via ClientAuthority. First client initializes room by uploading shared entities. Delay-buffered interpolation for smooth movement.
 
 ## API Reference
 
 ### Components
 
-**Owned** - Tag component marking entities to send to server
-**Networked** - 3-snapshot ring buffer (tick0-2, pos0-2, rot0-2), localRenderTick tracks client interpolation position
+**NetworkIdentity** - Stores server-assigned network ID for entity
+**ClientAuthority** - Marks entity as client-owned (full local physics, sent to server)
+**ServerAuthority** - Marks entity as server-authoritative (interpolated from server)
+**RemoteSnapshot** - 3-snapshot ring buffer for interpolation (tick0-2, pos0-2, rot0-2)
 
 ### Systems
 
-**NetworkInitSystem** (setup, first) - Connection management, offline cleanup
-**NetworkStructuralSendSystem** (setup) - Sends structural updates for new owned entities
+**NetworkInitSystem** (setup, first) - Connection management, network ID assignment, offline cleanup
+**NetworkRoomInitSystem** (setup) - Room initialization protocol, first client uploads shared entities
+**NetworkStructuralSendSystem** (setup) - Requests network IDs, sends client-owned entity updates
+**NetworkOrphanCleanupSystem** (setup) - Destroys body entities without ClientAuthority or RemoteSnapshot
 **NetworkSyncSystem** (setup) - Observes server state, creates/destroys remote entities, inserts snapshots
-**NetworkBufferConsumeSystem** (fixed, before KinematicMovementSystem) - Interpolates between snapshots
-**NetworkSendSystem** (fixed, after PhysicsRapierSyncSystem) - Sends owned positions
+**NetworkBufferConsumeSystem** (fixed, before KinematicMovementSystem) - Interpolates remote entities
+**NetworkSendSystem** (fixed, after PhysicsRapierSyncSystem) - Sends client-owned positions
 **NetworkCleanupSystem** (dispose) - Disconnect cleanup
 
 ### State Management
 
-**NetworkState** - `room`, `sessionId`, `compositeKeyToEntity`, `remoteEntities`, `initializedEntities`
+**NetworkState** - `room`, `sessionId`, `isInitializingRoom`, `networkIdToEntity`, `entityToNetworkId`, `remoteEntities`, `initializedEntities`, `pendingNetworkIdRequests`
 **getNetworkState(state)** - Get or create network state
 
 ### Sync Functions
 
-**handleIncomingStructuralUpdate** - Create/update remote entity from structural data
-**syncRemoteBody** - Insert snapshot into ring buffer
-**sendStructuralUpdates** - Send component data for new owned entities
+**handleIncomingStructuralUpdate** - Create/update remote entity from structural data using network ID
+**syncRemoteBody** - Insert snapshot into ring buffer using network ID
+**sendStructuralUpdates** - Request network IDs and send component data for new owned entities
 
 ### Types
 
 **BodyStateLike** - Position, rotation, tick
-**StructuralUpdate** - Entity component data for network spawning
-**NetworkState** - Network state container
+**StructuralUpdate** - Entity component data with network ID
+**NetworkState** - Network state container with bidirectional network ID mapping
 
 ### Orbit Camera
 

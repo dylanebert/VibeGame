@@ -1,5 +1,8 @@
+import type { State } from '../core';
+import { serializeComponent } from '../core/ecs/serialization';
+
 export interface PositionSnapshot {
-  entity: number;
+  networkId: number;
   posX: number;
   posY: number;
   posZ: number;
@@ -56,4 +59,20 @@ export function isValidSnapshot(snapshot: PositionSnapshot): boolean {
   }
 
   return true;
+}
+
+export function serializeEntityComponents(
+  entity: number,
+  state: State
+): Record<string, Record<string, number>> {
+  const components: Record<string, Record<string, number>> = {};
+
+  for (const componentName of state.getNetworkedComponentNames()) {
+    const component = state.getComponent(componentName);
+    if (component && state.hasComponent(entity, component)) {
+      components[componentName] = serializeComponent(component, entity);
+    }
+  }
+
+  return components;
 }

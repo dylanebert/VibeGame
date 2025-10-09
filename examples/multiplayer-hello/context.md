@@ -1,7 +1,7 @@
 # Multiplayer Hello Example
 
 <!-- LLM:OVERVIEW -->
-Client-instance multiplayer demonstration. Each client runs full physics simulation, server is pure relay. Showcases automatic networking integration with the engine.
+Hybrid multiplayer demonstration. Server runs authoritative physics for server-owned entities, clients control player with client-authority. Showcases automatic networking integration with the engine.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -18,9 +18,9 @@ multiplayer-hello/
 
 ## Scope
 
-- Client-instance architecture (full local physics)
-- Automatic player ownership via NetworkingPlugin
-- Pure relay server (no ECS, no physics)
+- Hybrid architecture (server-authoritative by default, client-authority for player)
+- Automatic player client-authority via NetworkingPlugin
+- Server ECS with physics simulation
 - Offline/online mode toggle
 
 ## Running
@@ -56,24 +56,31 @@ netState.room = room;
 
 ### Server (server.ts)
 
-- Pure Colyseus relay (no ECS, no physics)
-- Receives position snapshots
-- Validates and broadcasts to clients
-- Minimal server code (3 lines)
+- Server-authoritative ECS with physics simulation
+- Parses world XML from index.html to create server-owned entities
+- Simulates server-owned entities (e.g., world objects) with full physics
+- Relays client-authority entities (e.g., players)
+- Minimal server code (4 lines)
 
 ```typescript
 import { createGameServer } from 'vibegame/server';
 
-createGameServer({ port: 2567 });
+createGameServer({
+  port: 2567,
+  worldFile: './index.html'  // Parses same world as client
+});
 ```
 
 ## Current State
 
-- ✅ Client-instance model with automatic ownership
-- ✅ Pure relay server (no simulation)
+- ✅ Hybrid model with server-authoritative physics
+- ✅ Server parses world XML and creates server-authoritative entities
+- ✅ Client-authority for player entities
+- ✅ Server-owned world entities simulated authoritatively
 - ✅ Position broadcasting via Colyseus schemas
-- ✅ Remote players rendered as kinematic ghosts
+- ✅ Remote entities rendered as kinematic ghosts
 - ✅ Offline mode support
+- ✅ "Invisible" networking - same world definition for client and server
 
 <!-- LLM:EXAMPLES -->
 ## Examples
