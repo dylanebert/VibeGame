@@ -176,7 +176,6 @@ export class GameRoom extends Room<GameState> {
         });
       }
     );
-
   }
 
   onJoin(client: Client) {
@@ -277,7 +276,9 @@ export class GameRoom extends Room<GameState> {
 
     if (typeof DOMParser === 'undefined') {
       const dom = new JSDOM();
-      (global as typeof globalThis & { DOMParser: typeof dom.window.DOMParser }).DOMParser = dom.window.DOMParser;
+      (
+        global as typeof globalThis & { DOMParser: typeof dom.window.DOMParser }
+      ).DOMParser = dom.window.DOMParser;
     }
 
     try {

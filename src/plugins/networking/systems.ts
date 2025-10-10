@@ -5,11 +5,7 @@ import {
   KinematicMovementSystem,
   PhysicsRapierSyncSystem,
 } from '../physics/systems';
-import {
-  ClientAuthority,
-  NetworkIdentity,
-  RemoteSnapshot,
-} from './components';
+import { ClientAuthority, NetworkIdentity, RemoteSnapshot } from './components';
 import { NetworkMessages, RENDER_DELAY_TICKS } from './constants';
 import { getNetworkState } from './state';
 import {

@@ -52,7 +52,10 @@ export function handleIncomingStructuralUpdate(
     }
   }
 
-  if (state.hasComponent(entity, Body) && Body.type[entity] !== BodyType.Fixed) {
+  if (
+    state.hasComponent(entity, Body) &&
+    Body.type[entity] !== BodyType.Fixed
+  ) {
     Body.type[entity] = BodyType.KinematicPositionBased;
   }
 }

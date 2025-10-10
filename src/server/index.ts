@@ -18,7 +18,10 @@ export function createGameServer(options: ServerOptions = {}): Server {
       worldXML = readFileSync(options.worldFile, 'utf-8');
       console.log(`[Server] Loaded world from file: ${options.worldFile}`);
     } catch (error) {
-      console.error(`[Server] Failed to load world file: ${options.worldFile}`, error);
+      console.error(
+        `[Server] Failed to load world file: ${options.worldFile}`,
+        error
+      );
     }
   }
 
