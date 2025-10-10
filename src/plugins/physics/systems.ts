@@ -91,6 +91,76 @@ function getPhysicsContext(state: State): PhysicsContext {
   return context;
 }
 
+function removeColliderForEntity(
+  state: State,
+  context: PhysicsContext,
+  entity: number,
+  collider: RAPIER.Collider,
+  worldRapier: RAPIER.World
+): void {
+  clearControllersReferencingEntity(state, context, entity);
+
+  if (state.hasComponent(entity, CharacterController)) {
+    resetCharacterControllerForEntity(state, entity, context);
+  }
+
+  try {
+    const existing = worldRapier.getCollider(collider.handle);
+    if (existing) {
+      worldRapier.removeCollider(existing, false);
+    }
+  } catch (error) {
+    console.warn(
+      `[Physics] Failed to remove collider for entity ${entity}:`,
+      error
+    );
+  }
+
+  context.entityToCollider.delete(entity);
+  context.colliderToEntity.delete(collider.handle);
+}
+
+function removeRigidBodyForEntity(
+  state: State,
+  context: PhysicsContext,
+  entity: number,
+  body: RAPIER.RigidBody,
+  worldRapier: RAPIER.World
+): void {
+  clearControllersReferencingEntity(state, context, entity);
+
+  try {
+    const existing = worldRapier.getRigidBody(body.handle);
+    if (existing) {
+      worldRapier.removeRigidBody(existing);
+    }
+  } catch (error) {
+    console.warn(`[Physics] Failed to remove rigidbody for entity ${entity}:`, error);
+  }
+
+  context.entityToRigidbody.delete(entity);
+}
+
+function isRecoverableRapierError(error: unknown): boolean {
+  if (!error) return false;
+  let message: string | undefined;
+
+  if (typeof error === 'string') {
+    message = error;
+  } else if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof (error as { message?: unknown }).message === 'string') {
+    message = (error as { message: string }).message;
+  }
+
+  if (!message) return false;
+
+  return (
+    message.includes('recursive use of an object') ||
+    message.includes('unreachable')
+  );
+}
+
 let rapierEngineInitialized = false;
 let rapierInitPromise: Promise<void> | null = null;
 
@@ -516,27 +586,113 @@ export const PhysicsCleanupSystem: System = {
     const worldRapier = context.physicsWorld;
     if (!worldRapier) return;
 
+    const collidersNeedingRebuild = new Set<number>();
+    const bodiesNeedingRebuild = new Set<number>();
+
     for (const [entity, collider] of context.entityToCollider) {
-      if (!state.hasComponent(entity, Collider)) {
-        clearControllersReferencingEntity(state, context, entity);
-        worldRapier.removeCollider(collider, false);
+      const entityExists = state.exists(entity);
+      const hasColliderComponent =
+        entityExists && state.hasComponent(entity, Collider);
+
+      if (!entityExists || !hasColliderComponent) {
+        removeColliderForEntity(state, context, entity, collider, worldRapier);
+        continue;
+      }
+
+      const currentMapping = context.colliderToEntity.get(collider.handle);
+      if (currentMapping === undefined) {
+        context.colliderToEntity.set(collider.handle, entity);
+      } else if (currentMapping !== entity) {
+        console.warn(
+          `[Physics] Collider handle ${collider.handle} mismatch for entity ${entity}; expected ${entity}, got ${currentMapping}. Resetting collider.`
+        );
+        context.colliderToEntity.delete(collider.handle);
+        context.entityToCollider.delete(entity);
+        collidersNeedingRebuild.add(entity);
+        continue;
+      }
+
+      const worldCollider = worldRapier.getCollider(collider.handle);
+      if (!worldCollider) {
+        console.warn(
+          `[Physics] Collider handle ${collider.handle} for entity ${entity} is stale; scheduling rebuild.`
+        );
         context.entityToCollider.delete(entity);
         context.colliderToEntity.delete(collider.handle);
+        collidersNeedingRebuild.add(entity);
       }
     }
 
     for (const [entity, body] of context.entityToRigidbody) {
-      if (!state.hasComponent(entity, Body)) {
-        clearControllersReferencingEntity(state, context, entity);
-        worldRapier.removeRigidBody(body);
+      const entityExists = state.exists(entity);
+      const hasBodyComponent = entityExists && state.hasComponent(entity, Body);
+
+      if (!entityExists || !hasBodyComponent) {
+        removeRigidBodyForEntity(state, context, entity, body, worldRapier);
+        const collider = context.entityToCollider.get(entity);
+        if (collider) {
+          removeColliderForEntity(state, context, entity, collider, worldRapier);
+        }
+        continue;
+      }
+
+      const worldBody = worldRapier.getRigidBody(body.handle);
+      if (!worldBody) {
+        console.warn(
+          `[Physics] Rigidbody handle ${body.handle} for entity ${entity} is stale; scheduling rebuild.`
+        );
         context.entityToRigidbody.delete(entity);
+        bodiesNeedingRebuild.add(entity);
+
+        const collider = context.entityToCollider.get(entity);
+        if (collider) {
+          context.entityToCollider.delete(entity);
+          context.colliderToEntity.delete(collider.handle);
+          collidersNeedingRebuild.add(entity);
+        }
       }
     }
 
     for (const [entity, controller] of context.entityToCharacterController) {
-      if (!state.hasComponent(entity, CharacterController)) {
-        worldRapier.removeCharacterController(controller);
+      if (!state.exists(entity) || !state.hasComponent(entity, CharacterController)) {
+        try {
+          worldRapier.removeCharacterController(controller);
+        } catch (error) {
+          console.warn(
+            `[Physics] Failed to remove character controller for entity ${entity}:`,
+            error
+          );
+        }
         context.entityToCharacterController.delete(entity);
+      }
+    }
+
+    for (const entity of bodiesNeedingRebuild) {
+      if (!state.hasComponent(entity, Body)) continue;
+      if (context.entityToRigidbody.has(entity)) continue;
+
+      try {
+        createRigidbodyForEntity(entity, worldRapier, state, context);
+      } catch (error) {
+        console.warn(
+          `[Physics] Failed to recreate rigidbody for entity ${entity}:`,
+          error
+        );
+      }
+    }
+
+    for (const entity of collidersNeedingRebuild) {
+      if (!state.hasComponent(entity, Collider)) continue;
+      if (!context.entityToRigidbody.has(entity)) continue;
+      if (context.entityToCollider.has(entity)) continue;
+
+      try {
+        createColliderForEntity(entity, worldRapier, state, context);
+      } catch (error) {
+        console.warn(
+          `[Physics] Failed to recreate collider for entity ${entity}:`,
+          error
+        );
       }
     }
   },
@@ -548,7 +704,8 @@ export const CharacterMovementSystem: System = {
   update: (state) => {
     const context = getPhysicsContext(state);
     if (!ensureRapierReady()) return;
-    if (!context.physicsWorld || context.worldEntity === null) return;
+    const worldRapier = context.physicsWorld;
+    if (!worldRapier || context.worldEntity === null) return;
 
     const gravityY = PhysicsWorld.gravityY[context.worldEntity];
 
@@ -561,16 +718,71 @@ export const CharacterMovementSystem: System = {
 
       if (!controller || !collider || !rigidbody) continue;
 
-      applyCharacterMovement(
-        entity,
-        controller,
-        collider,
-        rigidbody,
-        state.time.fixedDeltaTime,
-        gravityY,
-        context.colliderToEntity,
-        context.physicsWorld
-      );
+      if (!worldRapier.getCollider(collider.handle)) {
+        removeColliderForEntity(state, context, entity, collider, worldRapier);
+        continue;
+      }
+
+      if (!worldRapier.getRigidBody(rigidbody.handle)) {
+        removeRigidBodyForEntity(state, context, entity, rigidbody, worldRapier);
+        const staleCollider = context.entityToCollider.get(entity);
+        if (staleCollider) {
+          removeColliderForEntity(
+            state,
+            context,
+            entity,
+            staleCollider,
+            worldRapier
+          );
+        }
+        continue;
+      }
+
+      try {
+        applyCharacterMovement(
+          entity,
+          controller,
+          collider,
+          rigidbody,
+          state.time.fixedDeltaTime,
+          gravityY,
+          context.colliderToEntity,
+          worldRapier
+        );
+      } catch (error) {
+        if (isRecoverableRapierError(error)) {
+          console.warn(
+            `[Physics] Character movement failed for entity ${entity}; resetting physics state.`,
+            error
+          );
+
+          const trackedCollider = context.entityToCollider.get(entity);
+          if (trackedCollider) {
+            removeColliderForEntity(
+              state,
+              context,
+              entity,
+              trackedCollider,
+              worldRapier
+            );
+          }
+
+          const trackedBody = context.entityToRigidbody.get(entity);
+          if (trackedBody) {
+            removeRigidBodyForEntity(
+              state,
+              context,
+              entity,
+              trackedBody,
+              worldRapier
+            );
+          }
+
+          continue;
+        }
+
+        throw error;
+      }
     }
   },
 };

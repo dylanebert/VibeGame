@@ -32,6 +32,8 @@ export const NetworkInitSystem: System = {
   group: 'setup',
   first: true,
   update(state: State) {
+    if (!isPhysicsInitialized(state)) return;
+
     const netState = getNetworkState(state);
     const room = netState.room;
 
@@ -120,8 +122,6 @@ export const NetworkSyncSystem: System = {
     const netState = getNetworkState(state);
     const room = netState.room;
     if (!room || !room.state) return;
-
-    if (!isPhysicsInitialized(state)) return;
 
     const activeNetworkIds = new Set<number>();
 
@@ -217,8 +217,6 @@ export const NetworkBufferConsumeSystem: System = {
   update(state: State) {
     const netState = getNetworkState(state);
     if (!netState.room) return;
-
-    if (!isPhysicsInitialized(state)) return;
 
     for (const entity of remoteSnapshotQuery(state.world)) {
       const tick2 = RemoteSnapshot.tick2[entity];
