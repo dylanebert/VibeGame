@@ -1,215 +1,389 @@
-# Network Ownership - Minimal Implementation Plan
+# Multiplayer Networking - Roblox-Style Architecture
 
-**Goal:** Network ownership model (Roblox-style) with immediate client responsiveness
+**Goal:** Server-authoritative multiplayer with automatic client simulation transfer, zero configuration for simple games.
 
-**Philosophy:** Start with the simplest possible implementation that has the right architecture to scale to full networking features.
+**Philosophy:** Entities persist across ownership changes. Server controls entity lifecycle. Clients smoothly transition between simulating and interpolating.
 
 ---
 
-## Core Architecture
+## Core Principles
 
-### 1. State Context
+1. **Context-aware defaults** - Server creates = networked, Client creates = local
+2. **Entities persist** - Ownership changes without destroy/create
+3. **Auto-transfer** - Server delegates simulation to nearby clients automatically
+4. **Simple client** - Clients don't track transfer history, just current owner
+5. **Server authority** - Server controls lifecycle, can reclaim entities
 
-Extend `State` class to know if it's running on client or server:
+---
+
+## Component Architecture
+
+### Authoring Component (Ephemeral)
+
+```typescript
+// src/core/xml/components.ts
+export const Networking = defineComponent({
+  mode: Types.ui8  // 0=auto, 1=owned
+});
+```
+
+**Used in XML, removed at runtime:**
+```xml
+<!-- Server: Auto (default): server-owned, auto-transferable -->
+<dynamic-part pos="0 5 0"></dynamic-part>
+
+<!-- Server: Owned: server-owned, never transfers -->
+<dynamic-part networking="owned" pos="0 5 0"></dynamic-part>
+
+<!-- Client: Auto (default): client-only, never sent to server -->
+<dynamic-part pos="0 5 0"></dynamic-part>
+
+<!-- Client: Owned: client-owned, broadcast to server -->
+<dynamic-part networking="owned" pos="0 5 0"></dynamic-part>
+```
+
+### Runtime Components
+
+```typescript
+// src/plugins/networking/components.ts
+
+// Core: Who owns this entity?
+export const NetworkOwner = defineComponent({
+  owner: Types.ui32  // 0=server, >0=clientId
+});
+
+// Tag: Don't auto-transfer (server-only)
+export const NetworkLock = defineComponent({});
+
+// Tag: Never networked (client optimization)
+export const LocalOnly = defineComponent({});
+```
+
+**That's it.** Three runtime components total.
+
+---
+
+## Ownership Modes
+
+### 1. Auto (Default for Server)
+
+**XML:**
+```xml
+<dynamic-part pos="0 5 0"></dynamic-part>
+```
+
+**Runtime (Server):**
+- `NetworkOwner(owner=0)` initially
+- No `NetworkLock`
+- AutoTransferPlugin can transfer to nearby clients
+
+**Runtime (Client A when nearby):**
+- Receives: `{ type: 'ownership', entity: 42, owner: clientA }`
+- `NetworkOwner(owner=clientA)` updates
+- Client A simulates, others interpolate
+
+**Runtime (Client A when far):**
+- Receives: `{ type: 'ownership', entity: 42, owner: 0 }`
+- `NetworkOwner(owner=0)` updates
+- Client A interpolates from server
+
+### 2. Server-Only (Explicit Lock)
+
+**XML:**
+```xml
+<dynamic-part networking="server" pos="0 5 0"></dynamic-part>
+```
+
+**Runtime (Server):**
+- `NetworkOwner(owner=0)`
+- `NetworkLock` (prevents transfer)
+
+**Runtime (All Clients):**
+- `NetworkOwner(owner=0)`
+- Always interpolate from server
+
+### 3. Client-Owned (Player)
+
+**Server code on join:**
+```typescript
+const player = state.createFromRecipe('player');
+state.addComponent(player, NetworkOwner, { owner: client.id });
+state.addComponent(player, NetworkLock);
+```
+
+**Runtime (Owner Client):**
+- `NetworkOwner(owner=myId)`
+- `NetworkLock`
+- Simulate and broadcast
+
+**Runtime (Other Clients):**
+- `NetworkOwner(owner=otherClientId)`
+- Interpolate from server-relayed updates
+
+### 4. Local-Only (Client Default)
+
+**Client code:**
+```typescript
+const particle = state.createEntity();
+state.addComponent(particle, Renderer);
+// No networking specified
+```
+
+**Runtime (Client):**
+- `LocalOnly` tag
+- No `NetworkOwner`
+- Simulate locally, never sent to server
+
+**Runtime (Server):**
+- Entity doesn't exist
+
+---
+
+## State Context Awareness
 
 ```typescript
 // src/core/ecs/state.ts
-export type StateContext = 'client' | 'server';
+export type StateContext = 'server' | 'client';
 
 export interface StateOptions {
   context?: StateContext;
-  playerId?: number;  // For clients: which player am I?
+  clientId?: number;
+  room?: ColyseusRoom;  // For client
 }
 
 export class State {
   public readonly context: StateContext;
-  public readonly playerId?: number;
+  public readonly clientId?: number;
+  public readonly room?: ColyseusRoom;
 
   constructor(options: StateOptions = {}) {
     this.context = options.context ?? 'client';
-    this.playerId = options.playerId;
-    // ... rest of existing constructor
+    this.clientId = options.clientId;
+    this.room = options.room;
+    // ...
   }
 
-  isClient(): boolean { return this.context === 'client'; }
   isServer(): boolean { return this.context === 'server'; }
-}
-```
+  isClient(): boolean { return this.context === 'client'; }
 
-**Why:** Same State class for client and server. Systems check context to behave differently.
+  createEntity(): number {
+    const entity = this.world.addEntity();
 
-**Scales to:** Advanced features can add more context types if needed, but client/server is sufficient.
-
----
-
-### 2. Minimal Components
-
-**One component for MVP:**
-
-```typescript
-// src/plugins/networking/components.ts
-export const NetworkedEntity = defineComponent({
-  owner: Types.ui32,  // 0 = server, >0 = player entity ID
-});
-```
-
-**That's it.** Owner field is all we need to implement network ownership.
-
-**Scales to:** Additional components for replication control, smoothing, stats, etc. can be added later as separate components. Core ownership remains this simple.
-
----
-
-### 3. Message Protocol
-
-**Minimal messages:**
-
-```typescript
-// src/plugins/networking/messages.ts
-type NetworkMessage =
-  | { type: 'connect', playerId: number }
-  | { type: 'disconnect', playerId: number }
-  | { type: 'state', entities: EntityState[] }
-  | { type: 'spawn', entity: number, recipe: string, attributes: any }
-  | { type: 'destroy', entity: number }
-  | { type: 'transfer-owner', entity: number, owner: number };
-
-type EntityState = {
-  entity: number;
-  owner: number;
-  pos: [number, number, number];
-  rot: [number, number, number, number];  // quaternion
-  vel: [number, number, number];
-};
-```
-
-**Why:** Just enough to replicate physics state. No priority, no compression, no custom events.
-
-**Scales to:** Can add message types without changing core protocol structure.
-
----
-
-### 4. Transport Interface
-
-**Minimal transport abstraction:**
-
-```typescript
-// src/plugins/networking/transport.ts
-export interface NetworkTransport {
-  send(message: NetworkMessage): void;
-  receive(): NetworkMessage[];
-  connect(url: string): Promise<void>;
-  disconnect(): void;
-  isConnected(): boolean;
-}
-
-// Initial implementation: WebSocket
-export class WebSocketTransport implements NetworkTransport {
-  private ws: WebSocket | null = null;
-  private messageQueue: NetworkMessage[] = [];
-
-  async connect(url: string): Promise<void> {
-    this.ws = new WebSocket(url);
-    this.ws.onmessage = (event) => {
-      this.messageQueue.push(JSON.parse(event.data));
-    };
-    // ... handle open/close/error
-  }
-
-  send(message: NetworkMessage): void {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
+    // Context-aware defaults
+    if (this.context === 'server') {
+      // Server entities networked by default
+      this.addComponent(entity, NetworkOwner, { owner: 0 });
+    } else {
+      // Client entities local by default
+      this.addComponent(entity, LocalOnly);
     }
+
+    return entity;
   }
 
-  receive(): NetworkMessage[] {
-    const messages = this.messageQueue;
-    this.messageQueue = [];
-    return messages;
+  // Override for explicit networking
+  createNetworkedEntity(owner: number): number {
+    const entity = this.world.addEntity();
+    this.addComponent(entity, NetworkOwner, { owner });
+    return entity;
   }
 }
 ```
 
-**Why:** Simple, synchronous receive(). No async complexity in systems.
-
-**Scales to:** Can swap WebRTC, custom protocols, etc. without changing system code.
-
 ---
 
-### 5. Core Systems
+## Networking Plugin
 
-**Client systems (minimal):**
+### Component Conversion System
 
 ```typescript
 // src/plugins/networking/systems.ts
+export const NetworkingInitSystem: System = {
+  group: 'setup',
+  first: true,
+  update: (state) => {
+    const query = defineQuery([Networking]);
 
-// Send owned entities to server
-export const NetworkSendSystem: System = {
+    for (const entity of query(state.world)) {
+      const mode = Networking.mode[entity];
+
+      if (state.isServer()) {
+        // Server processes authoring config
+        if (mode === NetworkMode.Auto || mode === NetworkMode.Server) {
+          state.addComponent(entity, NetworkOwner, { owner: 0 });
+
+          if (mode === NetworkMode.Server) {
+            state.addComponent(entity, NetworkLock);
+          }
+        }
+        // Client mode: handled during player spawn
+      } else {
+        // Client processes authoring config
+        if (mode === NetworkMode.Client) {
+          // Client-broadcast entity
+          state.addComponent(entity, NetworkOwner, { owner: state.clientId! });
+
+          // Request server to spawn
+          state.room!.send('request-spawn', {
+            tempId: entity,
+            components: serializeComponents(entity)
+          });
+        }
+        // Auto/Server modes: spawned by server, handled in spawn messages
+      }
+
+      // Remove ephemeral authoring component
+      state.removeComponent(entity, Networking);
+    }
+  }
+};
+```
+
+### Client Systems
+
+```typescript
+// Send updates for owned entities
+export const ClientSendSystem: System = {
   group: 'fixed',
   last: true,
   update: (state) => {
     if (!state.isClient()) return;
 
-    const query = defineQuery([NetworkedEntity, Body]);
-    const entities: EntityState[] = [];
+    const query = defineQuery([NetworkOwner, Transform]);
+    const updates: EntityUpdate[] = [];
 
-    for (const eid of query(state.world)) {
-      // Only send entities we own
-      if (NetworkedEntity.owner[eid] !== state.playerId) continue;
+    for (const entity of query(state.world)) {
+      if (NetworkOwner.owner[entity] !== state.clientId) continue;
 
-      entities.push({
-        entity: eid,
-        owner: state.playerId!,
-        pos: [Body.posX[eid], Body.posY[eid], Body.posZ[eid]],
-        rot: [Body.rotX[eid], Body.rotY[eid], Body.rotZ[eid], Body.rotW[eid]],
-        vel: [Body.velX[eid], Body.velY[eid], Body.velZ[eid]],
+      updates.push({
+        entity,
+        components: {
+          [Transform.id]: {
+            posX: Transform.posX[entity],
+            posY: Transform.posY[entity],
+            posZ: Transform.posZ[entity],
+            rotX: Transform.rotX[entity],
+            rotY: Transform.rotY[entity],
+            rotZ: Transform.rotZ[entity],
+            rotW: Transform.rotW[entity]
+          }
+        }
       });
     }
 
-    if (entities.length > 0) {
-      getTransport(state).send({ type: 'state', entities });
+    if (updates.length > 0) {
+      state.room!.send('entity:update', updates);
     }
   }
 };
 
-// Receive remote entities from server
-export const NetworkReceiveSystem: System = {
+// Interpolate remote entities
+export const ClientInterpolationSystem: System = {
+  group: 'simulation',
+  update: (state) => {
+    if (!state.isClient()) return;
+
+    const query = defineQuery([NetworkOwner, Transform, NetworkState]);
+
+    for (const entity of query(state.world)) {
+      // Skip entities I own
+      if (NetworkOwner.owner[entity] === state.clientId) continue;
+
+      // Interpolate toward target state
+      const alpha = 0.2;
+      Transform.posX[entity] = lerp(
+        Transform.posX[entity],
+        NetworkState.targetPosX[entity],
+        alpha
+      );
+      Transform.posY[entity] = lerp(
+        Transform.posY[entity],
+        NetworkState.targetPosY[entity],
+        alpha
+      );
+      Transform.posZ[entity] = lerp(
+        Transform.posZ[entity],
+        NetworkState.targetPosZ[entity],
+        alpha
+      );
+      // ... rotation, etc.
+    }
+  }
+};
+
+// Handle messages from server
+export const ClientMessageSystem: System = {
   group: 'setup',
   first: true,
   update: (state) => {
     if (!state.isClient()) return;
 
-    const messages = getTransport(state).receive();
-
-    for (const msg of messages) {
-      if (msg.type === 'state') {
-        for (const entityState of msg.entities) {
-          const eid = entityState.entity;
-
-          // Don't apply to entities we own (we're authoritative)
-          if (NetworkedEntity.owner[eid] === state.playerId) continue;
-
-          // Apply server state
-          Body.posX[eid] = entityState.pos[0];
-          Body.posY[eid] = entityState.pos[1];
-          Body.posZ[eid] = entityState.pos[2];
-          Body.rotX[eid] = entityState.rot[0];
-          Body.rotY[eid] = entityState.rot[1];
-          Body.rotZ[eid] = entityState.rot[2];
-          Body.rotW[eid] = entityState.rot[3];
-          Body.velX[eid] = entityState.vel[0];
-          Body.velY[eid] = entityState.vel[1];
-          Body.velZ[eid] = entityState.vel[2];
-        }
+    // Process queued messages from Colyseus
+    for (const msg of getQueuedMessages(state)) {
+      switch (msg.type) {
+        case 'spawn':
+          handleSpawn(state, msg);
+          break;
+        case 'destroy':
+          handleDestroy(state, msg);
+          break;
+        case 'ownership':
+          // KEY: Just update owner, entity persists
+          NetworkOwner.owner[msg.entity] = msg.owner;
+          break;
+        case 'update':
+          handleUpdate(state, msg);
+          break;
       }
-      // Handle spawn, destroy, transfer-owner...
     }
   }
 };
 ```
 
-**Server systems (minimal):**
+### Server Systems
 
 ```typescript
+// Simulate server-owned entities
+export const ServerSimulationSystem: System = {
+  group: 'fixed',
+  update: (state) => {
+    if (!state.isServer()) return;
+
+    const query = defineQuery([NetworkOwner, Body]);
+
+    for (const entity of query(state.world)) {
+      if (NetworkOwner.owner[entity] !== 0) continue;
+
+      // Server simulates its own entities
+      // Physics runs normally
+    }
+  }
+};
+
+// Broadcast updates to all clients
+export const ServerBroadcastSystem: System = {
+  group: 'fixed',
+  last: true,
+  update: (state) => {
+    if (!state.isServer()) return;
+
+    const query = defineQuery([NetworkOwner, Transform]);
+    const updates: EntityUpdate[] = [];
+
+    for (const entity of query(state.world)) {
+      updates.push({
+        entity,
+        owner: NetworkOwner.owner[entity],
+        components: serializeComponents(entity, [Transform, Body])
+      });
+    }
+
+    if (updates.length > 0) {
+      broadcastToAllClients('entity:update', updates);
+    }
+  }
+};
+
 // Receive client updates
 export const ServerReceiveSystem: System = {
   group: 'setup',
@@ -217,180 +391,448 @@ export const ServerReceiveSystem: System = {
   update: (state) => {
     if (!state.isServer()) return;
 
-    // For each connected client
     for (const client of getClients(state)) {
-      const messages = client.transport.receive();
-
-      for (const msg of messages) {
-        if (msg.type === 'state') {
-          for (const entityState of msg.entities) {
-            const eid = entityState.entity;
-
-            // Verify client owns this entity
-            if (NetworkedEntity.owner[eid] !== client.playerId) {
-              console.warn(`Client ${client.playerId} tried to update entity ${eid} they don't own`);
+      for (const msg of client.messages) {
+        if (msg.type === 'entity:update') {
+          for (const update of msg.updates) {
+            // Verify ownership
+            if (NetworkOwner.owner[update.entity] !== client.id) {
+              console.warn(`Client ${client.id} tried to update entity they don't own`);
               continue;
             }
 
-            // Apply client state (they're authoritative)
-            Body.posX[eid] = entityState.pos[0];
-            Body.posY[eid] = entityState.pos[1];
-            Body.posZ[eid] = entityState.pos[2];
-            // ... etc
+            // Apply update (no validation - weak security model)
+            applyComponentUpdate(update.entity, update.components);
           }
         }
       }
     }
   }
 };
+```
 
-// Broadcast to all clients
-export const ServerBroadcastSystem: System = {
-  group: 'fixed',
-  last: true,
+---
+
+## Auto-Transfer Plugin (Optional, Server-Only)
+
+```typescript
+// src/plugins/networking/auto-transfer-plugin.ts
+export const AutoTransferSystem: System = {
+  group: 'simulation',
   update: (state) => {
     if (!state.isServer()) return;
 
-    const query = defineQuery([NetworkedEntity, Body]);
-    const entities: EntityState[] = [];
+    const query = defineQuery([NetworkOwner, Transform, Not(NetworkLock)]);
 
-    for (const eid of query(state.world)) {
-      entities.push({
-        entity: eid,
-        owner: NetworkedEntity.owner[eid],
-        pos: [Body.posX[eid], Body.posY[eid], Body.posZ[eid]],
-        rot: [Body.rotX[eid], Body.rotY[eid], Body.rotZ[eid], Body.rotW[eid]],
-        vel: [Body.velX[eid], Body.velY[eid], Body.velZ[eid]],
-      });
+    for (const entity of query(state.world)) {
+      if (NetworkOwner.owner[entity] !== 0) continue;  // Already transferred
+
+      // Find nearest client
+      const nearest = findNearestClient(state, entity);
+
+      if (nearest && distance(entity, nearest) < TRANSFER_RADIUS) {
+        // Transfer ownership
+        NetworkOwner.owner[entity] = nearest.id;
+
+        // Broadcast ownership change
+        broadcastToAllClients('ownership', {
+          entity,
+          owner: nearest.id
+        });
+      }
+    }
+  }
+};
+
+export const AutoReclaimSystem: System = {
+  group: 'simulation',
+  update: (state) => {
+    if (!state.isServer()) return;
+
+    const query = defineQuery([NetworkOwner, Transform, Not(NetworkLock)]);
+
+    for (const entity of query(state.world)) {
+      const owner = NetworkOwner.owner[entity];
+      if (owner === 0) continue;  // Server owns
+
+      // Check if client is too far
+      if (distance(entity, owner) > RECLAIM_RADIUS) {
+        // Reclaim to server
+        NetworkOwner.owner[entity] = 0;
+
+        broadcastToAllClients('ownership', {
+          entity,
+          owner: 0
+        });
+      }
+    }
+  }
+};
+
+export const AutoTransferPlugin: Plugin = {
+  components: { NetworkLock },
+  systems: [AutoTransferSystem, AutoReclaimSystem]
+};
+```
+
+---
+
+## Colyseus Integration
+
+### Server Setup
+
+```typescript
+// server.ts
+import { Server } from '@colyseus/core';
+import { WebSocketTransport } from '@colyseus/ws-transport';
+import { GameRoom } from './game-room';
+
+const server = new Server({
+  transport: new WebSocketTransport({ port: 2567 })
+});
+
+server.define('game', GameRoom);
+server.listen(2567);
+
+console.log('Game server listening on ws://localhost:2567');
+```
+
+### Room Implementation
+
+```typescript
+// src/server/game-room.ts
+import { Room, Client } from '@colyseus/core';
+import { Schema, type, MapSchema } from '@colyseus/schema';
+import { State } from '../core/ecs/state';
+import { initializePhysics } from '../plugins/physics';
+import * as GAME from '../index';
+
+// Colyseus Schema for game-level state
+export class GameState extends Schema {
+  @type({ map: "number" }) scores = new MapSchema<number>();
+}
+
+export class GameRoom extends Room<GameState> {
+  private ecsState: State;
+  private gameLoop: NodeJS.Timeout;
+
+  async onCreate(options: any) {
+    this.setState(new GameState());
+
+    // Initialize ECS with server context
+    this.ecsState = new State({
+      context: 'server'
+    });
+
+    await initializePhysics();
+
+    // Load world
+    this.ecsState.loadWorldFromXML(options.worldXml || DEFAULT_WORLD);
+
+    // Start game loop (50Hz physics)
+    this.gameLoop = setInterval(() => {
+      this.ecsState.step(1/50);
+    }, 20);
+
+    // Handle client messages
+    this.onMessage('entity:update', this.handleEntityUpdate.bind(this));
+    this.onMessage('request-spawn', this.handleRequestSpawn.bind(this));
+  }
+
+  onJoin(client: Client, options: any) {
+    console.log(`Client ${client.sessionId} joined`);
+
+    // Create player entity (server creates it)
+    const player = this.ecsState.createFromRecipe('player', {
+      pos: [0, 2, 0]
+    });
+
+    // Transfer ownership to client
+    const clientId = this.clientIdToNumber(client.sessionId);
+    GAME.NetworkOwner.owner[player] = clientId;
+    this.ecsState.addComponent(player, GAME.NetworkLock);
+
+    // Send full snapshot to joining client
+    client.send('snapshot', this.createSnapshot());
+
+    // Update game state
+    this.state.scores.set(client.sessionId, 0);
+  }
+
+  onLeave(client: Client, consented: boolean) {
+    console.log(`Client ${client.sessionId} left`);
+
+    // Destroy player entity
+    const clientId = this.clientIdToNumber(client.sessionId);
+    const playerQuery = GAME.defineQuery([GAME.Player, GAME.NetworkOwner]);
+
+    for (const entity of playerQuery(this.ecsState.world)) {
+      if (GAME.NetworkOwner.owner[entity] === clientId) {
+        this.ecsState.destroyEntity(entity);
+        this.broadcast('destroy', { entity });
+      }
     }
 
-    // Send to all clients
-    for (const client of getClients(state)) {
-      client.transport.send({ type: 'state', entities });
+    this.state.scores.delete(client.sessionId);
+  }
+
+  onDispose() {
+    clearInterval(this.gameLoop);
+  }
+
+  private handleEntityUpdate(client: Client, updates: any) {
+    const clientId = this.clientIdToNumber(client.sessionId);
+
+    for (const update of updates) {
+      // Verify ownership
+      if (GAME.NetworkOwner.owner[update.entity] !== clientId) {
+        console.warn(`Client ${client.sessionId} tried to update entity they don't own`);
+        continue;
+      }
+
+      // Apply update
+      this.ecsState.applyComponentUpdate(update.entity, update.components);
+    }
+  }
+
+  private handleRequestSpawn(client: Client, msg: any) {
+    const clientId = this.clientIdToNumber(client.sessionId);
+
+    // Create entity server-side
+    const entity = this.ecsState.createEntity();
+    this.ecsState.addComponent(entity, GAME.NetworkOwner, { owner: clientId });
+    this.ecsState.addComponent(entity, GAME.NetworkLock);
+
+    // Apply components
+    this.ecsState.applyComponentData(entity, msg.components);
+
+    // Broadcast spawn to all clients
+    this.broadcast('spawn', {
+      entity,
+      owner: clientId,
+      components: msg.components
+    });
+
+    // Confirm to requesting client
+    client.send('spawn-confirm', {
+      tempId: msg.tempId,
+      entity
+    });
+  }
+
+  private createSnapshot() {
+    return {
+      entities: this.ecsState.serializeAllEntities(),
+      timestamp: Date.now()
+    };
+  }
+
+  private clientIdToNumber(sessionId: string): number {
+    // Convert session ID to numeric ID
+    return parseInt(sessionId.replace(/[^\d]/g, '').slice(0, 8)) || 1;
+  }
+}
+```
+
+### Client Connection
+
+```typescript
+// Client code (main.ts)
+import * as Colyseus from 'colyseus.js';
+import * as GAME from 'vibegame';
+
+async function start() {
+  // Connect to server
+  const client = new Colyseus.Client('ws://localhost:2567');
+
+  const room = await client.joinOrCreate('game', {
+    worldXml: document.querySelector('world')?.outerHTML
+  });
+
+  // Initialize client ECS
+  const state = new GAME.State({
+    context: 'client',
+    clientId: clientIdToNumber(room.sessionId),
+    room: room
+  });
+
+  // Setup message handlers
+  room.onMessage('snapshot', (snapshot) => {
+    state.applySnapshot(snapshot);
+  });
+
+  room.onMessage('spawn', (msg) => {
+    const entity = state.createNetworkedEntity(msg.owner);
+    state.applyComponentData(entity, msg.components);
+  });
+
+  room.onMessage('destroy', (msg) => {
+    state.destroyEntity(msg.entity);
+  });
+
+  room.onMessage('ownership', (msg) => {
+    GAME.NetworkOwner.owner[msg.entity] = msg.owner;
+  });
+
+  room.onMessage('entity:update', (updates) => {
+    for (const update of updates) {
+      state.applyComponentUpdate(update.entity, update.components);
+    }
+  });
+
+  // Run client
+  GAME.run();
+}
+
+start();
+```
+
+---
+
+## Message Protocol
+
+```typescript
+// src/plugins/networking/protocol.ts
+
+type NetworkMessage =
+  // Server → Client: Entity spawned
+  | {
+      type: 'spawn';
+      entity: number;
+      owner: number;
+      components: ComponentData;
+    }
+
+  // Server → Client: Entity destroyed
+  | {
+      type: 'destroy';
+      entity: number;
+    }
+
+  // Server → Client: Ownership transferred
+  | {
+      type: 'ownership';
+      entity: number;
+      owner: number;  // 0=server, >0=clientId
+    }
+
+  // Bidirectional: Component updates
+  | {
+      type: 'entity:update';
+      updates: EntityUpdate[];
+    }
+
+  // Client → Server: Request to spawn client-owned entity
+  | {
+      type: 'request-spawn';
+      tempId: number;
+      components: ComponentData;
+    }
+
+  // Server → Client: Confirm spawn with real ID
+  | {
+      type: 'spawn-confirm';
+      tempId: number;
+      entity: number;
+    }
+
+  // Server → Client: Full state snapshot (on join)
+  | {
+      type: 'snapshot';
+      entities: SerializedEntity[];
+      timestamp: number;
+    };
+
+type EntityUpdate = {
+  entity: number;
+  owner?: number;
+  components: ComponentData;
+};
+
+type ComponentData = {
+  [componentId: number]: {
+    [property: string]: number;
+  };
+};
+```
+
+---
+
+## Component Registration
+
+### Automatic Registration (Default Plugins)
+
+```typescript
+// src/plugins/transforms/plugin.ts
+export const TransformsPlugin: Plugin = {
+  components: { Transform, WorldTransform },
+  systems: [TransformHierarchySystem],
+
+  // Register for networking
+  networkComponents: {
+    [Transform.id]: {
+      properties: ['posX', 'posY', 'posZ', 'rotX', 'rotY', 'rotZ', 'rotW',
+                    'scaleX', 'scaleY', 'scaleZ']
     }
   }
 };
 ```
 
-**Why:** Naive broadcast to all clients. Owner sends, server replicates to others.
+### Default Networked Components
 
-**Scales to:** Can add:
-- Per-client filtering (don't send back to owner)
-- Sync rate throttling
-- Delta compression
-- Priority-based updates
+| Component | Properties Synced | Notes |
+|-----------|------------------|-------|
+| Transform | pos, rot, scale | Always synced |
+| Body | pos, rot, vel | Physics state |
+| Renderer | color, visible | Visual state |
+| Player | All properties | Player data |
 
----
+### Components Never Networked
 
-### 6. Minimal API
-
-```typescript
-// src/plugins/networking/index.ts
-export function setNetworkOwner(state: State, entity: number, owner: number | 'server'): void {
-  const ownerEid = owner === 'server' ? 0 : owner;
-  NetworkedEntity.owner[entity] = ownerEid;
-
-  if (state.isServer()) {
-    // Broadcast ownership change
-    for (const client of getClients(state)) {
-      client.transport.send({
-        type: 'transfer-owner',
-        entity,
-        owner: ownerEid
-      });
-    }
-  }
-}
-
-export function getNetworkOwner(state: State, entity: number): number {
-  return NetworkedEntity.owner[entity];
-}
-
-export function isOwnedByLocalPlayer(state: State, entity: number): boolean {
-  return state.isClient() && NetworkedEntity.owner[entity] === state.playerId;
-}
-```
-
-**Why:** Three functions. Manual ownership control only.
-
-**Scales to:** Can add `requestOwnership()`, auto-transfer systems, etc. Core ownership API stays minimal.
+| Component | Reason |
+|-----------|--------|
+| InputState | Local input only |
+| OrbitCamera | Local camera only |
+| RenderContext | Local rendering only |
+| PhysicsWorld | Server-only singleton |
+| LocalOnly | Explicit local tag |
 
 ---
 
-## Server vs Client Structure
+## File Structure
 
-### Problem: Server doesn't run in browser
-
-**Client loads XML from DOM:**
-```typescript
-// Client: src/runtime.ts (existing)
-export function run() {
-  const state = new State({ context: 'client' });
-  const worldElement = document.querySelector('world');
-  parseXMLAndCreateEntities(state, worldElement);
-  // ...
-}
-```
-
-**Server needs different entry point:**
-```typescript
-// Server: src/server/runtime.ts (NEW)
-export class GameServer {
-  private state: State;
-  private clients: Map<number, ClientConnection> = new Map();
-  private nextPlayerId = 1;
-
-  constructor(options: { port: number }) {
-    this.state = new State({ context: 'server' });
-    // Initialize WebSocket server on port
-  }
-
-  loadWorld(xmlString: string): void {
-    // Parse XML string (not DOM)
-    const parsed = parseXMLString(xmlString);
-    createEntitiesFromParsedXML(this.state, parsed);
-  }
-
-  async start(): Promise<void> {
-    // Start game loop
-    setInterval(() => {
-      this.state.step(1/50); // 50Hz
-    }, 20);
-  }
-}
-
-// Usage:
-import { GameServer } from 'vibegame/server';
-
-const server = new GameServer({ port: 8080 });
-server.loadWorld(`
-  <world>
-    <static-part pos="0 -0.5 0" shape="box" size="20 1 20"></static-part>
-  </world>
-`);
-await server.start();
-```
-
-**Why:** Server needs string-based XML loading, not DOM traversal.
-
-**File structure:**
 ```
 src/
-├── core/           # Shared between client and server
+├── core/
 │   ├── ecs/
+│   │   ├── state.ts           # Extended with context, clientId, room
+│   │   └── types.ts
 │   └── xml/
-├── plugins/        # Shared between client and server
+│       ├── parser.ts          # Parses networking attribute
+│       └── components.ts      # Networking (authoring)
+├── plugins/
+│   ├── networking/
+│   │   ├── index.ts           # Public API
+│   │   ├── plugin.ts          # NetworkingPlugin
+│   │   ├── components.ts      # NetworkOwner, NetworkLock, LocalOnly
+│   │   ├── systems.ts         # Core sync systems
+│   │   ├── auto-transfer.ts   # AutoTransferPlugin
+│   │   ├── protocol.ts        # Message types
+│   │   ├── serialization.ts   # Entity/component serialization
+│   │   ├── interpolation.ts   # Client-side smoothing
+│   │   └── registry.ts        # Component registration
+│   ├── transforms/
+│   │   └── plugin.ts          # networkComponents registration
 │   ├── physics/
-│   └── networking/
-├── runtime.ts      # Client runtime (browser, uses DOM)
-├── server/         # Server-only code
-│   ├── runtime.ts  # GameServer class
-│   └── index.ts    # Server exports
-└── index.ts        # Client exports (existing)
-```
+│   │   └── plugin.ts          # networkComponents registration
+│   └── ...
+├── server/
+│   ├── index.ts               # Server exports
+│   ├── game-room.ts           # Colyseus Room implementation
+│   └── utils.ts               # Server utilities
+└── index.ts                   # Client exports
 
-**Package.json exports:**
-```json
+package.json exports:
 {
   "exports": {
     ".": "./dist/index.js",              // Client
@@ -401,220 +843,174 @@ src/
 
 ---
 
-## XML Integration (Minimal)
-
-```xml
-<!-- Client creates player automatically -->
-<world canvas="#game-canvas">
-  <!-- Static ground (server-owned by default) -->
-  <static-part pos="0 -0.5 0" shape="box" size="20 1 20"></static-part>
-
-  <!-- Dynamic ball (server-owned by default) -->
-  <dynamic-part pos="0 5 0" shape="sphere"></dynamic-part>
-</world>
-```
-
-**Defaults for MVP:**
-- All entities server-owned (owner=0) by default
-- Developer must manually transfer ownership via `setNetworkOwner()`
-
-**Scales to:**
-```xml
-<!-- Future: declarative ownership -->
-<dynamic-part pos="0 5 0" shape="sphere" network="client"></dynamic-part>
-<dynamic-part pos="5 5 0" shape="sphere" network-owner="auto"></dynamic-part>
-```
-
----
-
 ## Implementation Phases
 
-### Phase 1: State Context
-- [ ] Add `context` and `playerId` to State constructor
-- [ ] Add `isClient()` and `isServer()` methods
-- [ ] Test: Create client state, server state
+### Phase 1: Core State Context
+- [ ] Add `context`, `clientId`, `room` to State
+- [ ] Implement context-aware `createEntity()`
+- [ ] Add `isServer()` / `isClient()` methods
 
-### Phase 2: Components
-- [ ] Create `src/plugins/networking/components.ts`
-- [ ] Define `NetworkedEntity` component
-- [ ] Test: Add component to entity, set owner
+### Phase 2: Networking Components
+- [ ] Define `Networking` (authoring)
+- [ ] Define `NetworkOwner` (runtime)
+- [ ] Define `NetworkLock`, `LocalOnly` (tags)
+- [ ] Test component creation
 
-### Phase 3: Transport
-- [ ] Create `NetworkTransport` interface
-- [ ] Implement `WebSocketTransport`
-- [ ] Test: Connect, send, receive messages
+### Phase 3: Colyseus Setup
+- [ ] Add Colyseus dependencies
+- [ ] Implement GameRoom class
+- [ ] Test basic room connection
+- [ ] Test player join/leave
 
-### Phase 4: Server Runtime
-- [ ] Create `src/server/runtime.ts`
-- [ ] Implement `GameServer` class
-- [ ] Add `loadWorld(xmlString)` method
-- [ ] Test: Load XML from string, create entities
+### Phase 4: Message Protocol
+- [ ] Define TypeScript message types
+- [ ] Implement message queue on State
+- [ ] Add message handlers (spawn, destroy, ownership, update)
+- [ ] Test message round-trip
 
-### Phase 5: Systems
-- [ ] Implement `NetworkSendSystem` (client)
-- [ ] Implement `NetworkReceiveSystem` (client)
-- [ ] Implement `ServerReceiveSystem` (server)
-- [ ] Implement `ServerBroadcastSystem` (server)
-- [ ] Test: Client sends, server receives, broadcasts
+### Phase 5: Client Systems
+- [ ] NetworkingInitSystem (convert authoring)
+- [ ] ClientSendSystem (send owned updates)
+- [ ] ClientMessageSystem (receive messages)
+- [ ] ClientInterpolationSystem (smooth remote entities)
+- [ ] Test client-side simulation
 
-### Phase 6: Ownership API
-- [ ] Implement `setNetworkOwner()`
-- [ ] Implement `getNetworkOwner()`
-- [ ] Implement `isOwnedByLocalPlayer()`
-- [ ] Test: Transfer ownership, verify authority
+### Phase 6: Server Systems
+- [ ] NetworkingInitSystem (convert authoring)
+- [ ] ServerSimulationSystem (simulate server-owned)
+- [ ] ServerBroadcastSystem (broadcast to clients)
+- [ ] ServerReceiveSystem (receive client updates)
+- [ ] Test server-side simulation
 
-### Phase 7: Plugin Definition
-- [ ] Create `NetworkingPlugin` with systems and components
-- [ ] Test: Add plugin to client, add plugin to server
+### Phase 7: Auto-Transfer Plugin
+- [ ] AutoTransferSystem (transfer to nearby)
+- [ ] AutoReclaimSystem (reclaim when far)
+- [ ] Test ownership transfers
+- [ ] Verify entity persistence
 
-### Phase 8: Example
-- [ ] Create ball-pushing example (2 clients, 1 server)
-- [ ] Verify immediate responsiveness for owner
-- [ ] Verify smooth replication for non-owner
+### Phase 8: XML Integration
+- [ ] Parse `networking` attribute
+- [ ] Convert to Networking component
+- [ ] Test recipes with networking modes
+- [ ] Document XML syntax
 
----
+### Phase 9: Component Registry
+- [ ] Add `networkComponents` to Plugin type
+- [ ] Register Transform, Body, Renderer
+- [ ] Implement selective serialization
+- [ ] Test component filtering
 
-## What This Enables (MVP Scenarios)
-
-### Scenario 1: Manual Ownership Transfer
-
-```typescript
-// Ball ownership transfers on collision
-const BallOwnershipSystem: System = {
-  update: (state) => {
-    if (!state.isServer()) return; // Server decides ownership
-
-    const touchedQuery = defineQuery([TouchedEvent, NetworkedEntity]);
-    for (const ball of touchedQuery(state.world)) {
-      const player = TouchedEvent.other[ball];
-      if (hasComponent(player, Player)) {
-        const playerId = PlayerIdentity.playerId[player];
-        setNetworkOwner(state, ball, playerId);
-      }
-    }
-  }
-};
-```
-
-### Scenario 2: Server-Owned Physics
-
-```typescript
-// Server owns all balls by default
-const server = new GameServer({ port: 8080 });
-server.loadWorld(`
-  <world>
-    <static-part pos="0 -0.5 0" shape="box" size="20 1 20"></static-part>
-    <dynamic-part pos="0 5 0" shape="sphere"></dynamic-part>
-  </world>
-`);
-
-// All entities have owner=0 (server)
-// Server simulates physics, broadcasts to clients
-await server.start();
-```
-
-### Scenario 3: Client-Owned Player
-
-```typescript
-// Server assigns player ownership when connecting
-const PlayerConnectionSystem: System = {
-  update: (state) => {
-    if (!state.isServer()) return;
-
-    for (const newConnection of getNewConnections(state)) {
-      const playerId = newConnection.playerId;
-
-      // Spawn player entity
-      const player = state.createFromRecipe('player', { pos: [0, 5, 0] });
-      state.addComponent(player, NetworkedEntity);
-
-      // Client owns their own player
-      setNetworkOwner(state, player, playerId);
-    }
-  }
-};
-```
-
----
-
-## What We're NOT Implementing (Yet)
-
-**Deferred to later:**
-- ❌ Auto-ownership transfer (proximity, interaction)
-- ❌ Dynamic sync rates (fixed 30Hz for MVP)
-- ❌ Network smoothing (InterpolatedTransform can be used manually)
-- ❌ Priority-based bandwidth limiting
-- ❌ Delta compression
-- ❌ Custom network messages (just state updates)
-- ❌ Per-client filtering (naive broadcast)
-- ❌ Validation hooks (developer adds systems)
-- ❌ Network stats tracking
-- ❌ XML declarative ownership (`network="client"`)
-
-**Why defer:** Each adds complexity. MVP proves core ownership model works. These are additive features that don't change architecture.
-
----
-
-## Key Architectural Decisions
-
-| Decision | Rationale | Scales How? |
-|----------|-----------|-------------|
-| Single `State` class | No duplication, same code everywhere | Add fields as needed |
-| One component (`NetworkedEntity`) | Owner field is all we need | Add replication, smoothing components later |
-| Naive broadcast | Simple, correct, works | Add filtering without protocol changes |
-| Manual ownership only | No auto-transfer complexity | Add auto-transfer systems later |
-| Fixed 30Hz sync | No per-entity rate logic | Add `syncRate` field to component later |
-| String-based server XML | Server doesn't use DOM | Existing XML parser works with strings |
-| WebSocket only | Simple transport | Transport interface allows swapping |
+### Phase 10: Example Game
+- [ ] Create multiplayer ball-pushing example
+- [ ] 2+ clients, 1 server
+- [ ] Demonstrate auto-transfer
+- [ ] Verify smooth ownership transitions
 
 ---
 
 ## Success Criteria
 
-**MVP is complete when:**
-1. Two clients can connect to one server
-2. Server spawns a ball (owner=0)
-3. Server transfers ownership to client via `setNetworkOwner()`
-4. Owning client moves ball immediately (zero lag)
-5. Non-owning client sees ball movement smoothly
-6. Server can take back ownership
-7. All clients see consistent state (within latency)
+**MVP Complete When:**
+1. ✅ Two clients connect to Colyseus room
+2. ✅ Server spawns entities from XML
+3. ✅ Transform/Body automatically networked
+4. ✅ Client owns player, simulates smoothly
+5. ✅ Ownership transfers without destroy/create
+6. ✅ Remote entities interpolate smoothly
+7. ✅ Auto-transfer works based on distance
+8. ✅ Client-local entities never sent to server
 
-**Performance targets:**
-- 30Hz state updates (33ms interval)
-- <50ms perceived lag for owned entities (network RTT)
+**Performance Targets:**
+- 20Hz update rate (50ms)
+- <100ms perceived lag for owned entities
 - 50Hz physics simulation on server
-- Works with 2-4 clients initially
+- Support 4-8 players initially
+- <50KB/s bandwidth per client
 
 ---
 
-## Open Questions
+## Design Decisions
 
-1. **Entity ID synchronization:** How do we ensure entity IDs are consistent across client/server?
-   - **Proposal:** Server creates all entities, assigns IDs, clients receive spawn messages
-
-2. **Physics simulation:** Who runs physics for owned entities?
-   - **Proposal:** Owner runs physics, server trusts owner (weak security model)
-
-3. **Player entity creation:** When does server spawn player?
-   - **Proposal:** On connection, server creates player entity and assigns ownership
-
-4. **Respawn system:** How to handle player falling?
-   - **Proposal:** Server owns respawn logic, teleports player via state update
+| Decision | Rationale | Trade-offs |
+|----------|-----------|------------|
+| Colyseus for transport | Battle-tested rooms/matchmaking | Additional dependency |
+| Ownership changes, not destroy/create | No message conflicts | Requires entity ID coordination |
+| Context-aware State | Simple defaults | Must track context |
+| Authoring component | Clean XML syntax | Conversion overhead |
+| Auto-transfer plugin | Optional feature | Server must track proximity |
+| No validation | Weak security, simple | Cheating possible |
+| Component registry | Selective sync | Requires explicit registration |
 
 ---
 
-## Next Steps
+## Usage Examples
 
-1. Implement Phase 1 (State Context)
-2. Create minimal example (1 server, 1 client, 1 ball)
-3. Test ownership transfer
-4. Verify zero-lag for owner
-5. Document findings
-6. Iterate on protocol if needed
+### Simple Game (Zero Config)
+
+```xml
+<!-- index.html -->
+<world canvas="#game-canvas">
+  <static-part pos="0 -0.5 0" shape="box" size="20 1 20"></static-part>
+  <dynamic-part pos="0 5 0" shape="sphere"></dynamic-part>
+</world>
+
+<script type="module">
+  import * as Colyseus from 'colyseus.js';
+  import * as GAME from 'vibegame';
+
+  const client = new Colyseus.Client('ws://localhost:2567');
+  const room = await client.joinOrCreate('game');
+
+  GAME.withColyseus(room).run();
+</script>
+```
+
+**Result:** Ball auto-transfers to nearby players, smooth simulation.
+
+### Server-Only Physics
+
+```xml
+<dynamic-part networking="server" pos="0 5 0" shape="sphere"></dynamic-part>
+```
+
+**Result:** Always simulated on server, clients interpolate.
+
+### Custom Networked Component
+
+```typescript
+const Health = GAME.defineComponent({
+  current: GAME.Types.f32,
+  max: GAME.Types.f32
+});
+
+const HealthPlugin: GAME.Plugin = {
+  components: { Health },
+  systems: [HealthSystem],
+  networkComponents: {
+    [Health.id]: {
+      properties: ['current', 'max']
+    }
+  }
+};
+
+GAME.withPlugin(HealthPlugin).run();
+```
+
+**Result:** Health syncs across clients automatically.
 
 ---
 
-**End of Plan**
+## Key Insights
 
-This is the minimal foundation. Everything else is additive.
+1. **Entities persist, ownership changes** - Eliminates destroy/create conflicts
+2. **Context-aware defaults** - Zero config for simple games
+3. **Authoring vs runtime separation** - Clean XML syntax, efficient runtime
+4. **Auto-transfer is optional** - Core networking is simpler
+5. **No validation by default** - Simple implementation, users add security
+6. **Component registry** - Only sync what's declared
+
+---
+
+**End of Architecture Document**
+
+This architecture enables Roblox-style multiplayer with minimal components and maximum simplicity.
