@@ -9,6 +9,7 @@ import {
   type Component,
   type IWorld,
 } from 'bitecs';
+import type { Room } from 'colyseus.js';
 import { toKebabCase } from '../utils/naming';
 import { ConfigRegistry } from './config';
 import { setComponentFields } from './utils';
@@ -26,9 +27,20 @@ import type {
 } from './types';
 import { createEntityFromRecipe } from '../recipes/parser';
 
+export type StateContext = 'server' | 'client';
+
+export interface StateOptions {
+  context?: StateContext;
+  clientId?: number;
+  room?: Room;
+}
+
 export class State {
   public readonly world: IWorld;
   public readonly time: GameTime;
+  public context: StateContext;
+  public clientId?: number;
+  public room?: Room;
   public readonly scheduler = new Scheduler();
   public readonly systems = new Set<System>();
   public readonly config = new ConfigRegistry();
@@ -36,8 +48,11 @@ export class State {
   private readonly components = new Map<string, Component>();
   private isDisposed = false;
 
-  constructor() {
+  constructor(options?: StateOptions) {
     this.world = createWorld();
+    this.context = options?.context ?? 'client';
+    this.clientId = options?.clientId;
+    this.room = options?.room;
     this.time = {
       deltaTime: 0,
       fixedDeltaTime: TIME_CONSTANTS.FIXED_TIMESTEP,
@@ -185,6 +200,10 @@ export class State {
     }
     this.systems.clear();
     this.isDisposed = true;
+  }
+
+  disposed(): boolean {
+    return this.isDisposed;
   }
 
   private checkDisposed(): void {

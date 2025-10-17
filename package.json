@@ -67,9 +67,17 @@
       "types": "./dist/plugins/recipes/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./networking": {
+      "types": "./dist/plugins/networking/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./vite": {
       "types": "./dist/vite/index.d.ts",
       "import": "./dist/vite/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js"
     }
   },
   "files": [
@@ -116,6 +124,7 @@
     "three": ">=0.170.0"
   },
   "devDependencies": {
+    "@colyseus/ws-transport": "^0.16.5",
     "@types/bun": "^1.2.21",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^24.3.0",
@@ -125,6 +134,8 @@
     "ajv": "^8.17.1",
     "bitecs": "^0.3.40",
     "canvas": "^3.2.0",
+    "colyseus": "^0.16.5",
+    "colyseus.js": "^0.16.21",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",

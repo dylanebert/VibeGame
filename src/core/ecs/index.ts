@@ -1,6 +1,6 @@
 export { NULL_ENTITY, TIME_CONSTANTS } from './constants';
 export { Parent } from './components';
-export { State } from './state';
+export { State, type StateContext, type StateOptions } from './state';
 export type {
   ComponentDefaults,
   ComponentEnums,

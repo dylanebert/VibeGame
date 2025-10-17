@@ -1,7 +1,14 @@
-import type { Component, Config, Plugin, Recipe, System } from './core';
+import type {
+  Component,
+  Config,
+  Plugin,
+  Recipe,
+  StateOptions,
+  System,
+} from './core';
 import { State } from './core';
-import { GameRuntime } from './runtime';
 import { DefaultPlugins } from './plugins/defaults';
+import { GameRuntime } from './runtime';
 
 export interface BuilderOptions {
   canvas?: string;
@@ -10,8 +17,9 @@ export interface BuilderOptions {
 }
 
 export class GameBuilder {
-  private state: State;
+  private state: State | null = null;
   private options: BuilderOptions;
+  private stateOptions: StateOptions;
   private useDefaultPlugins = true;
   private excludedPlugins: Set<Plugin> = new Set();
   private plugins: Plugin[] = [];
@@ -20,9 +28,9 @@ export class GameBuilder {
   private recipes: Recipe[] = [];
   private configs: Config[] = [];
 
-  constructor(options: BuilderOptions = {}) {
-    this.state = new State();
+  constructor(options: BuilderOptions = {}, stateOptions: StateOptions = {}) {
     this.options = options;
+    this.stateOptions = stateOptions;
   }
 
   withoutDefaultPlugins(): GameBuilder {
@@ -77,7 +85,9 @@ export class GameBuilder {
     return this;
   }
 
-  build(): GameRuntime {
+  async build(): Promise<GameRuntime> {
+    this.state = new State(this.stateOptions);
+
     if (this.useDefaultPlugins) {
       for (const plugin of DefaultPlugins) {
         if (!this.excludedPlugins.has(plugin)) {
@@ -110,12 +120,8 @@ export class GameBuilder {
   }
 
   async run(): Promise<GameRuntime> {
-    const runtime = this.build();
+    const runtime = await this.build();
     await runtime.start();
     return runtime;
   }
-}
-
-export function create(options?: BuilderOptions): GameBuilder {
-  return new GameBuilder(options);
 }

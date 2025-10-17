@@ -23,14 +23,23 @@ examples/
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.ts
-└── lorenz/  # Lorenz attractor particle system
+├── lorenz/  # Lorenz attractor particle system
+│   ├── context.md
+│   ├── src/
+│   │   ├── main.ts
+│   │   ├── plugin.ts
+│   │   ├── components.ts
+│   │   ├── systems.ts
+│   │   └── utils.ts
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.ts
+└── multiplayer/  # Multiplayer networking with Colyseus
     ├── context.md
     ├── src/
     │   ├── main.ts
-    │   ├── plugin.ts
-    │   ├── components.ts
-    │   ├── systems.ts
-    │   └── utils.ts
+    │   └── server.ts
+    ├── test-connection.ts
     ├── index.html
     ├── package.json
     └── vite.config.ts

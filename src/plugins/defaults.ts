@@ -4,6 +4,7 @@ import { StartupPlugin } from './startup/plugin';
 import { TransformsPlugin } from './transforms';
 import { AnimationPlugin } from './animation/plugin';
 import { InputPlugin } from './input/plugin';
+import { NetworkingPlugin } from './networking/plugin';
 import { PhysicsPlugin } from './physics/plugin';
 import { RenderingPlugin } from './rendering/plugin';
 import { PostprocessingPlugin } from './postprocessing/plugin';
@@ -16,6 +17,7 @@ export const DefaultPlugins: Plugin[] = [
   TransformsPlugin,
   AnimationPlugin,
   InputPlugin,
+  NetworkingPlugin,
   PhysicsPlugin,
   RenderingPlugin,
   PostprocessingPlugin,

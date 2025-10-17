@@ -7,6 +7,7 @@ export { DefaultPlugins } from './plugins/defaults';
 export * from './core';
 export * from './plugins/animation';
 export * from './plugins/input';
+export * from './plugins/networking';
 export * from './plugins/orbit-camera';
 export * from './plugins/physics';
 export * from './plugins/player';
@@ -55,9 +56,9 @@ export function configure(options: BuilderOptions) {
   return getBuilder().configure(options);
 }
 
-export function run() {
+export async function run() {
   const builder = getBuilder();
   disposeAllRuntimes();
   globalBuilder = null;
-  return builder.run();
+  return await builder.run();
 }

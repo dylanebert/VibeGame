@@ -109,6 +109,9 @@ The engine uses a semi-fixed timestep model with three execution phases:
 
 - world: IWorld
 - time: GameTime
+- context: StateContext ('server' | 'client')
+- clientId?: number
+- room?: Room
 - scheduler: Scheduler
 - systems: Set<System>
 - config: ConfigRegistry
@@ -194,8 +197,8 @@ const Health = GAME.defineComponent({
   max: GAME.Types.f32
 });
 
-// Create state and entity
-const state = new GAME.State();
+// Create state
+const state = new GAME.State({ context: 'client' });
 const entity = state.createEntity();
 
 // Add component with initial values

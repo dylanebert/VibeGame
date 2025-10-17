@@ -1,0 +1,18 @@
+{
+  "name": "vibegame-multiplayer-example",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "bun src/server.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "bun test-connection.ts"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "colyseus.js": "^0.16.21"
+  }
+}
