@@ -25,7 +25,7 @@ rendering/
 
 ## Canvas Sizing
 
-Renderer uses `canvas.clientWidth/clientHeight` for sizing, respecting CSS dimensions. Multiple canvases per page require separate State instances (one State per canvas).
+Renderer and camera use `canvas.clientWidth/clientHeight` for sizing and aspect ratio, respecting CSS dimensions. Multiple canvases per page require separate State instances (one State per canvas).
 
 ## Performance
 

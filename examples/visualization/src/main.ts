@@ -29,9 +29,59 @@ const createAnimationSystem = (speedMultiplier = 1): GAME.System => ({
   },
 });
 
+interface CanvasInstance {
+  canvas: HTMLCanvasElement;
+  worldElement: HTMLElement;
+  speedMultiplier: number;
+  state?: GAME.State;
+  isVisible: boolean;
+}
+
+async function initializeState(instance: CanvasInstance): Promise<void> {
+  const { canvas, worldElement, speedMultiplier } = instance;
+
+  const state = new GAME.State();
+
+  state.registerPlugin(TransformsPlugin);
+  state.registerPlugin(RenderingPlugin);
+  state.registerSystem(createAnimationSystem(speedMultiplier));
+
+  await state.initializePlugins();
+
+  worldElement.style.display = 'none';
+
+  const rendererEntity = state.createEntity();
+  state.addComponent(rendererEntity, RenderContext);
+  RenderContext.hasCanvas[rendererEntity] = 1;
+
+  const skyColor = worldElement.getAttribute('sky');
+  if (skyColor) {
+    const parsedColor = GAME.XMLValueParser.parse(skyColor);
+    if (typeof parsedColor === 'number') {
+      RenderContext.clearColor[rendererEntity] = parsedColor;
+    }
+  }
+
+  setCanvasElement(rendererEntity, canvas);
+
+  const xmlContent = `<world>${worldElement.innerHTML}</world>`;
+  const parseResult = GAME.XMLParser.parse(xmlContent);
+
+  if (parseResult.root.tagName === 'parsererror') {
+    console.error('XML parsing failed for world:', worldElement);
+    return;
+  }
+
+  GAME.parseXMLToEntities(state, parseResult.root);
+
+  state.step(GAME.TIME_CONSTANTS.FIXED_TIMESTEP);
+
+  instance.state = state;
+}
+
 async function initializeWorlds() {
   const worldElements = document.querySelectorAll('world');
-  const states: GAME.State[] = [];
+  const instances: CanvasInstance[] = [];
 
   for (let i = 0; i < worldElements.length; i++) {
     const worldElement = worldElements[i] as HTMLElement;
@@ -48,44 +98,36 @@ async function initializeWorlds() {
       continue;
     }
 
-    const state = new GAME.State();
-
-    state.registerPlugin(TransformsPlugin);
-    state.registerPlugin(RenderingPlugin);
-    state.registerSystem(createAnimationSystem(1 + i * 0.3));
-
-    await state.initializePlugins();
-
-    worldElement.style.display = 'none';
-
-    const rendererEntity = state.createEntity();
-    state.addComponent(rendererEntity, RenderContext);
-    RenderContext.hasCanvas[rendererEntity] = 1;
-
-    const skyColor = worldElement.getAttribute('sky');
-    if (skyColor) {
-      const parsedColor = GAME.XMLValueParser.parse(skyColor);
-      if (typeof parsedColor === 'number') {
-        RenderContext.clearColor[rendererEntity] = parsedColor;
-      }
-    }
-
-    setCanvasElement(rendererEntity, canvas);
-
-    const xmlContent = `<world>${worldElement.innerHTML}</world>`;
-    const parseResult = GAME.XMLParser.parse(xmlContent);
-
-    if (parseResult.root.tagName === 'parsererror') {
-      console.error('XML parsing failed for world:', worldElement);
-      continue;
-    }
-
-    GAME.parseXMLToEntities(state, parseResult.root);
-
-    state.step(GAME.TIME_CONSTANTS.FIXED_TIMESTEP);
-
-    states.push(state);
+    instances.push({
+      canvas,
+      worldElement,
+      speedMultiplier: 1 + i * 0.3,
+      isVisible: false,
+    });
   }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const instance = instances.find((inst) => inst.canvas === entry.target);
+        if (!instance) return;
+
+        instance.isVisible = entry.isIntersecting;
+
+        if (entry.isIntersecting && !instance.state) {
+          initializeState(instance);
+        }
+      });
+    },
+    {
+      rootMargin: '100px',
+      threshold: 0.01,
+    },
+  );
+
+  instances.forEach((instance) => {
+    observer.observe(instance.canvas);
+  });
 
   let lastTime = performance.now();
 
@@ -95,8 +137,10 @@ async function initializeWorlds() {
     const deltaTime = (currentTime - lastTime) / 1000;
     lastTime = currentTime;
 
-    for (const state of states) {
-      state.step(deltaTime);
+    for (const instance of instances) {
+      if (instance.state && instance.isVisible) {
+        instance.state.step(deltaTime);
+      }
     }
   };
 

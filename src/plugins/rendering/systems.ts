@@ -166,7 +166,7 @@ export const CameraSyncSystem: System = {
     for (const entity of cameraEntities) {
       let camera = threeCameras.get(entity);
       if (!camera) {
-        camera = createThreeCamera(entity);
+        camera = createThreeCamera(entity, state);
       }
 
       camera.position.set(

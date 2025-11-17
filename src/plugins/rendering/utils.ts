@@ -14,11 +14,18 @@ export const RendererShape = {
 export const threeCameras = new Map<number, THREE.PerspectiveCamera>();
 const canvasElements = new Map<number, HTMLCanvasElement>();
 
-function createThreeCamera(entity: number): THREE.PerspectiveCamera {
-  const aspectRatio =
-    typeof window !== 'undefined'
-      ? window.innerWidth / window.innerHeight
-      : 16 / 9;
+function createThreeCamera(entity: number, state: State): THREE.PerspectiveCamera {
+  let aspectRatio = 16 / 9;
+
+  const context = stateToRenderingContext.get(state);
+  const canvas = context?.canvas;
+
+  if (canvas && canvas.clientWidth && canvas.clientHeight) {
+    aspectRatio = canvas.clientWidth / canvas.clientHeight;
+  } else if (typeof window !== 'undefined') {
+    aspectRatio = window.innerWidth / window.innerHeight;
+  }
+
   const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
   threeCameras.set(entity, camera);
   return camera;
