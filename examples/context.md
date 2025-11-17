@@ -18,19 +18,24 @@ examples/
 ├── context.md  # This file
 ├── hello-world/  # Basic example
 │   ├── context.md
-│   ├── src/
-│   │   └── main.ts
+│   ├── src/main.ts
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.ts
-└── lorenz/  # Lorenz attractor particle system
+├── lorenz/  # Lorenz attractor particle system
+│   ├── context.md
+│   ├── src/
+│   │   ├── main.ts
+│   │   ├── plugin.ts
+│   │   ├── components.ts
+│   │   ├── systems.ts
+│   │   └── utils.ts
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.ts
+└── visualization/  # Minimal visualization with tree-shaking
     ├── context.md
-    ├── src/
-    │   ├── main.ts
-    │   ├── plugin.ts
-    │   ├── components.ts
-    │   ├── systems.ts
-    │   └── utils.ts
+    ├── src/main.ts
     ├── index.html
     ├── package.json
     └── vite.config.ts

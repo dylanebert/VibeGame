@@ -1,12 +1,11 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
+import { State, defineQuery } from 'vibegame';
 import {
   AmbientLight,
   DirectionalLight,
   MainCamera,
   Renderer,
-  State,
-  defineQuery,
-} from 'vibegame';
+} from 'vibegame/rendering';
 
 describe('Rendering Components', () => {
   let state: State;

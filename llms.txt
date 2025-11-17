@@ -182,6 +182,15 @@ While auto-creation is recommended, you can manually create these for customizat
 
 ## Post-Processing Effects
 
+Requires including the PostprocessingPlugin in the builder, as it is not included in the DefaultPlugins.
+```typescript
+import { PostprocessingPlugin } from 'vibegame/postprocessing';
+
+GAME
+  .withPlugin(PostprocessingPlugin)
+  .run();
+```
+
 ```xml
 <!-- Bloom effect for glow -->
 <camera bloom="intensity: 2; luminance-threshold: 0.8"></camera>
@@ -459,12 +468,12 @@ function getOrCreateGameState(state: GAME.State): number {
 ### Component Access (bitECS style)
 ```typescript
 // Direct property access
-GAME.Transform.posX[entity] = 10;
-GAME.Transform.posY[entity] = 5;
+Transform.posX[entity] = 10;
+Transform.posY[entity] = 5;
 
 // Read values
-const x = GAME.Transform.posX[entity];
-const health = GAME.Health.current[entity];
+const x = Transform.posX[entity];
+const health = Health.current[entity];
 ```
 
 ## Features Not Yet Built-In
@@ -612,6 +621,10 @@ Available in all systems via the `state` parameter:
 ### Using Specific Plugins
 ```typescript
 import * as GAME from 'vibegame';
+import { TransformsPlugin } from 'vibegame/transforms';
+import { RenderingPlugin } from 'vibegame/rendering';
+import { PhysicsPlugin } from 'vibegame/physics';
+import { AnimationPlugin } from 'vibegame/animation';
 
 // Start with no defaults, add specific plugins
 GAME
@@ -623,7 +636,7 @@ GAME
 
 // Keep defaults, exclude specific plugins
 GAME
-  .withoutPlugins(AnimationPlugin, PostprocessingPlugin)
+  .withoutPlugins(AnimationPlugin)
   .run();
 ```
 
@@ -631,7 +644,6 @@ GAME
 - **RecipesPlugin** - XML parsing and entity creation
 - **TransformsPlugin** - Position, rotation, scale, hierarchy
 - **RenderingPlugin** - Three.js meshes, lights, camera
-- **PostprocessingPlugin** - Bloom, dithering, tonemapping effects
 - **PhysicsPlugin** - Rapier physics simulation
 - **InputPlugin** - Keyboard, mouse, gamepad input
 - **OrbitCameraPlugin** - Third-person camera
@@ -700,12 +712,15 @@ Tag component (no properties)
 
 ```typescript
 import * as GAME from 'vibegame';
+import { AnimatedCharacter } from 'vibegame/animation';
+import { CharacterController } from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 // Add animated character to a player entity
 const player = state.createEntity();
-state.addComponent(player, GAME.AnimatedCharacter);
-state.addComponent(player, GAME.CharacterController);
-state.addComponent(player, GAME.Transform);
+state.addComponent(player, AnimatedCharacter);
+state.addComponent(player, CharacterController);
+state.addComponent(player, Transform);
 
 // The AnimatedCharacterInitializationSystem will automatically
 // create body parts in the next setup phase
@@ -715,13 +730,14 @@ state.addComponent(player, GAME.Transform);
 
 ```typescript
 import * as GAME from 'vibegame';
+import { AnimatedCharacter } from 'vibegame/animation';
 
-const characterQuery = GAME.defineQuery([GAME.AnimatedCharacter]);
+const characterQuery = GAME.defineQuery([AnimatedCharacter]);
 const MySystem: GAME.System = {
   update: (state) => {
     const characters = characterQuery(state.world);
     for (const entity of characters) {
-      const animState = GAME.AnimatedCharacter.animationState[entity];
+      const animState = AnimatedCharacter.animationState[entity];
       if (animState === 2) { // JUMPING
         console.log('Character is jumping!');
       }
@@ -809,9 +825,10 @@ Default input mappings and sensitivity settings
 
 ```typescript
 import * as GAME from 'vibegame';
+import { InputPlugin } from 'vibegame/input';
 
 GAME
-  .withPlugin(GAME.InputPlugin)
+  .withPlugin(InputPlugin)
   .run();
 ```
 
@@ -819,24 +836,25 @@ GAME
 
 ```typescript
 import * as GAME from 'vibegame';
+import { Player, InputState } from 'vibegame/input';
 
-const playerQuery = GAME.defineQuery([GAME.Player, GAME.InputState]);
+const playerQuery = GAME.defineQuery([Player, InputState]);
 const PlayerControlSystem: GAME.System = {
   update: (state) => {
     const players = playerQuery(state.world);
-    
+
     for (const player of players) {
       // Read movement axes
-      const moveX = GAME.InputState.moveX[player];
-      const moveY = GAME.InputState.moveY[player];
-      
+      const moveX = InputState.moveX[player];
+      const moveY = InputState.moveY[player];
+
       // Check for jump
-      if (GAME.InputState.jump[player]) {
+      if (InputState.jump[player]) {
         // Jump is available this frame
       }
-      
+
       // Check mouse buttons
-      if (GAME.InputState.leftMouse[player]) {
+      if (InputState.leftMouse[player]) {
         // Left mouse is held
       }
     }
@@ -974,25 +992,26 @@ Orbital camera controller for third-person views and smooth target following.
 
 ```typescript
 import * as GAME from 'vibegame';
+import { OrbitCamera } from 'vibegame/orbit-camera';
 
-const cameraQuery = GAME.defineQuery([GAME.OrbitCamera]);
+const cameraQuery = GAME.defineQuery([OrbitCamera]);
 const CameraControlSystem = {
   update: (state) => {
     const cameras = cameraQuery(state.world);
-    
+
     for (const camera of cameras) {
       // Rotate camera on input
       if (state.input.mouse.deltaX) {
-        GAME.OrbitCamera.targetYaw[camera] += state.input.mouse.deltaX * 0.01;
+        OrbitCamera.targetYaw[camera] += state.input.mouse.deltaX * 0.01;
       }
-      
+
       // Zoom on scroll
       if (state.input.mouse.wheel) {
-        GAME.OrbitCamera.targetDistance[camera] = Math.max(
-          GAME.OrbitCamera.minDistance[camera],
+        OrbitCamera.targetDistance[camera] = Math.max(
+          OrbitCamera.minDistance[camera],
           Math.min(
-            GAME.OrbitCamera.maxDistance[camera],
-            GAME.OrbitCamera.targetDistance[camera] - state.input.mouse.wheel * 0.5
+            OrbitCamera.maxDistance[camera],
+            OrbitCamera.targetDistance[camera] - state.input.mouse.wheel * 0.5
           )
         );
       }
@@ -1005,10 +1024,11 @@ const CameraControlSystem = {
 
 ```typescript
 import * as GAME from 'vibegame';
+import { OrbitCamera } from 'vibegame/orbit-camera';
 
 // Switch camera target
 const switchTarget = (state, cameraEntity, newTargetEntity) => {
-  GAME.OrbitCamera.target[cameraEntity] = newTargetEntity;
+  OrbitCamera.target[cameraEntity] = newTargetEntity;
 };
 ```
 
@@ -1207,18 +1227,19 @@ Initializes Rapier WASM physics engine
 ##### Create Physics Entity
 ```typescript
 import * as GAME from 'vibegame';
+import { Body, Collider, BodyType, ColliderShape } from 'vibegame/physics';
 
 // Create a dynamic physics box
 const entity = state.createEntity();
 
-state.addComponent(entity, GAME.Body, {
-  type: GAME.BodyType.Dynamic,
+state.addComponent(entity, Body, {
+  type: BodyType.Dynamic,
   mass: 5,
   posX: 0, posY: 10, posZ: 0
 });
 
-state.addComponent(entity, GAME.Collider, {
-  shape: GAME.ColliderShape.Box,
+state.addComponent(entity, Collider, {
+  shape: ColliderShape.Box,
   sizeX: 1, sizeY: 1, sizeZ: 1,
   friction: 0.7,
   restitution: 0.3
@@ -1232,48 +1253,51 @@ state.addComponent(entity, GAME.Collider, {
 
 ```typescript
 import * as GAME from 'vibegame';
+import { Body, BodyType, ApplyForce, ApplyImpulse, KinematicMove, SetLinearVelocity } from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 // Dynamic bodies - Use forces/impulses for movement
-if (GAME.Body.type[entity] === GAME.BodyType.Dynamic) {
+if (Body.type[entity] === BodyType.Dynamic) {
   // Apply force for gradual acceleration
-  state.addComponent(entity, GAME.ApplyForce, { x: 10, y: 0, z: 0 });
-  
+  state.addComponent(entity, ApplyForce, { x: 10, y: 0, z: 0 });
+
   // Apply impulse for instant velocity change
-  state.addComponent(entity, GAME.ApplyImpulse, { x: 0, y: 50, z: 0 });
-  
+  state.addComponent(entity, ApplyImpulse, { x: 0, y: 50, z: 0 });
+
   // Direct position setting only for teleportation
-  GAME.Body.posX[entity] = 10; // Teleport - use sparingly
+  Body.posX[entity] = 10; // Teleport - use sparingly
 }
 
 // Kinematic bodies - Direct control via movement components
-if (GAME.Body.type[entity] === GAME.BodyType.KinematicPositionBased) {
-  state.addComponent(entity, GAME.KinematicMove, { x: 5, y: 2, z: 0 });
+if (Body.type[entity] === BodyType.KinematicPositionBased) {
+  state.addComponent(entity, KinematicMove, { x: 5, y: 2, z: 0 });
 }
 
-if (GAME.Body.type[entity] === GAME.BodyType.KinematicVelocityBased) {
-  state.addComponent(entity, GAME.SetLinearVelocity, { x: 3, y: 0, z: 0 });
+if (Body.type[entity] === BodyType.KinematicVelocityBased) {
+  state.addComponent(entity, SetLinearVelocity, { x: 3, y: 0, z: 0 });
 }
 
 // Never modify Transform directly for physics entities
-// GAME.Transform.posX[entity] = 10; // ❌ Will be overwritten by Body
+// Transform.posX[entity] = 10; // ❌ Will be overwritten by Body
 ```
 
 ##### Apply Forces
 ```typescript
 import * as GAME from 'vibegame';
+import { ApplyImpulse, ApplyForce, SetLinearVelocity } from 'vibegame/physics';
 
 // Apply upward impulse (jump)
-state.addComponent(entity, GAME.ApplyImpulse, {
+state.addComponent(entity, ApplyImpulse, {
   x: 0, y: 50, z: 0
 });
 
 // Apply continuous force
-state.addComponent(entity, GAME.ApplyForce, {
+state.addComponent(entity, ApplyForce, {
   x: 10, y: 0, z: 0
 });
 
 // Set velocity directly
-state.addComponent(entity, GAME.SetLinearVelocity, {
+state.addComponent(entity, SetLinearVelocity, {
   x: 0, y: 5, z: 0
 });
 ```
@@ -1281,17 +1305,18 @@ state.addComponent(entity, GAME.SetLinearVelocity, {
 ##### Handle Collisions
 ```typescript
 import * as GAME from 'vibegame';
+import { TouchedEvent, ApplyImpulse } from 'vibegame/physics';
 
-const touchedQuery = GAME.defineQuery([GAME.TouchedEvent]);
+const touchedQuery = GAME.defineQuery([TouchedEvent]);
 const CollisionSystem: GAME.System = {
   update: (state) => {
     // Query entities with collision events
     for (const entity of touchedQuery(state.world)) {
-      const otherEntity = GAME.TouchedEvent.other[entity];
+      const otherEntity = TouchedEvent.other[entity];
       console.log(`Entity ${entity} collided with ${otherEntity}`);
-      
+
       // React to collision
-      state.addComponent(entity, GAME.ApplyImpulse, {
+      state.addComponent(entity, ApplyImpulse, {
         x: 0, y: 10, z: 0
       });
     }
@@ -1302,18 +1327,19 @@ const CollisionSystem: GAME.System = {
 ##### Character Movement
 ```typescript
 import * as GAME from 'vibegame';
+import { CharacterMovement, CharacterController } from 'vibegame/physics';
 
 const PlayerMovementSystem: GAME.System = {
   update: (state) => {
-    const movementQuery = GAME.defineQuery([GAME.CharacterMovement, GAME.CharacterController]);
+    const movementQuery = GAME.defineQuery([CharacterMovement, CharacterController]);
     for (const entity of movementQuery(state.world)) {
       // Set desired movement based on input
-      GAME.CharacterMovement.desiredVelX[entity] = input.x * 5;
-      GAME.CharacterMovement.desiredVelZ[entity] = input.z * 5;
-      
+      CharacterMovement.desiredVelX[entity] = input.x * 5;
+      CharacterMovement.desiredVelZ[entity] = input.z * 5;
+
       // Jump if grounded
-      if (GAME.CharacterController.grounded[entity] && input.jump) {
-        GAME.CharacterMovement.velocityY[entity] = 10;
+      if (CharacterController.grounded[entity] && input.jump) {
+        CharacterMovement.velocityY[entity] = 10;
       }
     }
   }

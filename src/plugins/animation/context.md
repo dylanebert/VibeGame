@@ -77,12 +77,15 @@ Tag component (no properties)
 
 ```typescript
 import * as GAME from 'vibegame';
+import { AnimatedCharacter } from 'vibegame/animation';
+import { CharacterController } from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 // Add animated character to a player entity
 const player = state.createEntity();
-state.addComponent(player, GAME.AnimatedCharacter);
-state.addComponent(player, GAME.CharacterController);
-state.addComponent(player, GAME.Transform);
+state.addComponent(player, AnimatedCharacter);
+state.addComponent(player, CharacterController);
+state.addComponent(player, Transform);
 
 // The AnimatedCharacterInitializationSystem will automatically
 // create body parts in the next setup phase
@@ -92,13 +95,14 @@ state.addComponent(player, GAME.Transform);
 
 ```typescript
 import * as GAME from 'vibegame';
+import { AnimatedCharacter } from 'vibegame/animation';
 
-const characterQuery = GAME.defineQuery([GAME.AnimatedCharacter]);
+const characterQuery = GAME.defineQuery([AnimatedCharacter]);
 const MySystem: GAME.System = {
   update: (state) => {
     const characters = characterQuery(state.world);
     for (const entity of characters) {
-      const animState = GAME.AnimatedCharacter.animationState[entity];
+      const animState = AnimatedCharacter.animationState[entity];
       if (animState === 2) { // JUMPING
         console.log('Character is jumping!');
       }

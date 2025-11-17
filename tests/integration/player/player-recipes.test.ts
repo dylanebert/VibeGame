@@ -1,33 +1,24 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import { State, XMLParser, parseXMLToEntities } from 'vibegame';
-import {
-  Player,
-  PlayerPlugin,
-  CharacterMovement,
-  InputState,
-  InputPlugin,
-} from 'vibegame';
+import { Player, PlayerPlugin } from 'vibegame/player';
+import { InputState, InputPlugin } from 'vibegame/input';
 import {
   Body,
   BodyType,
   CharacterController,
+  CharacterMovement,
   Collider,
   ColliderShape,
-  initializePhysics,
   PhysicsPlugin,
-} from 'vibegame';
-import { Transform, TransformsPlugin } from 'vibegame';
-import { Respawn, RespawnPlugin } from 'vibegame';
+} from 'vibegame/physics';
+import { Transform, TransformsPlugin } from 'vibegame/transforms';
+import { Respawn, RespawnPlugin } from 'vibegame/respawn';
 
 describe('Player Recipes and XML', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -37,6 +28,8 @@ describe('Player Recipes and XML', () => {
     state.registerPlugin(RespawnPlugin);
     state.registerPlugin(InputPlugin);
     state.registerPlugin(PlayerPlugin);
+
+    await state.initializePlugins();
   });
 
   describe('Basic Player Usage (XML)', () => {

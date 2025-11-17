@@ -1,17 +1,14 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import {
-  AnimatedCharacter,
-  AnimationPlugin,
-  CharacterController,
-  parseXMLToEntities,
-  PhysicsPlugin,
   State,
-  Transform,
-  TransformsPlugin,
   XMLParser,
   defineQuery,
+  parseXMLToEntities,
 } from 'vibegame';
+import { AnimatedCharacter, AnimationPlugin } from 'vibegame/animation';
+import { CharacterController, PhysicsPlugin } from 'vibegame/physics';
+import { Transform, TransformsPlugin } from 'vibegame/transforms';
 
 describe('Animation Plugin', () => {
   let state: State;

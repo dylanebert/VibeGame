@@ -1,4 +1,5 @@
 import * as GAME from 'vibegame';
+import { Transform } from 'vibegame/transforms';
 import { Particle } from './components';
 import { initializeLorenz, updateLorenz } from './utils';
 
@@ -14,7 +15,7 @@ const LorenzSetupSystem: GAME.System = {
   },
 };
 
-const query = GAME.defineQuery([Particle, GAME.Transform]);
+const query = GAME.defineQuery([Particle, Transform]);
 
 const LorenzUpdateSystem: GAME.System = {
   group: 'fixed',

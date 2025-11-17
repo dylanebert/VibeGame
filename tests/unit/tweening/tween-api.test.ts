@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { defineComponent, Types } from 'bitecs';
-import { createTween, State, defineQuery } from 'vibegame';
-import { Transform, TransformsPlugin } from 'vibegame';
-import { Tween, TweenPlugin, TweenValue } from 'vibegame';
+import { State, defineQuery } from 'vibegame';
+import { Transform, TransformsPlugin } from 'vibegame/transforms';
+import { createTween, Tween, TweenPlugin, TweenValue } from 'vibegame/tweening';
 
 describe('Tween API', () => {
   let state: State;

@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
 import {
   Body,
@@ -6,24 +6,21 @@ import {
   Collider,
   ColliderShape,
   CollisionEvents,
-  initializePhysics,
   PhysicsPlugin,
   PhysicsWorld,
   TouchedEvent,
   TouchEndedEvent,
-} from 'vibegame';
-import { Transform } from 'vibegame';
+} from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 describe('Collision Events Integration', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   it('should detect collision between dynamic bodies', () => {

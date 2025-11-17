@@ -13,7 +13,7 @@ import {
   handleMouseUp,
   handleWheel,
   setTargetCanvas,
-} from 'vibegame';
+} from 'vibegame/input';
 import { handleKeyDown, clearAllInput } from '../../../src/plugins/input/utils';
 
 describe('Input Plugin', () => {

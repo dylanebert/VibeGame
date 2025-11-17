@@ -120,9 +120,10 @@ Default input mappings and sensitivity settings
 
 ```typescript
 import * as GAME from 'vibegame';
+import { InputPlugin } from 'vibegame/input';
 
 GAME
-  .withPlugin(GAME.InputPlugin)
+  .withPlugin(InputPlugin)
   .run();
 ```
 
@@ -130,24 +131,25 @@ GAME
 
 ```typescript
 import * as GAME from 'vibegame';
+import { Player, InputState } from 'vibegame/input';
 
-const playerQuery = GAME.defineQuery([GAME.Player, GAME.InputState]);
+const playerQuery = GAME.defineQuery([Player, InputState]);
 const PlayerControlSystem: GAME.System = {
   update: (state) => {
     const players = playerQuery(state.world);
-    
+
     for (const player of players) {
       // Read movement axes
-      const moveX = GAME.InputState.moveX[player];
-      const moveY = GAME.InputState.moveY[player];
-      
+      const moveX = InputState.moveX[player];
+      const moveY = InputState.moveY[player];
+
       // Check for jump
-      if (GAME.InputState.jump[player]) {
+      if (InputState.jump[player]) {
         // Jump is available this frame
       }
-      
+
       // Check mouse buttons
-      if (GAME.InputState.leftMouse[player]) {
+      if (InputState.leftMouse[player]) {
         // Left mouse is held
       }
     }

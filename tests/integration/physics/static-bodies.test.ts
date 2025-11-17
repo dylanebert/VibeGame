@@ -1,26 +1,24 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
 import {
   Body,
   BodyType,
   Collider,
   ColliderShape,
-  initializePhysics,
+  
   PhysicsPlugin,
   PhysicsWorld,
-} from 'vibegame';
-import { Transform } from 'vibegame';
+} from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 describe('Static Bodies Integration', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   it('should create a static floor that does not move', () => {

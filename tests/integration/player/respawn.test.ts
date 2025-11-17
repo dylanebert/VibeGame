@@ -1,5 +1,11 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
+import {
+  State,
+  TIME_CONSTANTS,
+  XMLParser,
+  parseXMLToEntities,
+} from 'vibegame';
 import {
   Body,
   BodyType,
@@ -7,31 +13,19 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
-  initializePhysics,
-  InputState,
-  OrbitCameraPlugin,
-  parseXMLToEntities,
+  
   PhysicsPlugin,
-  Player,
-  PlayerPlugin,
-  Respawn,
-  RespawnPlugin,
-  State,
-  TIME_CONSTANTS,
-  Transform,
-  TransformsPlugin,
-  WorldTransform,
-  XMLParser,
-} from 'vibegame';
+} from 'vibegame/physics';
+import { InputState } from 'vibegame/input';
+import { OrbitCameraPlugin } from 'vibegame/orbit-camera';
+import { Player, PlayerPlugin } from 'vibegame/player';
+import { Respawn, RespawnPlugin } from 'vibegame/respawn';
+import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
 
 describe('Respawn Plugin', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -41,6 +35,8 @@ describe('Respawn Plugin', () => {
     state.registerPlugin(OrbitCameraPlugin);
     state.registerPlugin(RespawnPlugin);
     state.registerPlugin(PlayerPlugin);
+
+    await state.initializePlugins();
   });
 
   describe('XML Declarative Usage', () => {
@@ -176,7 +172,7 @@ describe('Respawn Plugin', () => {
   });
 
   describe('Respawn System Behavior', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       state.step();
     });
 

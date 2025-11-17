@@ -1,30 +1,21 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import {
-  AmbientLight,
-  AnimatedCharacter,
-  Body,
-  CharacterController,
-  CharacterMovement,
-  Collider,
-  DefaultPlugins,
-  DirectionalLight,
-  HasAnimator,
-  InputState,
-  MainCamera,
-  OrbitCamera,
-  Parent,
-  Player,
-  RenderingPlugin,
-  Respawn,
-  StartupPlugin,
   State,
-  Transform,
-  TransformsPlugin,
   XMLParser,
   defineQuery,
   parseXMLToEntities,
 } from 'vibegame';
+import { DefaultPlugins } from 'vibegame/defaults';
+import { AmbientLight, DirectionalLight, MainCamera, RenderingPlugin } from 'vibegame/rendering';
+import { AnimatedCharacter, HasAnimator } from 'vibegame/animation';
+import { Body, CharacterController, CharacterMovement, Collider } from 'vibegame/physics';
+import { InputState } from 'vibegame/input';
+import { OrbitCamera } from 'vibegame/orbit-camera';
+import { Parent, Transform, TransformsPlugin } from 'vibegame/transforms';
+import { Player } from 'vibegame/player';
+import { Respawn } from 'vibegame/respawn';
+import { StartupPlugin } from 'vibegame/startup';
 
 describe('Startup Plugin - Auto-Creation', () => {
   beforeEach(() => {
@@ -32,11 +23,12 @@ describe('Startup Plugin - Auto-Creation', () => {
     global.DOMParser = dom.window.DOMParser;
   });
 
-  it('should automatically create player, camera, and lighting with DefaultPlugins', () => {
+  it('should automatically create player, camera, and lighting with DefaultPlugins', async () => {
     const state = new State();
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+    await state.initializePlugins();
 
     expect(defineQuery([Player])(state.world).length).toBe(0);
     expect(defineQuery([MainCamera])(state.world).length).toBe(0);
@@ -69,11 +61,12 @@ describe('Startup Plugin - Auto-Creation', () => {
     expect(state.hasComponent(light, DirectionalLight)).toBe(true);
   });
 
-  it('should work with manual plugin registration', () => {
+  it('should work with manual plugin registration', async () => {
     const state = new State();
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(RenderingPlugin);
     state.registerPlugin(StartupPlugin);
+    await state.initializePlugins();
 
     expect(defineQuery([Player])(state.world).length).toBe(0);
     expect(defineQuery([MainCamera])(state.world).length).toBe(0);
@@ -91,7 +84,7 @@ describe('Startup Plugin - Auto-Creation', () => {
 describe('Startup Plugin - Preventing Auto-Creation', () => {
   let state: State;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -99,6 +92,7 @@ describe('Startup Plugin - Preventing Auto-Creation', () => {
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+    await state.initializePlugins();
   });
 
   it('should not create player when one already exists from XML', () => {
@@ -187,7 +181,7 @@ describe('Startup Plugin - Preventing Auto-Creation', () => {
 describe('Startup Plugin - Idempotent Behavior', () => {
   let state: State;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -195,6 +189,7 @@ describe('Startup Plugin - Idempotent Behavior', () => {
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+    await state.initializePlugins();
   });
 
   it('should be idempotent and only create entities once', () => {
@@ -227,7 +222,7 @@ describe('Startup Plugin - Idempotent Behavior', () => {
 describe('Startup Plugin - Player Character System', () => {
   let state: State;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -235,6 +230,7 @@ describe('Startup Plugin - Player Character System', () => {
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+    await state.initializePlugins();
   });
 
   it('should attach animated character to player entities', () => {
@@ -277,7 +273,7 @@ describe('Startup Plugin - Component Defaults', () => {
   let state: State;
   let startupState: State;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -285,11 +281,13 @@ describe('Startup Plugin - Component Defaults', () => {
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+    await state.initializePlugins();
 
     startupState = new State();
     for (const plugin of DefaultPlugins) {
       startupState.registerPlugin(plugin);
     }
+    await startupState.initializePlugins();
     startupState.scheduler.step(startupState, 0);
   });
 
@@ -399,7 +397,7 @@ describe('Startup Plugin - Component Defaults', () => {
 describe('Startup Plugin - Individual Light Types', () => {
   let state: State;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -407,5 +405,6 @@ describe('Startup Plugin - Individual Light Types', () => {
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+    await state.initializePlugins();
   });
 });

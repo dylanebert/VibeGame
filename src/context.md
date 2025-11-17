@@ -75,7 +75,8 @@ See [layers/structure.md](../layers/structure.md) for complete plugin architectu
 
 Global functions for configuring and running a game:
 
-- `withPlugin(plugin: Plugin)` - Add a plugin to the game
+- `withPlugin(plugin: Plugin)` - Add a single plugin
+- `withPlugins(...plugins: Plugin[])` - Add multiple plugins
 - `withoutDefaultPlugins()` - Exclude all default plugins
 - `withoutPlugins(...plugins: Plugin[])` - Exclude specific default plugins
 - `withSystem(system: System)` - Add a custom system
@@ -165,7 +166,11 @@ GAME.run();
 
 ```typescript
 import * as GAME from 'vibegame';
+import { DefaultPlugins } from 'vibegame/defaults';
 import { MyCustomPlugin } from './my-plugin';
+
+// Use default plugins
+GAME.withPlugins(...DefaultPlugins).run();
 
 // Exclude all defaults and use specific plugins
 GAME.withoutDefaultPlugins()

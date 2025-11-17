@@ -1,18 +1,19 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import {
+  State,
+  XMLParser,
+  defineQuery,
+  parseXMLToEntities,
+} from 'vibegame';
+import {
   MainCamera,
   RenderContext,
   Renderer,
   RenderingPlugin,
-  State,
-  Transform,
-  TransformsPlugin,
-  XMLParser,
-  defineQuery,
-  parseXMLToEntities,
   setCanvasElement,
-} from 'vibegame';
+} from 'vibegame/rendering';
+import { Transform, TransformsPlugin } from 'vibegame/transforms';
 
 describe('Rendering Recipes', () => {
   let state: State;

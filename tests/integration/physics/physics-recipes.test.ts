@@ -1,29 +1,23 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { State, TIME_CONSTANTS, XMLParser } from 'vibegame';
+import { State, TIME_CONSTANTS, XMLParser, parseXMLToEntities } from 'vibegame';
 import {
   Body,
   BodyType,
   PhysicsPlugin,
-  initializePhysics,
   CharacterController,
   CharacterMovement,
   Collider,
   ColliderShape,
-} from 'vibegame';
-import { parseXMLToEntities } from 'vibegame';
-import { RenderingPlugin } from 'vibegame';
-import { TransformsPlugin } from 'vibegame';
-import { TweenPlugin } from 'vibegame';
+} from 'vibegame/physics';
+import { RenderingPlugin } from 'vibegame/rendering';
+import { TransformsPlugin } from 'vibegame/transforms';
+import { TweenPlugin } from 'vibegame/tweening';
 
 describe('Physics Recipes', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -31,6 +25,8 @@ describe('Physics Recipes', () => {
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(RenderingPlugin);
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   describe('static-part recipe', () => {
@@ -347,7 +343,7 @@ describe('Physics Recipes', () => {
   });
 
   describe('moving platform with tweening', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       state.registerPlugin(TweenPlugin);
     });
 

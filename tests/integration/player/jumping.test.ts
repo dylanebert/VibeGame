@@ -1,7 +1,7 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS } from 'vibegame';
-import { InputState } from 'vibegame';
-import { OrbitCameraPlugin } from 'vibegame';
+import { InputState } from 'vibegame/input';
+import { OrbitCameraPlugin } from 'vibegame/orbit-camera';
 import {
   Body,
   BodyType,
@@ -9,20 +9,16 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
-  initializePhysics,
+  
   PhysicsPlugin,
-} from 'vibegame';
-import { Player, PlayerPlugin } from 'vibegame';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame';
+} from 'vibegame/physics';
+import { Player, PlayerPlugin } from 'vibegame/player';
+import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
 
 describe('Player Jumping', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     state = new State();
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(PhysicsPlugin);
@@ -30,6 +26,8 @@ describe('Player Jumping', () => {
     state.registerPlugin(PlayerPlugin);
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+
+    await state.initializePlugins();
   });
 
   function createPlayer(x = 0, y = 5, z = 0): number {

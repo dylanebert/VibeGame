@@ -112,10 +112,10 @@ describe('GameBuilder', () => {
     expect(result).toBe(builder);
   });
 
-  it('should merge options when configure is called multiple times', () => {
+  it('should merge options when configure is called multiple times', async () => {
     builder.configure({ canvas: '#game' }).configure({ autoStart: false });
 
-    const runtime = builder.build();
+    const runtime = await builder.build();
     expect(runtime).toBeDefined();
   });
 
@@ -138,8 +138,8 @@ describe('GameBuilder', () => {
     expect(result).toBe(builder);
   });
 
-  it('should build a GameRuntime instance', () => {
-    const runtime = builder.build();
+  it('should build a GameRuntime instance', async () => {
+    const runtime = await builder.build();
     expect(runtime).toBeDefined();
     expect(runtime.getState).toBeDefined();
     expect(runtime.start).toBeDefined();
@@ -154,7 +154,7 @@ describe('GameBuilder', () => {
     runtime.stop();
   });
 
-  it('should register plugins with state when building', () => {
+  it('should register plugins with state when building', async () => {
     let pluginRegistered = false;
     const testPlugin = {
       components: {},
@@ -168,14 +168,14 @@ describe('GameBuilder', () => {
     };
 
     builder.withPlugin(testPlugin);
-    const runtime = builder.build();
+    const runtime = await builder.build();
     const state = runtime.getState();
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
     expect(pluginRegistered).toBe(true);
   });
 
-  it('should register systems with state when building', () => {
+  it('should register systems with state when building', async () => {
     let systemCalled = false;
     const testSystem = {
       update: () => {
@@ -184,18 +184,18 @@ describe('GameBuilder', () => {
     };
 
     builder.withSystem(testSystem);
-    const runtime = builder.build();
+    const runtime = await builder.build();
     const state = runtime.getState();
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
     expect(systemCalled).toBe(true);
   });
 
-  it('should register components with state when building', () => {
+  it('should register components with state when building', async () => {
     const TestComponent = defineComponent({ value: Types.f32 });
 
     builder.withComponent('test-component', TestComponent);
-    const runtime = builder.build();
+    const runtime = await builder.build();
     const state = runtime.getState();
 
     const registeredComponent = state.getComponent('test-component');
@@ -205,14 +205,14 @@ describe('GameBuilder', () => {
     expect(componentNames).toContain('test-component');
   });
 
-  it('should register recipes with state when building', () => {
+  it('should register recipes with state when building', async () => {
     const recipe = {
       name: 'player',
       components: ['transform'],
     };
 
     builder.withRecipe(recipe);
-    const runtime = builder.build();
+    const runtime = await builder.build();
     const state = runtime.getState();
 
     const playerRecipe = state.getRecipe('player');
@@ -223,7 +223,7 @@ describe('GameBuilder', () => {
     expect(recipeNames.has('player')).toBe(true);
   });
 
-  it('should register config with state when building', () => {
+  it('should register config with state when building', async () => {
     const config = {
       defaults: {
         'test-component': { value: 42 },
@@ -231,15 +231,15 @@ describe('GameBuilder', () => {
     };
 
     builder.withConfig(config);
-    const runtime = builder.build();
+    const runtime = await builder.build();
     const state = runtime.getState() as State;
 
     const defaults = state.config.getDefaults('test-component');
     expect(defaults).toEqual({ value: 42 });
   });
 
-  it('should include default plugins by default', () => {
-    const runtime = builder.build();
+  it('should include default plugins by default', async () => {
+    const runtime = await builder.build();
     const state = runtime.getState();
 
     const transform = state.getComponent('transform');
@@ -248,9 +248,9 @@ describe('GameBuilder', () => {
     expect(renderer).toBeDefined();
   });
 
-  it('should exclude default plugins when withoutDefaultPlugins is called', () => {
+  it('should exclude default plugins when withoutDefaultPlugins is called', async () => {
     builder.withoutDefaultPlugins();
-    const runtime = builder.build();
+    const runtime = await builder.build();
     const state = runtime.getState();
 
     const transform = state.getComponent('transform');
@@ -259,7 +259,7 @@ describe('GameBuilder', () => {
     expect(renderer).toBeUndefined();
   });
 
-  it('should handle complex plugin with all features', () => {
+  it('should handle complex plugin with all features', async () => {
     const ComplexComponent = defineComponent({
       x: Types.f32,
       y: Types.f32,
@@ -297,7 +297,7 @@ describe('GameBuilder', () => {
     };
 
     builder.withPlugin(complexPlugin);
-    const runtime = builder.build();
+    const runtime = await builder.build();
     const state = runtime.getState();
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);

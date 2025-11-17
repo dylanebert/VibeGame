@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
 import {
   ApplyAngularImpulse,
@@ -9,25 +9,23 @@ import {
   BodyType,
   Collider,
   ColliderShape,
-  initializePhysics,
+  
   KinematicMove,
   PhysicsPlugin,
   PhysicsWorld,
   SetAngularVelocity,
   SetLinearVelocity,
-} from 'vibegame';
-import { Transform } from 'vibegame';
+} from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 describe('Physics Forces and Impulses', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   describe('Linear Forces', () => {

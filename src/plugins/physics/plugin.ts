@@ -40,8 +40,10 @@ import {
   SetVelocitySystem,
   TeleportationSystem,
 } from './systems';
+import { initializePhysics } from './utils';
 
 export const PhysicsPlugin: Plugin = {
+  initialize: initializePhysics,
   systems: [
     PhysicsWorldSystem,
     PhysicsInitializationSystem,

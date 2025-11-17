@@ -1,6 +1,6 @@
 {
   "name": "vibegame",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "a 3D game engine designed for vibe coding",
   "type": "module",
   "module": "./dist/index.js",
@@ -11,61 +11,53 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./core": {
-      "types": "./dist/core/index.d.ts",
-      "import": "./dist/index.js"
-    },
     "./defaults": {
-      "types": "./dist/plugins/defaults.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/defaults.d.ts",
+      "import": "./dist/defaults.js"
     },
     "./animation": {
       "types": "./dist/plugins/animation/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/animation/index.js"
     },
     "./input": {
       "types": "./dist/plugins/input/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./lighting": {
-      "types": "./dist/plugins/lighting/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/input/index.js"
     },
     "./orbit-camera": {
       "types": "./dist/plugins/orbit-camera/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/orbit-camera/index.js"
     },
     "./physics": {
       "types": "./dist/plugins/physics/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/physics/index.js"
     },
     "./player": {
       "types": "./dist/plugins/player/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/player/index.js"
     },
     "./rendering": {
       "types": "./dist/plugins/rendering/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/rendering/index.js"
     },
     "./postprocessing": {
       "types": "./dist/plugins/postprocessing/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/postprocessing/index.js"
     },
     "./transforms": {
       "types": "./dist/plugins/transforms/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/transforms/index.js"
     },
     "./respawn": {
       "types": "./dist/plugins/respawn/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/respawn/index.js"
+    },
+    "./startup": {
+      "types": "./dist/plugins/startup/index.d.ts",
+      "import": "./dist/plugins/startup/index.js"
     },
     "./tweening": {
       "types": "./dist/plugins/tweening/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./recipes": {
-      "types": "./dist/plugins/recipes/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/plugins/tweening/index.js"
     },
     "./vite": {
       "types": "./dist/vite/index.d.ts",

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State } from 'vibegame';
-import { Player } from 'vibegame';
+import { Player } from 'vibegame/player';
 
 describe('Player Components', () => {
   let state: State;

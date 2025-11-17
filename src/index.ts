@@ -2,19 +2,8 @@ import type { BuilderOptions } from './builder';
 import { GameBuilder } from './builder';
 import type { Component, Plugin, System } from './core';
 import { disposeAllRuntimes } from './core/runtime-manager';
-export { DefaultPlugins } from './plugins/defaults';
 
 export * from './core';
-export * from './plugins/animation';
-export * from './plugins/input';
-export * from './plugins/orbit-camera';
-export * from './plugins/physics';
-export * from './plugins/player';
-export * from './plugins/rendering';
-export * from './plugins/respawn';
-export * from './plugins/startup';
-export * from './plugins/transforms';
-export * from './plugins/tweening';
 export type { BuilderOptions };
 
 let globalBuilder: GameBuilder | null = null;
@@ -33,6 +22,10 @@ export function resetBuilder(): void {
 
 export function withPlugin(plugin: Plugin) {
   return getBuilder().withPlugin(plugin);
+}
+
+export function withPlugins(...plugins: Plugin[]) {
+  return getBuilder().withPlugins(...plugins);
 }
 
 export function withoutDefaultPlugins() {
@@ -55,7 +48,7 @@ export function configure(options: BuilderOptions) {
   return getBuilder().configure(options);
 }
 
-export function run() {
+export async function run() {
   const builder = getBuilder();
   disposeAllRuntimes();
   globalBuilder = null;

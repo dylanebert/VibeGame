@@ -1,9 +1,8 @@
-import { State, XMLParser } from 'vibegame';
-import { MainCamera, OrbitCamera, OrbitCameraPlugin } from 'vibegame';
-import { parseXMLToEntities } from 'vibegame';
-import { Transform, TransformsPlugin } from 'vibegame';
-import { PlayerPlugin } from 'vibegame';
-import { RenderingPlugin } from 'vibegame';
+import { State, XMLParser, parseXMLToEntities } from 'vibegame';
+import { OrbitCamera, OrbitCameraPlugin } from 'vibegame/orbit-camera';
+import { Transform, TransformsPlugin } from 'vibegame/transforms';
+import { PlayerPlugin } from 'vibegame/player';
+import { MainCamera, RenderingPlugin } from 'vibegame/rendering';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 

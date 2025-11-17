@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import { parseXMLToEntities, State, XMLParser, defineQuery } from 'vibegame';
-import { TransformsPlugin } from 'vibegame';
-import { Tween, TweenPlugin, TweenValue } from 'vibegame';
+import { TransformsPlugin } from 'vibegame/transforms';
+import { Tween, TweenPlugin, TweenValue } from 'vibegame/tweening';
 
 describe('Tween Parser', () => {
   let state: State;

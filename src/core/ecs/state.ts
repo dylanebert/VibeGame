@@ -34,6 +34,7 @@ export class State {
   public readonly config = new ConfigRegistry();
   private readonly recipes = new Map<string, Recipe>();
   private readonly components = new Map<string, Component>();
+  private readonly plugins: Plugin[] = [];
   private isDisposed = false;
 
   constructor() {
@@ -52,6 +53,7 @@ export class State {
   }
 
   registerPlugin(plugin: Plugin): void {
+    this.plugins.push(plugin);
     if (plugin.components) {
       for (const [name, component] of Object.entries(plugin.components)) {
         this.registerComponent(name, component);
@@ -69,6 +71,14 @@ export class State {
     }
     if (plugin.config) {
       this.registerConfig(plugin.config);
+    }
+  }
+
+  async initializePlugins(): Promise<void> {
+    for (const plugin of this.plugins) {
+      if (plugin.initialize) {
+        await plugin.initialize(this);
+      }
     }
   }
 

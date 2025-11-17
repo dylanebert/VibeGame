@@ -64,18 +64,22 @@ vibegame/
 │   └── index.ts  # Main exports
 ├── examples/  # Example applications
 │   ├── hello-world/  # Basic example
-│   │   ├── src/
-│   │   │   └── main.ts
+│   │   ├── src/main.ts
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   └── lorenz/  # Lorenz attractor particle system
-│       ├── src/
-│       │   ├── main.ts
-│       │   ├── plugin.ts
-│       │   ├── components.ts
-│       │   ├── systems.ts
-│       │   └── utils.ts
+│   ├── lorenz/  # Lorenz attractor particle system
+│   │   ├── src/
+│   │   │   ├── main.ts
+│   │   │   ├── plugin.ts
+│   │   │   ├── components.ts
+│   │   │   ├── systems.ts
+│   │   │   └── utils.ts
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   └── visualization/  # Minimal visualization with tree-shaking
+│       ├── src/main.ts
 │       ├── index.html
 │       ├── package.json
 │       └── vite.config.ts
@@ -119,19 +123,19 @@ Optional files:
 
 ### Plugin Registry
 
-1. **animation** - Animation mixer and clip management
-2. **input** - Mouse, keyboard, gamepad input handling
-3. **orbit-camera** - Orbital camera controller
-4. **physics** - Rapier 3D WASM physics integration
-5. **player** - Player character controller
-6. **postprocessing** - Post-processing effects (bloom, dithering, tonemapping)
-7. **recipes** - XML recipe system for declarative entities
-8. **rendering** - Three.js rendering pipeline
-9. **respawn** - Entity respawn system
-10. **startup** - Initialization and setup systems
-11. **transforms** - Transform component hierarchy
-12. **tweening** - Tween-based animations
-13. **defaults** - Bundle of standard plugins
+1. **animation** - Animation mixer and clip management (AnimationPlugin)
+2. **input** - Mouse, keyboard, gamepad input handling (InputPlugin)
+3. **orbit-camera** - Orbital camera controller (OrbitCameraPlugin)
+4. **physics** - Rapier 3D WASM physics integration (PhysicsPlugin)
+5. **player** - Player character controller (PlayerPlugin)
+6. **postprocessing** - Post-processing effects (PostprocessingPlugin)
+7. **rendering** - Three.js rendering pipeline (RenderingPlugin)
+8. **respawn** - Entity respawn system (RespawnPlugin)
+9. **startup** - Initialization and setup systems (StartupPlugin)
+10. **transforms** - Transform component hierarchy (TransformsPlugin)
+11. **tweening** - Tween-based animations (TweenPlugin)
+
+**Note**: Recipe system is core functionality, not a plugin. Individual plugins define their own recipes.
 
 ## Architecture
 

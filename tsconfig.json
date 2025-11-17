@@ -25,7 +25,19 @@
     "baseUrl": ".",
     "paths": {
       "vibegame": ["./src/index.ts"],
-      "vibegame/defaults": ["./src/plugins/defaults.ts"],
+      "vibegame/defaults": ["./src/defaults.ts"],
+      "vibegame/animation": ["./src/plugins/animation/index.ts"],
+      "vibegame/input": ["./src/plugins/input/index.ts"],
+      "vibegame/orbit-camera": ["./src/plugins/orbit-camera/index.ts"],
+      "vibegame/physics": ["./src/plugins/physics/index.ts"],
+      "vibegame/player": ["./src/plugins/player/index.ts"],
+      "vibegame/postprocessing": ["./src/plugins/postprocessing/index.ts"],
+      "vibegame/rendering": ["./src/plugins/rendering/index.ts"],
+      "vibegame/respawn": ["./src/plugins/respawn/index.ts"],
+      "vibegame/startup": ["./src/plugins/startup/index.ts"],
+      "vibegame/transforms": ["./src/plugins/transforms/index.ts"],
+      "vibegame/tweening": ["./src/plugins/tweening/index.ts"],
+      "vibegame/vite": ["./src/vite/index.ts"],
       "vibegame/core/validation": ["./src/core/validation/index.ts"]
     }
   },

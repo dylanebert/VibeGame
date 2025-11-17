@@ -10,7 +10,7 @@ import {
   CollisionEvents,
   InterpolatedTransform,
   PhysicsWorld,
-} from 'vibegame';
+} from 'vibegame/physics';
 
 describe('Physics Components', () => {
   let state: State;

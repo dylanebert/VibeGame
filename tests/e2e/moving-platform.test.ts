@@ -1,28 +1,21 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import {
-  Body,
-  BodyType,
-  CharacterController,
-  Player,
   State,
   TIME_CONSTANTS,
-  Transform,
   XMLParser,
   defineQuery,
-  initializePhysics,
   parseXMLToEntities,
 } from 'vibegame';
 import { DefaultPlugins } from 'vibegame/defaults';
+import { Body, BodyType, CharacterController } from 'vibegame/physics';
+import { Player } from 'vibegame/player';
+import { Transform } from 'vibegame/transforms';
 
 describe('E2E: Moving Platform Character Controller', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -31,6 +24,8 @@ describe('E2E: Moving Platform Character Controller', () => {
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+
+    await state.initializePlugins();
   });
 
   it('should keep player at rest on stationary kinematic platform (base case)', () => {

@@ -3,6 +3,9 @@ import { defineComponent, Types } from 'bitecs';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import * as GAME from 'vibegame';
+import { RenderingPlugin } from 'vibegame/rendering';
+import { PhysicsPlugin } from 'vibegame/physics';
+import { TransformsPlugin } from 'vibegame/transforms';
 
 describe('Builder-Runtime Integration', () => {
   beforeEach(() => {
@@ -54,8 +57,8 @@ describe('Builder-Runtime Integration', () => {
       document.body.innerHTML = '<canvas id="game-canvas"></canvas>';
 
       const runtime = await GAME.withoutDefaultPlugins()
-        .withPlugin(GAME.RenderingPlugin)
-        .withPlugin(GAME.PhysicsPlugin)
+        .withPlugin(RenderingPlugin)
+        .withPlugin(PhysicsPlugin)
         .withPlugin(MyCustomPlugin)
         .configure({
           canvas: '#game-canvas',
@@ -171,7 +174,7 @@ describe('Builder-Runtime Integration', () => {
       });
 
       const state = new GAME.State();
-      state.registerPlugin(GAME.TransformsPlugin);
+      state.registerPlugin(TransformsPlugin);
       state.registerComponent('test', TestComponent);
       state.registerRecipe({
         name: 'entity',
@@ -267,7 +270,7 @@ describe('Builder-Runtime Integration', () => {
       `;
 
       const runtime = await GAME.withoutDefaultPlugins()
-        .withPlugin(GAME.TransformsPlugin)
+        .withPlugin(TransformsPlugin)
         .withPlugin(GamePlugin)
         .configure({
           canvas: '#game-canvas',

@@ -136,25 +136,26 @@ orbit-camera/
 
 ```typescript
 import * as GAME from 'vibegame';
+import { OrbitCamera } from 'vibegame/orbit-camera';
 
-const cameraQuery = GAME.defineQuery([GAME.OrbitCamera]);
+const cameraQuery = GAME.defineQuery([OrbitCamera]);
 const CameraControlSystem = {
   update: (state) => {
     const cameras = cameraQuery(state.world);
-    
+
     for (const camera of cameras) {
       // Rotate camera on input
       if (state.input.mouse.deltaX) {
-        GAME.OrbitCamera.targetYaw[camera] += state.input.mouse.deltaX * 0.01;
+        OrbitCamera.targetYaw[camera] += state.input.mouse.deltaX * 0.01;
       }
-      
+
       // Zoom on scroll
       if (state.input.mouse.wheel) {
-        GAME.OrbitCamera.targetDistance[camera] = Math.max(
-          GAME.OrbitCamera.minDistance[camera],
+        OrbitCamera.targetDistance[camera] = Math.max(
+          OrbitCamera.minDistance[camera],
           Math.min(
-            GAME.OrbitCamera.maxDistance[camera],
-            GAME.OrbitCamera.targetDistance[camera] - state.input.mouse.wheel * 0.5
+            OrbitCamera.maxDistance[camera],
+            OrbitCamera.targetDistance[camera] - state.input.mouse.wheel * 0.5
           )
         );
       }
@@ -167,10 +168,11 @@ const CameraControlSystem = {
 
 ```typescript
 import * as GAME from 'vibegame';
+import { OrbitCamera } from 'vibegame/orbit-camera';
 
 // Switch camera target
 const switchTarget = (state, cameraEntity, newTargetEntity) => {
-  GAME.OrbitCamera.target[cameraEntity] = newTargetEntity;
+  OrbitCamera.target[cameraEntity] = newTargetEntity;
 };
 ```
 <!-- /LLM:EXAMPLES -->

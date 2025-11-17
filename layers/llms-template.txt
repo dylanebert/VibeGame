@@ -182,6 +182,15 @@ While auto-creation is recommended, you can manually create these for customizat
 
 ## Post-Processing Effects
 
+Requires including the PostprocessingPlugin in the builder, as it is not included in the DefaultPlugins.
+```typescript
+import { PostprocessingPlugin } from 'vibegame/postprocessing';
+
+GAME
+  .withPlugin(PostprocessingPlugin)
+  .run();
+```
+
 ```xml
 <!-- Bloom effect for glow -->
 <camera bloom="intensity: 2; luminance-threshold: 0.8"></camera>
@@ -459,12 +468,12 @@ function getOrCreateGameState(state: GAME.State): number {
 ### Component Access (bitECS style)
 ```typescript
 // Direct property access
-GAME.Transform.posX[entity] = 10;
-GAME.Transform.posY[entity] = 5;
+Transform.posX[entity] = 10;
+Transform.posY[entity] = 5;
 
 // Read values
-const x = GAME.Transform.posX[entity];
-const health = GAME.Health.current[entity];
+const x = Transform.posX[entity];
+const health = Health.current[entity];
 ```
 
 ## Features Not Yet Built-In
@@ -612,6 +621,10 @@ Available in all systems via the `state` parameter:
 ### Using Specific Plugins
 ```typescript
 import * as GAME from 'vibegame';
+import { TransformsPlugin } from 'vibegame/transforms';
+import { RenderingPlugin } from 'vibegame/rendering';
+import { PhysicsPlugin } from 'vibegame/physics';
+import { AnimationPlugin } from 'vibegame/animation';
 
 // Start with no defaults, add specific plugins
 GAME
@@ -623,7 +636,7 @@ GAME
 
 // Keep defaults, exclude specific plugins
 GAME
-  .withoutPlugins(AnimationPlugin, PostprocessingPlugin)
+  .withoutPlugins(AnimationPlugin)
   .run();
 ```
 
@@ -631,7 +644,6 @@ GAME
 - **RecipesPlugin** - XML parsing and entity creation
 - **TransformsPlugin** - Position, rotation, scale, hierarchy
 - **RenderingPlugin** - Three.js meshes, lights, camera
-- **PostprocessingPlugin** - Bloom, dithering, tonemapping effects
 - **PhysicsPlugin** - Rapier physics simulation
 - **InputPlugin** - Keyboard, mouse, gamepad input
 - **OrbitCameraPlugin** - Third-person camera

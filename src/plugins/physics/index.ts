@@ -21,5 +21,4 @@ export {
   TouchEndedEvent,
 } from './components';
 export { PhysicsPlugin } from './plugin';
-export { initializePhysics } from './systems';
-export { DEFAULT_GRAVITY } from './utils';
+export { DEFAULT_GRAVITY, initializePhysics } from './utils';

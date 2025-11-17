@@ -1,6 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { State, TIME_CONSTANTS, XMLParser, defineQuery } from 'vibegame';
+import { State, TIME_CONSTANTS, XMLParser, defineQuery, parseXMLToEntities } from 'vibegame';
 import {
   ApplyForce,
   ApplyImpulse,
@@ -9,22 +9,17 @@ import {
   Collider,
   ColliderShape,
   CollisionEvents,
-  initializePhysics,
+  
   PhysicsPlugin,
   TouchedEvent,
-} from 'vibegame';
-import { parseXMLToEntities } from 'vibegame';
-import { RenderingPlugin } from 'vibegame';
-import { TransformsPlugin } from 'vibegame';
+} from 'vibegame/physics';
+import { RenderingPlugin } from 'vibegame/rendering';
+import { TransformsPlugin } from 'vibegame/transforms';
 
 describe('Physics XML Declarative API', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -32,6 +27,8 @@ describe('Physics XML Declarative API', () => {
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(RenderingPlugin);
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   describe('physics properties via XML', () => {
@@ -248,11 +245,11 @@ describe('Physics XML Declarative API', () => {
     });
   });
 
-  describe('initializePhysics requirement', () => {
-    it('should require initializePhysics to be called before use', async () => {
-      expect(initializePhysics).toBeDefined();
-
-      await initializePhysics();
+  describe('Physics Plugin Initialization', () => {
+    it('should initialize physics through plugin system', async () => {
+      // Physics is already initialized via beforeEach -> state.initializePlugins()
+      // Test that physics world was created
+      expect(state).toBeDefined();
 
       const testState = new State();
       testState.registerPlugin(TransformsPlugin);

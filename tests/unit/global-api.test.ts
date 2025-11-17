@@ -3,6 +3,17 @@ import { defineComponent, Types } from 'bitecs';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
 import * as GAME from 'vibegame';
+import { DefaultPlugins } from 'vibegame/defaults';
+import { AnimationPlugin } from 'vibegame/animation';
+import { InputPlugin } from 'vibegame/input';
+import { OrbitCameraPlugin } from 'vibegame/orbit-camera';
+import { PhysicsPlugin } from 'vibegame/physics';
+import { PlayerPlugin } from 'vibegame/player';
+import { RenderingPlugin } from 'vibegame/rendering';
+import { RespawnPlugin } from 'vibegame/respawn';
+import { StartupPlugin } from 'vibegame/startup';
+import { TransformsPlugin } from 'vibegame/transforms';
+import { TweenPlugin } from 'vibegame/tweening';
 
 describe('Global API', () => {
   beforeEach(() => {
@@ -222,9 +233,9 @@ describe('Global API', () => {
   });
 
   it('should export DefaultPlugins', () => {
-    expect(GAME.DefaultPlugins).toBeDefined();
-    expect(Array.isArray(GAME.DefaultPlugins)).toBe(true);
-    expect(GAME.DefaultPlugins.length).toBeGreaterThan(0);
+    expect(DefaultPlugins).toBeDefined();
+    expect(Array.isArray(DefaultPlugins)).toBe(true);
+    expect(DefaultPlugins.length).toBeGreaterThan(0);
   });
 
   it('should export core types and utilities', () => {
@@ -239,15 +250,15 @@ describe('Global API', () => {
   });
 
   it('should export all plugin modules', () => {
-    expect(GAME.AnimationPlugin).toBeDefined();
-    expect(GAME.InputPlugin).toBeDefined();
-    expect(GAME.OrbitCameraPlugin).toBeDefined();
-    expect(GAME.PhysicsPlugin).toBeDefined();
-    expect(GAME.PlayerPlugin).toBeDefined();
-    expect(GAME.RenderingPlugin).toBeDefined();
-    expect(GAME.RespawnPlugin).toBeDefined();
-    expect(GAME.StartupPlugin).toBeDefined();
-    expect(GAME.TransformsPlugin).toBeDefined();
-    expect(GAME.TweenPlugin).toBeDefined();
+    expect(AnimationPlugin).toBeDefined();
+    expect(InputPlugin).toBeDefined();
+    expect(OrbitCameraPlugin).toBeDefined();
+    expect(PhysicsPlugin).toBeDefined();
+    expect(PlayerPlugin).toBeDefined();
+    expect(RenderingPlugin).toBeDefined();
+    expect(RespawnPlugin).toBeDefined();
+    expect(StartupPlugin).toBeDefined();
+    expect(TransformsPlugin).toBeDefined();
+    expect(TweenPlugin).toBeDefined();
   });
 });

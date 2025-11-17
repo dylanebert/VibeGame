@@ -253,18 +253,19 @@ Initializes Rapier WASM physics engine
 ##### Create Physics Entity
 ```typescript
 import * as GAME from 'vibegame';
+import { Body, Collider, BodyType, ColliderShape } from 'vibegame/physics';
 
 // Create a dynamic physics box
 const entity = state.createEntity();
 
-state.addComponent(entity, GAME.Body, {
-  type: GAME.BodyType.Dynamic,
+state.addComponent(entity, Body, {
+  type: BodyType.Dynamic,
   mass: 5,
   posX: 0, posY: 10, posZ: 0
 });
 
-state.addComponent(entity, GAME.Collider, {
-  shape: GAME.ColliderShape.Box,
+state.addComponent(entity, Collider, {
+  shape: ColliderShape.Box,
   sizeX: 1, sizeY: 1, sizeZ: 1,
   friction: 0.7,
   restitution: 0.3
@@ -278,48 +279,51 @@ state.addComponent(entity, GAME.Collider, {
 
 ```typescript
 import * as GAME from 'vibegame';
+import { Body, BodyType, ApplyForce, ApplyImpulse, KinematicMove, SetLinearVelocity } from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 // Dynamic bodies - Use forces/impulses for movement
-if (GAME.Body.type[entity] === GAME.BodyType.Dynamic) {
+if (Body.type[entity] === BodyType.Dynamic) {
   // Apply force for gradual acceleration
-  state.addComponent(entity, GAME.ApplyForce, { x: 10, y: 0, z: 0 });
-  
+  state.addComponent(entity, ApplyForce, { x: 10, y: 0, z: 0 });
+
   // Apply impulse for instant velocity change
-  state.addComponent(entity, GAME.ApplyImpulse, { x: 0, y: 50, z: 0 });
-  
+  state.addComponent(entity, ApplyImpulse, { x: 0, y: 50, z: 0 });
+
   // Direct position setting only for teleportation
-  GAME.Body.posX[entity] = 10; // Teleport - use sparingly
+  Body.posX[entity] = 10; // Teleport - use sparingly
 }
 
 // Kinematic bodies - Direct control via movement components
-if (GAME.Body.type[entity] === GAME.BodyType.KinematicPositionBased) {
-  state.addComponent(entity, GAME.KinematicMove, { x: 5, y: 2, z: 0 });
+if (Body.type[entity] === BodyType.KinematicPositionBased) {
+  state.addComponent(entity, KinematicMove, { x: 5, y: 2, z: 0 });
 }
 
-if (GAME.Body.type[entity] === GAME.BodyType.KinematicVelocityBased) {
-  state.addComponent(entity, GAME.SetLinearVelocity, { x: 3, y: 0, z: 0 });
+if (Body.type[entity] === BodyType.KinematicVelocityBased) {
+  state.addComponent(entity, SetLinearVelocity, { x: 3, y: 0, z: 0 });
 }
 
 // Never modify Transform directly for physics entities
-// GAME.Transform.posX[entity] = 10; // ❌ Will be overwritten by Body
+// Transform.posX[entity] = 10; // ❌ Will be overwritten by Body
 ```
 
 ##### Apply Forces
 ```typescript
 import * as GAME from 'vibegame';
+import { ApplyImpulse, ApplyForce, SetLinearVelocity } from 'vibegame/physics';
 
 // Apply upward impulse (jump)
-state.addComponent(entity, GAME.ApplyImpulse, {
+state.addComponent(entity, ApplyImpulse, {
   x: 0, y: 50, z: 0
 });
 
 // Apply continuous force
-state.addComponent(entity, GAME.ApplyForce, {
+state.addComponent(entity, ApplyForce, {
   x: 10, y: 0, z: 0
 });
 
 // Set velocity directly
-state.addComponent(entity, GAME.SetLinearVelocity, {
+state.addComponent(entity, SetLinearVelocity, {
   x: 0, y: 5, z: 0
 });
 ```
@@ -327,17 +331,18 @@ state.addComponent(entity, GAME.SetLinearVelocity, {
 ##### Handle Collisions
 ```typescript
 import * as GAME from 'vibegame';
+import { TouchedEvent, ApplyImpulse } from 'vibegame/physics';
 
-const touchedQuery = GAME.defineQuery([GAME.TouchedEvent]);
+const touchedQuery = GAME.defineQuery([TouchedEvent]);
 const CollisionSystem: GAME.System = {
   update: (state) => {
     // Query entities with collision events
     for (const entity of touchedQuery(state.world)) {
-      const otherEntity = GAME.TouchedEvent.other[entity];
+      const otherEntity = TouchedEvent.other[entity];
       console.log(`Entity ${entity} collided with ${otherEntity}`);
-      
+
       // React to collision
-      state.addComponent(entity, GAME.ApplyImpulse, {
+      state.addComponent(entity, ApplyImpulse, {
         x: 0, y: 10, z: 0
       });
     }
@@ -348,18 +353,19 @@ const CollisionSystem: GAME.System = {
 ##### Character Movement
 ```typescript
 import * as GAME from 'vibegame';
+import { CharacterMovement, CharacterController } from 'vibegame/physics';
 
 const PlayerMovementSystem: GAME.System = {
   update: (state) => {
-    const movementQuery = GAME.defineQuery([GAME.CharacterMovement, GAME.CharacterController]);
+    const movementQuery = GAME.defineQuery([CharacterMovement, CharacterController]);
     for (const entity of movementQuery(state.world)) {
       // Set desired movement based on input
-      GAME.CharacterMovement.desiredVelX[entity] = input.x * 5;
-      GAME.CharacterMovement.desiredVelZ[entity] = input.z * 5;
-      
+      CharacterMovement.desiredVelX[entity] = input.x * 5;
+      CharacterMovement.desiredVelZ[entity] = input.z * 5;
+
       // Jump if grounded
-      if (GAME.CharacterController.grounded[entity] && input.jump) {
-        GAME.CharacterMovement.velocityY[entity] = 10;
+      if (CharacterController.grounded[entity] && input.jump) {
+        CharacterMovement.velocityY[entity] = 10;
       }
     }
   }
