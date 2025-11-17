@@ -1,25 +1,25 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { State, TIME_CONSTANTS, XMLParser, defineQuery } from 'vibegame';
+import {
+  State,
+  TIME_CONSTANTS,
+  XMLParser,
+  defineQuery,
+  parseXMLToEntities,
+} from 'vibegame';
 import { DefaultPlugins } from 'vibegame/defaults';
-import { InputState } from 'vibegame';
+import { InputState } from 'vibegame/input';
 import {
   Body,
   CharacterController,
   CharacterMovement,
-  initializePhysics,
-} from 'vibegame';
-import { Player } from 'vibegame';
-import { parseXMLToEntities } from 'vibegame';
+} from 'vibegame/physics';
+import { Player } from 'vibegame/player';
 
 describe('E2E: Player Jump Mechanics', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -28,6 +28,8 @@ describe('E2E: Player Jump Mechanics', () => {
     for (const plugin of DefaultPlugins) {
       state.registerPlugin(plugin);
     }
+
+    await state.initializePlugins();
   });
 
   it('should not jump automatically on startup', () => {

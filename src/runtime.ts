@@ -1,7 +1,6 @@
 import type { BuilderOptions } from './builder';
 import type { State } from './core';
 import { TIME_CONSTANTS, XMLParser, XMLValueParser } from './core';
-import { initializePhysics } from './plugins/physics';
 import { parseXMLToEntities } from './core';
 import { RenderContext, setCanvasElement } from './plugins/rendering';
 import { setTargetCanvas } from './plugins/input';
@@ -87,7 +86,7 @@ export class GameRuntime {
       });
     }
 
-    await initializePhysics();
+    await this.state.initializePlugins();
     this.processWorldElements();
     this.setupMutationObserver();
     this.state.step(TIME_CONSTANTS.FIXED_TIMESTEP);

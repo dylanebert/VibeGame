@@ -1,7 +1,7 @@
 import { defineComponent, Types } from 'bitecs';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
-import { Parent, Transform, TransformsPlugin, WorldTransform } from 'vibegame';
+import { Parent, Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
 
 describe('Transform Order of Operations', () => {
   let state: State;

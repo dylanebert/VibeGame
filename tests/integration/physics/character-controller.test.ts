@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { NULL_ENTITY, State, TIME_CONSTANTS, defineQuery } from 'vibegame';
 import {
   Body,
@@ -7,24 +7,22 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
-  initializePhysics,
+  
   PhysicsPlugin,
   PhysicsWorld,
-} from 'vibegame';
-import { Transform } from 'vibegame';
+} from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 describe('Character Controller Integration', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+
+    await state.initializePlugins();
   });
 
   it('should initialize character controller', () => {

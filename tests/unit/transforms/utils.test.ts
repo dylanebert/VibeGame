@@ -3,15 +3,14 @@ import { State } from 'vibegame';
 import {
   Transform,
   WorldTransform,
-  eulerToQuaternion,
-  quaternionToEuler,
   syncEulerFromQuaternion,
   syncQuaternionFromEuler,
   copyTransform,
   setTransformIdentity,
   composeTransformMatrix,
   decomposeTransformMatrix,
-} from 'vibegame';
+} from 'vibegame/transforms';
+import { eulerToQuaternion, quaternionToEuler } from 'vibegame';
 import * as THREE from 'three';
 
 describe('Transform Utilities', () => {

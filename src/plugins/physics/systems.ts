@@ -91,15 +91,6 @@ function getPhysicsContext(state: State): PhysicsContext {
   return context;
 }
 
-let rapierEngineInitialized = false;
-
-export async function initializePhysics(): Promise<void> {
-  if (!rapierEngineInitialized) {
-    await RAPIER.init();
-    rapierEngineInitialized = true;
-  }
-}
-
 export const PhysicsWorldSystem: System = {
   group: 'fixed',
   first: true,

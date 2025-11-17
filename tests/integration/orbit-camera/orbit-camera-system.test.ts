@@ -1,13 +1,6 @@
-import {
-  State,
-  TIME_CONSTANTS,
-  OrbitCamera,
-  OrbitCameraPlugin,
-  Transform,
-  TransformsPlugin,
-  WorldTransform,
-  defineQuery,
-} from 'vibegame';
+import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
+import { OrbitCamera, OrbitCameraPlugin } from 'vibegame/orbit-camera';
+import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
 describe('OrbitCamera System Integration', () => {

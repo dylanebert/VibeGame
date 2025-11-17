@@ -1,7 +1,6 @@
 import type { Component, Config, Plugin, Recipe, System } from './core';
 import { State } from './core';
 import { GameRuntime } from './runtime';
-import { DefaultPlugins } from './plugins/defaults';
 
 export interface BuilderOptions {
   canvas?: string;
@@ -77,8 +76,9 @@ export class GameBuilder {
     return this;
   }
 
-  build(): GameRuntime {
+  async build(): Promise<GameRuntime> {
     if (this.useDefaultPlugins) {
+      const { DefaultPlugins } = await import('./plugins/defaults');
       for (const plugin of DefaultPlugins) {
         if (!this.excludedPlugins.has(plugin)) {
           this.state.registerPlugin(plugin);
@@ -110,7 +110,7 @@ export class GameBuilder {
   }
 
   async run(): Promise<GameRuntime> {
-    const runtime = this.build();
+    const runtime = await this.build();
     await runtime.start();
     return runtime;
   }

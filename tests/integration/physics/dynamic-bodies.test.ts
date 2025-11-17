@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
 import {
   ApplyForce,
@@ -10,20 +10,17 @@ import {
   PhysicsPlugin,
   PhysicsWorld,
   SetLinearVelocity,
-  initializePhysics,
-} from 'vibegame';
-import { Transform } from 'vibegame';
+} from 'vibegame/physics';
+import { Transform } from 'vibegame/transforms';
 
 describe('Dynamic Bodies Integration', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   it('should fall under gravity', () => {

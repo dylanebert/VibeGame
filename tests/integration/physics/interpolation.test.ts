@@ -1,27 +1,24 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS, defineQuery } from 'vibegame';
 import {
   Body,
   BodyType,
   Collider,
   ColliderShape,
-  initializePhysics,
   InterpolatedTransform,
   PhysicsPlugin,
   PhysicsWorld,
-} from 'vibegame';
-import { Transform, WorldTransform } from 'vibegame';
+} from 'vibegame/physics';
+import { Transform, WorldTransform } from 'vibegame/transforms';
 
 describe('Physics Interpolation', () => {
   let state: State;
 
-  beforeAll(async () => {
-    await initializePhysics();
-  });
-
-  beforeEach(() => {
+beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   it('should interpolate positions between fixed steps', () => {

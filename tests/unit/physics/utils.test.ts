@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State } from 'vibegame';
-import { Body, BodyType, Collider, ColliderShape } from 'vibegame';
+import { Body, BodyType, Collider, ColliderShape } from 'vibegame/physics';
 
 describe('Physics Component Behavior', () => {
   let state: State;

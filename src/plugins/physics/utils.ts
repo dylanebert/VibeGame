@@ -33,6 +33,15 @@ import {
 
 export const DEFAULT_GRAVITY = -60;
 
+let rapierEngineInitialized = false;
+
+export async function initializePhysics(): Promise<void> {
+  if (!rapierEngineInitialized) {
+    await RAPIER.init();
+    rapierEngineInitialized = true;
+  }
+}
+
 const interpolatedTransformQuery = defineQuery([InterpolatedTransform]);
 
 export function createRigidbodyDescriptor(

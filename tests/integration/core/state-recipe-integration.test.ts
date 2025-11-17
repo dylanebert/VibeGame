@@ -1,24 +1,22 @@
 import { defineComponent, Types } from 'bitecs';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import {
-  State,
-  TransformsPlugin,
-  PhysicsPlugin,
-  initializePhysics,
-} from 'vibegame';
+import { State } from 'vibegame';
+import { TransformsPlugin } from 'vibegame/transforms';
+import { PhysicsPlugin } from 'vibegame/physics';
 
 describe('State Recipe Integration', () => {
   let state: State;
 
   beforeEach(async () => {
-    await initializePhysics();
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
     state = new State();
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(PhysicsPlugin);
+
+    await state.initializePlugins();
   });
 
   it('should create physics entity using state.createFromRecipe', () => {
