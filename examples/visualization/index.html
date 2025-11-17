@@ -3,31 +3,181 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VibeGame - Minimal Visualization Example</title>
+    <title>Interactive Blog - Multiple VibeGame Instances</title>
     <style>
-      body { margin: 0; overflow: hidden; background: #fff; }
-      #game-canvas { display: block; width: 960px; height: 540px; margin: 0 auto; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 0;
+        background: #fafafa;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      .blog-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #111;
+      }
+
+      h2 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #222;
+      }
+
+      p {
+        margin-bottom: 1.2rem;
+        text-align: justify;
+      }
+
+      .visualization-container {
+        margin: 2rem 0;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+
+      .visualization-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #666;
+        margin-bottom: 1rem;
+      }
+
+      canvas.game-canvas {
+        display: block;
+        width: 100%;
+        height: 400px;
+        border-radius: 4px;
+      }
     </style>
   </head>
 
   <body>
-    <world canvas="#game-canvas" sky="#ffffff">
-      <entity transform pos="0 8 15" euler="-20 0 0" main-camera></entity>
-      <entity ambient-light="intensity: 0.6"></entity>
-      <entity directional-light="intensity: 0.7"></entity>
-      <entity transform renderer="shape: box" size="0.8" color="#58C4DD"></entity>
-      <entity transform renderer="shape: sphere" size="0.8" color="#FFC300"></entity>
-      <entity transform renderer="shape: box" size="0.8" color="#236B8E"></entity>
-      <entity transform renderer="shape: sphere" size="0.8" color="#83C167"></entity>
-      <entity transform renderer="shape: box" size="0.8" color="#FC6255"></entity>
-      <entity transform renderer="shape: sphere" size="0.8" color="#9A72AC"></entity>
-      <entity transform renderer="shape: box" size="0.8" color="#58C4DD"></entity>
-      <entity transform renderer="shape: sphere" size="0.8" color="#FFC300"></entity>
-      <entity transform renderer="shape: box" size="0.8" color="#236B8E"></entity>
-      <entity transform renderer="shape: sphere" size="0.8" color="#83C167"></entity>
-    </world>
+    <div class="blog-container">
+      <h1>Interactive Visualizations with VibeGame</h1>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+        irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      </p>
 
-    <canvas id="game-canvas"></canvas>
+      <h2>Animation Pattern A</h2>
+      <p>
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+        voluptatem accusantium doloremque laudantium.
+      </p>
+
+      <div class="visualization-container">
+        <div class="visualization-title">Visualization 1: Circular Motion</div>
+        <world canvas="#canvas-1" sky="#ffffff">
+          <entity transform pos="0 8 15" euler="-20 0 0" main-camera></entity>
+          <entity ambient-light="intensity: 0.6"></entity>
+          <entity directional-light="intensity: 0.7"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#58C4DD"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#FFC300"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#236B8E"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#83C167"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#FC6255"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#9A72AC"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#58C4DD"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#FFC300"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#236B8E"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#83C167"></entity>
+        </world>
+        <canvas id="canvas-1" class="game-canvas"></canvas>
+      </div>
+
+      <p>
+        Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto
+        beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit
+        aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
+        voluptatem sequi nesciunt.
+      </p>
+
+      <h2>Animation Pattern B</h2>
+      <p>
+        Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci
+        velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam
+        aliquam quaerat voluptatem.
+      </p>
+
+      <div class="visualization-container">
+        <div class="visualization-title">Visualization 2: Wave Pattern</div>
+        <world canvas="#canvas-2" sky="#f0f0f0">
+          <entity transform pos="0 8 15" euler="-20 0 0" main-camera></entity>
+          <entity ambient-light="intensity: 0.6"></entity>
+          <entity directional-light="intensity: 0.7"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#FF6B6B"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#4ECDC4"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#45B7D1"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#FFA07A"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#98D8C8"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#F7DC6F"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#BB8FCE"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#85C1E2"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#F8B739"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#52B788"></entity>
+        </world>
+        <canvas id="canvas-2" class="game-canvas"></canvas>
+      </div>
+
+      <p>
+        Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit
+        laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure
+        reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur.
+      </p>
+
+      <h2>Animation Pattern C</h2>
+      <p>
+        Vel illum qui dolorem eum fugiat quo voluptas nulla pariatur. At vero eos et
+        accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum
+        deleniti atque corrupti quos dolores et quas molestias excepturi.
+      </p>
+
+      <div class="visualization-container">
+        <div class="visualization-title">Visualization 3: Mixed Geometry</div>
+        <world canvas="#canvas-3" sky="#ffffff">
+          <entity transform pos="0 8 15" euler="-20 0 0" main-camera></entity>
+          <entity ambient-light="intensity: 0.6"></entity>
+          <entity directional-light="intensity: 0.7"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#E91E63"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#9C27B0"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#673AB7"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#3F51B5"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#2196F3"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#00BCD4"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#009688"></entity>
+          <entity transform renderer="shape: sphere" size="0.8" color="#4CAF50"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#8BC34A"></entity>
+          <entity transform renderer="shape: box" size="0.8" color="#CDDC39"></entity>
+        </world>
+        <canvas id="canvas-3" class="game-canvas"></canvas>
+      </div>
+
+      <p>
+        Sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt
+        mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et
+        expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil
+        impedit quo minus id quod maxime placeat facere possimus.
+      </p>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

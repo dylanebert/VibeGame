@@ -1,14 +1,15 @@
 # Visualization Example
 
 <!-- LLM:OVERVIEW -->
-Minimal example demonstrating tree-shaking and plugin selection for lightweight 3D visualizations with modern scientific aesthetics.
+Demonstrates multiple independent VibeGame instances on a single page, each with isolated State and canvas, styled as an interactive blog post.
 <!-- /LLM:OVERVIEW -->
 
 ## Purpose
 
-- Demonstrate minimal plugin setup without defaults
-- Show shorthand XML syntax for clean entity definitions
-- Exhibit modern visualization lighting and color schemes
+- Test multiple canvas support for interactive blog posts
+- Demonstrate manual State instantiation without runtime
+- Show CSS-based canvas sizing with proper aspect handling
+- Multiple independent animation loops
 
 ## Layout
 
@@ -16,19 +17,19 @@ Minimal example demonstrating tree-shaking and plugin selection for lightweight 
 visualization/
 ├── context.md
 ├── src/
-│   └── main.ts  # Animation system with circular motion
-├── index.html  # Declarative scene with modern color palette
+│   └── main.ts  # Manual State creation per canvas
+├── index.html  # Blog-style layout with multiple worlds
 ├── package.json
 └── vite.config.ts
 ```
 
 ## Key Features
 
+- **Multiple instances**: Three separate State instances, one per canvas
+- **No runtime**: Direct State API usage following e2e test pattern
+- **CSS sizing**: Canvas dimensions controlled by CSS, respected by renderer
+- **Blog layout**: Prose-style content with embedded visualizations
 - **Minimal plugins**: Only TransformsPlugin and RenderingPlugin
-- **Shorthand syntax**: `pos`, `size`, `color` attributes expand automatically
-- **Scientific colors**: 3Blue1Brown-inspired palette for clarity
-- **Soft lighting**: Balanced ambient and directional for visualization
-- **No physics**: Pure transform-based animation
 
 ## Running
 

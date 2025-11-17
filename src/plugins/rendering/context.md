@@ -20,8 +20,12 @@ rendering/
 
 ## Scope
 
-- **In-scope**: Three.js rendering, mesh management, lighting, camera sync
+- **In-scope**: Three.js rendering, mesh management, lighting, camera sync, canvas sizing
 - **Out-of-scope**: Post-processing effects (handled by postprocessing plugin), Physics visualization, UI overlays
+
+## Canvas Sizing
+
+Renderer uses `canvas.clientWidth/clientHeight` for sizing, respecting CSS dimensions. Multiple canvases per page require separate State instances (one State per canvas).
 
 ## Performance
 

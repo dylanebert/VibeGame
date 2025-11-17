@@ -1,16 +1,16 @@
 import * as GAME from 'vibegame';
 import { Transform } from 'vibegame/transforms';
-import { Renderer } from 'vibegame/rendering';
+import { Renderer, RenderContext, setCanvasElement } from 'vibegame/rendering';
 import { TransformsPlugin } from 'vibegame/transforms';
 import { RenderingPlugin } from 'vibegame/rendering';
 
 const query = GAME.defineQuery([Transform, Renderer]);
 
-const AnimationSystem: GAME.System = {
+const createAnimationSystem = (speedMultiplier = 1): GAME.System => ({
   group: 'draw',
   update: (state) => {
     const entities = query(state.world);
-    const time = state.time.elapsed;
+    const time = state.time.elapsed * speedMultiplier;
 
     let index = 0;
     for (const eid of entities) {
@@ -27,9 +27,86 @@ const AnimationSystem: GAME.System = {
       index++;
     }
   },
-};
+});
 
-GAME.withoutDefaultPlugins()
-  .withPlugins(TransformsPlugin, RenderingPlugin)
-  .withSystem(AnimationSystem)
-  .run();
+async function initializeWorlds() {
+  const worldElements = document.querySelectorAll('world');
+  const states: GAME.State[] = [];
+
+  for (let i = 0; i < worldElements.length; i++) {
+    const worldElement = worldElements[i] as HTMLElement;
+    const canvasSelector = worldElement.getAttribute('canvas');
+
+    if (!canvasSelector) {
+      console.warn('World element missing canvas attribute:', worldElement);
+      continue;
+    }
+
+    const canvas = document.querySelector(canvasSelector) as HTMLCanvasElement;
+    if (!canvas) {
+      console.warn(`Canvas not found for selector: ${canvasSelector}`);
+      continue;
+    }
+
+    const state = new GAME.State();
+
+    state.registerPlugin(TransformsPlugin);
+    state.registerPlugin(RenderingPlugin);
+    state.registerSystem(createAnimationSystem(1 + i * 0.3));
+
+    await state.initializePlugins();
+
+    worldElement.style.display = 'none';
+
+    const rendererEntity = state.createEntity();
+    state.addComponent(rendererEntity, RenderContext);
+    RenderContext.hasCanvas[rendererEntity] = 1;
+
+    const skyColor = worldElement.getAttribute('sky');
+    if (skyColor) {
+      const parsedColor = GAME.XMLValueParser.parse(skyColor);
+      if (typeof parsedColor === 'number') {
+        RenderContext.clearColor[rendererEntity] = parsedColor;
+      }
+    }
+
+    setCanvasElement(rendererEntity, canvas);
+
+    const xmlContent = `<world>${worldElement.innerHTML}</world>`;
+    const parseResult = GAME.XMLParser.parse(xmlContent);
+
+    if (parseResult.root.tagName === 'parsererror') {
+      console.error('XML parsing failed for world:', worldElement);
+      continue;
+    }
+
+    GAME.parseXMLToEntities(state, parseResult.root);
+
+    state.step(GAME.TIME_CONSTANTS.FIXED_TIMESTEP);
+
+    states.push(state);
+  }
+
+  let lastTime = performance.now();
+
+  const animate = (currentTime: number) => {
+    requestAnimationFrame(animate);
+
+    const deltaTime = (currentTime - lastTime) / 1000;
+    lastTime = currentTime;
+
+    for (const state of states) {
+      state.step(deltaTime);
+    }
+  };
+
+  requestAnimationFrame(animate);
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeWorlds);
+  } else {
+    initializeWorlds();
+  }
+}

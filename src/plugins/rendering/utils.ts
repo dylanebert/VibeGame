@@ -203,7 +203,10 @@ export function createRenderer(
     canvas,
     antialias: true,
   });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const width = canvas.clientWidth || window.innerWidth;
+  const height = canvas.clientHeight || window.innerHeight;
+  renderer.setSize(width, height, false);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -216,14 +219,28 @@ export function createRenderer(
 }
 
 export function handleWindowResize(
-  _state: State,
+  state: State,
   renderer: THREE.WebGLRenderer
 ): void {
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  const context = getRenderingContext(state);
+  const canvas = context.canvas;
 
-  for (const [, camera] of threeCameras) {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+  if (canvas) {
+    const width = canvas.clientWidth || window.innerWidth;
+    const height = canvas.clientHeight || window.innerHeight;
+    renderer.setSize(width, height, false);
+
+    for (const [, camera] of threeCameras) {
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+  } else {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    for (const [, camera] of threeCameras) {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    }
   }
 }
 
