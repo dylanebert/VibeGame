@@ -7,7 +7,11 @@ import {
   Renderer,
   RenderingPlugin,
 } from 'vibegame/rendering';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
+import {
+  Transform,
+  TransformsPlugin,
+  WorldTransform,
+} from 'vibegame/transforms';
 
 describe('Rendering Plugin Integration', () => {
   let state: State;

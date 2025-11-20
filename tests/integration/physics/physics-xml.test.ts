@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { State, TIME_CONSTANTS, XMLParser, defineQuery, parseXMLToEntities } from 'vibegame';
+import {
+  State,
+  TIME_CONSTANTS,
+  XMLParser,
+  defineQuery,
+  parseXMLToEntities,
+} from 'vibegame';
 import {
   ApplyForce,
   ApplyImpulse,
@@ -9,7 +15,6 @@ import {
   Collider,
   ColliderShape,
   CollisionEvents,
-  
   PhysicsPlugin,
   TouchedEvent,
 } from 'vibegame/physics';
@@ -19,7 +24,7 @@ import { TransformsPlugin } from 'vibegame/transforms';
 describe('Physics XML Declarative API', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 

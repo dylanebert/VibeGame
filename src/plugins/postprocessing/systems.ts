@@ -60,7 +60,6 @@ export const PostprocessingSystem: System = {
           const bloomEffect = new BloomEffectLib({
             intensity: Bloom.intensity[entity],
             luminanceThreshold: Bloom.luminanceThreshold[entity],
-            smoothing: Bloom.luminanceSmoothing[entity],
             mipmapBlur: Bloom.mipmapBlur[entity] === 1,
             radius: Bloom.radius[entity],
             levels: Bloom.levels[entity],
@@ -72,8 +71,6 @@ export const PostprocessingSystem: System = {
           bloom.intensity = Bloom.intensity[entity];
           bloom.luminanceMaterial.uniforms.threshold.value =
             Bloom.luminanceThreshold[entity];
-          bloom.luminanceMaterial.uniforms.smoothing.value =
-            Bloom.luminanceSmoothing[entity];
         }
       } else if (currentBloomEffect) {
         effectsMap.delete('bloom');

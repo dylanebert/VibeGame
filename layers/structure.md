@@ -13,8 +13,8 @@ VibeGame - A vibe coding game engine using ECS architecture with bitECS, featuri
 
 ## Commands
 
-- Build: `bun run build` (production build)
-- Build: `bun run build:release` (release build)
+- Build: `bun run build` (vibegame core only)
+- Build: `bun run build:release` (all builds including CDN standalone)
 - Example: `bun run example` (build and run demo application)
 - Type Check: `bun run check` (TypeScript validation)
 - Lint: `bun run lint --fix` (ESLint code analysis and formatting)
@@ -51,6 +51,7 @@ vibegame/
 │   │   ├── recipes/  # XML recipe system
 │   │   ├── rendering/  # Three.js rendering
 │   │   ├── respawn/  # Respawn system
+│   │   ├── sequencer/  # Transform sequencing
 │   │   ├── startup/  # Initialization
 │   │   ├── transforms/  # Transform hierarchy
 │   │   ├── tweening/  # Tween animations
@@ -64,11 +65,13 @@ vibegame/
 │   └── index.ts  # Main exports
 ├── examples/  # Example applications
 │   ├── hello-world/  # Basic example
+│   │   ├── context.md
 │   │   ├── src/main.ts
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   ├── lorenz/  # Lorenz attractor particle system
+│   │   ├── context.md
 │   │   ├── src/
 │   │   │   ├── main.ts
 │   │   │   ├── plugin.ts
@@ -78,11 +81,19 @@ vibegame/
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   └── visualization/  # Minimal visualization with tree-shaking
+│   ├── visualization/  # Minimal visualization with tree-shaking
+│   │   ├── context.md
+│   │   ├── src/main.ts
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   └── sequencer/  # Sequencer package example
+│       ├── context.md
 │       ├── src/main.ts
 │       ├── index.html
 │       ├── package.json
-│       └── vite.config.ts
+│       ├── vite.config.ts
+│       └── tsconfig.json
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   ├── context-template.md  # Template for context files
@@ -125,15 +136,16 @@ Optional files:
 
 1. **animation** - Animation mixer and clip management (AnimationPlugin)
 2. **input** - Mouse, keyboard, gamepad input handling (InputPlugin)
-3. **orbit-camera** - Orbital camera controller (OrbitCameraPlugin)
+3. **orbit-camera** - Standalone orbital camera with direct input handling (OrbitCameraPlugin)
 4. **physics** - Rapier 3D WASM physics integration (PhysicsPlugin)
 5. **player** - Player character controller (PlayerPlugin)
 6. **postprocessing** - Post-processing effects (PostprocessingPlugin)
 7. **rendering** - Three.js rendering pipeline (RenderingPlugin)
 8. **respawn** - Entity respawn system (RespawnPlugin)
-9. **startup** - Initialization and setup systems (StartupPlugin)
-10. **transforms** - Transform component hierarchy (TransformsPlugin)
-11. **tweening** - Tween-based animations (TweenPlugin)
+9. **sequencer** - Transform sequencing with modifier aggregation (SequencerPlugin)
+10. **startup** - Initialization and setup systems (StartupPlugin)
+11. **transforms** - Transform component hierarchy (TransformsPlugin)
+12. **tweening** - Tween-based animations (TweenPlugin)
 
 **Note**: Recipe system is core functionality, not a plugin. Individual plugins define their own recipes.
 
@@ -178,7 +190,7 @@ Bevy-inspired ECS with explicit update phases:
 
 - TypeScript: tsconfig.json (strict mode, ES2020 target, DOM types)
 - Build: vite.config.ts (library mode, ESM output, DTS generation)
-- Package: package.json
+- Package: package.json (main package with plugin exports)
 - Code Quality: eslint.config.js (TypeScript linting), .prettierrc (formatting)
 
 ## Where to Add Code
@@ -202,8 +214,9 @@ Bevy-inspired ECS with explicit update phases:
    - systems.ts (if needed)
    - recipes.ts (if needed)
    - utils.ts (if needed)
-3. Export from package.json
-4. Add to DefaultPlugins if standard
+   - context.md (folder documentation)
+3. Add export to main package.json
+4. Add to DefaultPlugins if standard (otherwise tree-shaken)
 
 ### Core Modifications
 

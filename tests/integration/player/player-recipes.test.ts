@@ -18,7 +18,7 @@ import { Respawn, RespawnPlugin } from 'vibegame/respawn';
 describe('Player Recipes and XML', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -56,8 +56,6 @@ beforeEach(async () => {
       expect(Player.jumpCooldown[player]).toBe(0);
       expect(Player.lastGroundedTime[player]).toBe(0);
       expect(Player.jumpBufferTime[player]).toBe(-10000);
-      expect(Player.cameraSensitivity[player]).toBeCloseTo(0.007);
-      expect(Player.cameraZoomSensitivity[player]).toBe(1.5);
       expect(Player.cameraEntity[player]).toBe(0);
     });
 
@@ -80,12 +78,11 @@ beforeEach(async () => {
     it('should create player with all custom attributes', () => {
       const xml = `
         <root>
-          <player 
+          <player
             pos="5 1 -10"
             speed="8"
             jump-height="4"
             rotation-speed="15"
-            camera-sensitivity="0.005"
           />
         </root>
       `;
@@ -99,13 +96,12 @@ beforeEach(async () => {
       expect(Player.speed[player]).toBe(8);
       expect(Player.jumpHeight[player]).toBe(4);
       expect(Player.rotationSpeed[player]).toBe(15);
-      expect(Player.cameraSensitivity[player]).toBeCloseTo(0.005);
     });
 
     it('should handle CSS-style syntax for player attributes', () => {
       const xml = `
         <root>
-          <player player="speed: 7; jump-height: 3.5; camera-zoom-sensitivity: 2" />
+          <player player="speed: 7; jump-height: 3.5" />
         </root>
       `;
       const parsed = XMLParser.parse(xml);
@@ -114,17 +110,15 @@ beforeEach(async () => {
 
       expect(Player.speed[player]).toBe(7);
       expect(Player.jumpHeight[player]).toBe(3.5);
-      expect(Player.cameraZoomSensitivity[player]).toBe(2);
     });
 
     it('should handle dot notation for player attributes', () => {
       const xml = `
         <root>
-          <player 
+          <player
             player.speed="10"
             player.jump-height="5"
             player.rotation-speed="12"
-            player.camera-sensitivity="0.01"
           />
         </root>
       `;
@@ -135,7 +129,6 @@ beforeEach(async () => {
       expect(Player.speed[player]).toBe(10);
       expect(Player.jumpHeight[player]).toBe(5);
       expect(Player.rotationSpeed[player]).toBe(12);
-      expect(Player.cameraSensitivity[player]).toBeCloseTo(0.01);
     });
   });
 
@@ -214,7 +207,6 @@ beforeEach(async () => {
       state.addComponent(player, Player, {
         speed: 7,
         jumpHeight: 3.5,
-        cameraSensitivity: 0.01,
       });
 
       state.addComponent(player, Transform, { posY: 5 });
@@ -232,7 +224,6 @@ beforeEach(async () => {
 
       expect(Player.speed[player]).toBe(7);
       expect(Player.jumpHeight[player]).toBe(3.5);
-      expect(Player.cameraSensitivity[player]).toBeCloseTo(0.01);
       expect(Transform.posY[player]).toBe(5);
       expect(Body.type[player]).toBe(BodyType.KinematicPositionBased);
     });

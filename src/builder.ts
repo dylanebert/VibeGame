@@ -1,5 +1,5 @@
 import type { Component, Config, Plugin, Recipe, System } from './core';
-import { State } from './core';
+import { State } from './core/ecs/state';
 import { GameRuntime } from './runtime';
 
 export interface BuilderOptions {

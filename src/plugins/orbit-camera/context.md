@@ -1,15 +1,15 @@
 # Orbit Camera Plugin
 
 <!-- LLM:OVERVIEW -->
-Orbital camera controller for third-person views and smooth target following.
+Standalone orbital camera controller with direct input handling for third-person views and smooth target following.
 <!-- /LLM:OVERVIEW -->
 
 ## Purpose
 
 - Orbital camera movement around target
+- Direct mouse/scroll input handling
 - Smooth camera interpolation
-- Mouse/touch orbit controls
-- Zoom and pan support
+- Independent camera control (no player dependency)
 
 ## Layout
 
@@ -19,7 +19,7 @@ orbit-camera/
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
 ├── components.ts  # OrbitCamera component
-├── systems.ts  # OrbitCameraSystem
+├── systems.ts  # OrbitCameraInputSystem, OrbitCameraSystem
 ├── recipes.ts  # Camera recipes
 ├── operations.ts  # Camera operations
 ├── constants.ts  # Camera constants
@@ -34,21 +34,22 @@ orbit-camera/
 ## Entry Points
 
 - **plugin.ts**: OrbitCameraPlugin definition
-- **systems.ts**: OrbitCameraSystem for updates
-- **recipes.ts**: orbitCamera recipe
+- **systems.ts**: OrbitCameraInputSystem, OrbitCameraSystem
+- **recipes.ts**: camera recipe
 
 ## Dependencies
 
-- **Internal**: Core ECS, input, transforms
+- **Internal**: Core ECS, input plugin, transforms plugin
 - **External**: Three.js Camera
 
 ## Components
 
-- **OrbitCamera**: Camera configuration and state
+- **OrbitCamera**: Camera configuration, state, and sensitivity
 
 ## Systems
 
-- **OrbitCameraSystem**: Updates camera position/rotation
+- **OrbitCameraInputSystem**: Handles mouse look and scroll zoom from InputState
+- **OrbitCameraSystem**: Updates camera position/rotation around target
 
 ## Recipes
 
@@ -58,11 +59,12 @@ orbit-camera/
 ### Components
 
 #### OrbitCamera
-- target: eid (0) - Target entity ID
-- current-yaw: f32 (π) - Current horizontal angle
+- target: eid (0) - Target entity to orbit around
+- input-source: eid (0) - Entity with InputState component (player or self)
+- current-yaw: f32 (0) - Current horizontal angle
 - current-pitch: f32 (π/6) - Current vertical angle
 - current-distance: f32 (4) - Current distance
-- target-yaw: f32 (π) - Target horizontal angle
+- target-yaw: f32 (0) - Target horizontal angle
 - target-pitch: f32 (π/6) - Target vertical angle
 - target-distance: f32 (4) - Target distance
 - min-distance: f32 (1)
@@ -73,18 +75,27 @@ orbit-camera/
 - offset-x: f32 (0)
 - offset-y: f32 (1.25)
 - offset-z: f32 (0)
+- sensitivity: f32 (0.007) - Mouse look sensitivity
+- zoom-sensitivity: f32 (1.5) - Scroll zoom sensitivity
 
 ### Systems
 
+#### OrbitCameraInputSystem
+- Group: simulation
+- Reads InputState from inputSource entity (player or camera)
+- Updates camera yaw/pitch/distance based on mouse and scroll input
+- Auto-detects inputSource if camera has InputState but no source set
+
 #### OrbitCameraSystem
 - Group: draw
-- Updates camera position and rotation around target
+- Smoothly interpolates camera to target values
+- Calculates and updates camera position around target
 
 ### Recipes
 
 #### camera
-- Creates orbital camera with default settings
-- Components: orbit-camera, transform, world-transform, main-camera
+- Creates orbital camera with input handling
+- Components: orbit-camera, transform, main-camera, input-state
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -132,36 +143,33 @@ orbit-camera/
 />
 ```
 
-### Programmatic Usage
+### Standalone Camera (No Player)
 
 ```typescript
 import * as GAME from 'vibegame';
-import { OrbitCamera } from 'vibegame/orbit-camera';
+import { InputPlugin, InputState } from 'vibegame/input';
+import { OrbitCamera, OrbitCameraPlugin } from 'vibegame/orbit-camera';
+import { Transform } from 'vibegame/transforms';
 
-const cameraQuery = GAME.defineQuery([OrbitCamera]);
-const CameraControlSystem = {
-  update: (state) => {
-    const cameras = cameraQuery(state.world);
+const InitSystem: GAME.System = {
+  group: 'setup',
+  setup: (state) => {
+    const target = state.createEntity();
+    state.addComponent(target, Transform);
 
-    for (const camera of cameras) {
-      // Rotate camera on input
-      if (state.input.mouse.deltaX) {
-        OrbitCamera.targetYaw[camera] += state.input.mouse.deltaX * 0.01;
-      }
-
-      // Zoom on scroll
-      if (state.input.mouse.wheel) {
-        OrbitCamera.targetDistance[camera] = Math.max(
-          OrbitCamera.minDistance[camera],
-          Math.min(
-            OrbitCamera.maxDistance[camera],
-            OrbitCamera.targetDistance[camera] - state.input.mouse.wheel * 0.5
-          )
-        );
-      }
-    }
-  }
+    const camera = state.createEntity();
+    state.addComponent(camera, OrbitCamera);
+    state.addComponent(camera, Transform);
+    state.addComponent(camera, InputState);
+    OrbitCamera.target[camera] = target;
+    OrbitCamera.inputSource[camera] = camera; // Camera reads its own input
+  },
 };
+
+GAME
+  .withoutDefaultPlugins()
+  .withPlugins(InputPlugin, OrbitCameraPlugin)
+  .run();
 ```
 
 ### Dynamic Target Switching

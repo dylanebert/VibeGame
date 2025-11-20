@@ -9,7 +9,7 @@ Complete player character controller with physics movement, jumping, and platfor
 - Player character movement and physics
 - Jump mechanics with momentum preservation from moving platforms
 - Input-driven character control
-- Camera target for orbit camera
+- Camera-relative movement using orbit camera orientation
 
 ## Layout
 
@@ -48,7 +48,9 @@ player/
 
 ## Systems
 
-- **PlayerMovementSystem**: Input to movement
+- **PlayerMovementSystem**: Camera-relative input to movement
+- **PlayerGroundedSystem**: Platform tracking and momentum management
+- **PlayerCameraLinkingSystem**: Links player to camera and sets camera inputSource
 
 ## Recipes
 
@@ -66,11 +68,9 @@ player/
 - jumpCooldown: f32 (0)
 - lastGroundedTime: f32 (0)
 - jumpBufferTime: f32 (-10000)
-- cameraSensitivity: f32 (0.007)
-- cameraZoomSensitivity: f32 (1.5)
-- cameraEntity: eid (0)
-- inheritedVelX: f32 (0) - Total horizontal momentum from platform
-- inheritedVelZ: f32 (0) - Total horizontal momentum from platform
+- cameraEntity: eid (0) - Linked camera for orientation reference
+- inheritedVelX: f32 (0) - Horizontal momentum from platform
+- inheritedVelZ: f32 (0) - Horizontal momentum from platform
 - inheritedAngVelX: f32 (0) - Platform angular velocity X
 - inheritedAngVelY: f32 (0) - Platform angular velocity Y
 - inheritedAngVelZ: f32 (0) - Platform angular velocity Z
@@ -83,19 +83,18 @@ player/
 
 #### PlayerMovementSystem
 - Group: fixed
-- Handles movement, rotation, jumping with full platform velocity inheritance (linear + angular)
+- Reads camera yaw for camera-relative movement
+- Handles rotation, jumping with platform momentum inheritance
 
 #### PlayerGroundedSystem
 - Group: fixed
-- Tracks grounded state, platform changes, and clears momentum on landing
+- Tracks grounded state and platform changes
+- Clears momentum on landing
 
 #### PlayerCameraLinkingSystem
 - Group: simulation
-- Links player to orbit camera
-
-#### PlayerCameraControlSystem
-- Group: simulation
-- Camera control via mouse input
+- Auto-links player to first available camera
+- Sets camera target and inputSource to player entity
 
 ### Recipes
 
@@ -134,12 +133,11 @@ Smooth rotation towards movement
 
 ```xml
 <world>
-  <player 
+  <player
     pos="5 1 -10"
     speed="8"
     jump-height="4"
     rotation-speed="15"
-    camera-sensitivity="0.005"
   />
 </world>
 ```
@@ -173,17 +171,13 @@ import * as GAME from 'vibegame';
 
 const PlayerSpawnSystem: GAME.System = {
   setup: (state) => {
-    // Create player entity
     const player = state.createEntity();
-    
-    // Add player recipe components
+
     state.addComponent(player, GAME.Player, {
       speed: 7,
       jumpHeight: 3.5,
-      cameraSensitivity: 0.01
     });
-    
-    // Add required components
+
     state.addComponent(player, GAME.Transform, { posY: 5 });
     state.addComponent(player, GAME.Body, { type: GAME.BodyType.KinematicPositionBased });
     state.addComponent(player, GAME.CharacterController);
@@ -199,9 +193,11 @@ const PlayerSpawnSystem: GAME.System = {
 - A/D or Arrow Left/Right - Move left/right 
 - Space - Jump
 
-**Mouse:**
+**Mouse (via orbit camera):**
 - Right-click + drag - Rotate camera
 - Scroll wheel - Zoom in/out
+
+Note: Camera controls are handled by OrbitCameraPlugin, not PlayerPlugin.
 
 ### Plugin Registration
 

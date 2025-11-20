@@ -17,7 +17,7 @@ import { TweenPlugin } from 'vibegame/tweening';
 describe('Physics Recipes', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 

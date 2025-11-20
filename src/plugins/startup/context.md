@@ -38,7 +38,8 @@ startup/
 
 #### CameraStartupSystem
 - Group: setup
-- Creates main camera if none exists
+- Creates orbit camera with InputState if none exists
+- Sets inputSource to self for standalone operation
 
 #### PlayerStartupSystem
 - Group: setup
