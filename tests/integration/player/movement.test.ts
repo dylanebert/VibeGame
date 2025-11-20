@@ -7,13 +7,16 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
-  
   PhysicsPlugin,
 } from 'vibegame/physics';
 import { InputState } from 'vibegame/input';
 import { OrbitCamera, OrbitCameraPlugin } from 'vibegame/orbit-camera';
 import { Player, PlayerPlugin } from 'vibegame/player';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
+import {
+  Transform,
+  TransformsPlugin,
+  WorldTransform,
+} from 'vibegame/transforms';
 
 describe('Player Movement', () => {
   let state: State;

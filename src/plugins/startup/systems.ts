@@ -117,6 +117,8 @@ export const CameraStartupSystem: System = {
       state.addComponent(camera, OrbitCamera);
       state.addComponent(camera, Transform);
       state.addComponent(camera, MainCamera);
+      state.addComponent(camera, InputState);
+      OrbitCamera.inputSource[camera] = camera;
     }
   },
 };

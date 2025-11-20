@@ -2,6 +2,7 @@ import { defineComponent, Types } from 'bitecs';
 
 export const OrbitCamera = defineComponent({
   target: Types.eid,
+  inputSource: Types.eid,
   currentYaw: Types.f32,
   currentPitch: Types.f32,
   currentDistance: Types.f32,
@@ -16,4 +17,6 @@ export const OrbitCamera = defineComponent({
   offsetX: Types.f32,
   offsetY: Types.f32,
   offsetZ: Types.f32,
+  sensitivity: Types.f32,
+  zoomSensitivity: Types.f32,
 });

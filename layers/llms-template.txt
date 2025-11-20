@@ -167,8 +167,8 @@ While auto-creation is recommended, you can manually create these for customizat
   <!-- Custom player spawn position and properties -->
   <player pos="0 10 0" speed="8" jump-height="3"></player>
 
-  <!-- Custom camera settings -->
-  <camera orbit-camera="distance: 10; target-pitch: 0.5"></camera>
+  <!-- Custom camera with standalone input -->
+  <camera orbit-camera="distance: 10; target-pitch: 0.5; sensitivity: 0.01"></camera>
 
   <!-- Custom lighting (combined entity) -->
   <entity
@@ -646,7 +646,7 @@ GAME
 - **RenderingPlugin** - Three.js meshes, lights, camera
 - **PhysicsPlugin** - Rapier physics simulation
 - **InputPlugin** - Keyboard, mouse, gamepad input
-- **OrbitCameraPlugin** - Third-person camera
+- **OrbitCameraPlugin** - Standalone orbital camera with direct input handling
 - **PlayerPlugin** - Character controller
 - **TweenPlugin** - Animation system
 - **RespawnPlugin** - Fall detection and reset

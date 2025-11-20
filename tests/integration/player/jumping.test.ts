@@ -9,16 +9,19 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
-  
   PhysicsPlugin,
 } from 'vibegame/physics';
 import { Player, PlayerPlugin } from 'vibegame/player';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
+import {
+  Transform,
+  TransformsPlugin,
+  WorldTransform,
+} from 'vibegame/transforms';
 
 describe('Player Jumping', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     state = new State();
     state.registerPlugin(TransformsPlugin);
     state.registerPlugin(PhysicsPlugin);

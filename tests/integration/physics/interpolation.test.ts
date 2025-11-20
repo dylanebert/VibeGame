@@ -14,7 +14,7 @@ import { Transform, WorldTransform } from 'vibegame/transforms';
 describe('Physics Interpolation', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
 

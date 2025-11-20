@@ -1,10 +1,10 @@
-import { consoleForwarding, vibegame } from 'vibegame/vite';
 import { defineConfig } from 'vite';
+import { vibegame, consoleForwarding } from 'vibegame/vite';
 
 export default defineConfig({
   plugins: [vibegame(), consoleForwarding()],
   server: {
-    port: 3000,
+    port: 3002,
     open: true,
     fs: {
       allow: ['..'],

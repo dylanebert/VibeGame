@@ -7,7 +7,6 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
-  
   PhysicsPlugin,
   PhysicsWorld,
 } from 'vibegame/physics';
@@ -16,7 +15,7 @@ import { Transform } from 'vibegame/transforms';
 describe('Character Controller Integration', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
 

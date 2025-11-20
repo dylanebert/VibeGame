@@ -14,7 +14,10 @@ export const RendererShape = {
 export const threeCameras = new Map<number, THREE.PerspectiveCamera>();
 const canvasElements = new Map<number, HTMLCanvasElement>();
 
-function createThreeCamera(entity: number, state: State): THREE.PerspectiveCamera {
+function createThreeCamera(
+  entity: number,
+  state: State
+): THREE.PerspectiveCamera {
   let aspectRatio = 16 / 9;
 
   const context = stateToRenderingContext.get(state);

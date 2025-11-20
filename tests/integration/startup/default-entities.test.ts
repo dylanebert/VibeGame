@@ -1,15 +1,20 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import {
-  State,
-  XMLParser,
-  defineQuery,
-  parseXMLToEntities,
-} from 'vibegame';
+import { State, XMLParser, defineQuery, parseXMLToEntities } from 'vibegame';
 import { DefaultPlugins } from 'vibegame/defaults';
-import { AmbientLight, DirectionalLight, MainCamera, RenderingPlugin } from 'vibegame/rendering';
+import {
+  AmbientLight,
+  DirectionalLight,
+  MainCamera,
+  RenderingPlugin,
+} from 'vibegame/rendering';
 import { AnimatedCharacter, HasAnimator } from 'vibegame/animation';
-import { Body, CharacterController, CharacterMovement, Collider } from 'vibegame/physics';
+import {
+  Body,
+  CharacterController,
+  CharacterMovement,
+  Collider,
+} from 'vibegame/physics';
 import { InputState } from 'vibegame/input';
 import { OrbitCamera } from 'vibegame/orbit-camera';
 import { Parent, Transform, TransformsPlugin } from 'vibegame/transforms';

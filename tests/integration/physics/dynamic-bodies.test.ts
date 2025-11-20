@@ -16,7 +16,7 @@ import { Transform } from 'vibegame/transforms';
 describe('Dynamic Bodies Integration', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     state = new State();
     state.registerPlugin(PhysicsPlugin);
 

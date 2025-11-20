@@ -207,6 +207,19 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'examples/**', '**/*.test.js'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'examples/**',
+      '**/*.test.js',
+      'packages/**/dist/**',
+    ],
+  },
+  // Workspace packages: can import from vibegame package
+  {
+    files: ['packages/**/*.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
   },
 ];

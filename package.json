@@ -59,6 +59,10 @@
       "types": "./dist/plugins/tweening/index.d.ts",
       "import": "./dist/plugins/tweening/index.js"
     },
+    "./sequencer": {
+      "types": "./dist/plugins/sequencer/index.d.ts",
+      "import": "./dist/plugins/sequencer/index.js"
+    },
     "./vite": {
       "types": "./dist/vite/index.d.ts",
       "import": "./dist/vite/index.js"

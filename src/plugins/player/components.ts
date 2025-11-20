@@ -9,8 +9,6 @@ export const Player = defineComponent({
   jumpCooldown: Types.f32,
   lastGroundedTime: Types.f32,
   jumpBufferTime: Types.f32,
-  cameraSensitivity: Types.f32,
-  cameraZoomSensitivity: Types.f32,
   cameraEntity: Types.eid,
   inheritedVelX: Types.f32,
   inheritedVelZ: Types.f32,

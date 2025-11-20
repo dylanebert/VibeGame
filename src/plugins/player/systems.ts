@@ -22,7 +22,6 @@ const playerGroundedQuery = defineQuery([
   Body,
 ]);
 const playersQuery = defineQuery([Player]);
-const playerCameraControlQuery = defineQuery([Player, InputState]);
 
 export const PlayerMovementSystem: System = {
   group: 'fixed',
@@ -176,57 +175,7 @@ export const PlayerCameraLinkingSystem: System = {
         const camera = cameras[0];
         Player.cameraEntity[player] = camera;
         OrbitCamera.target[camera] = player;
-      }
-    }
-  },
-};
-
-export const PlayerCameraControlSystem: System = {
-  group: 'simulation',
-  after: [PlayerCameraLinkingSystem],
-  update: (state) => {
-    const playerEntities = playerCameraControlQuery(state.world);
-
-    for (const entity of playerEntities) {
-      const cameraEntity = Player.cameraEntity[entity];
-      if (!cameraEntity || !state.hasComponent(cameraEntity, OrbitCamera)) {
-        continue;
-      }
-
-      const sensitivity = Player.cameraSensitivity[entity];
-      const zoomSensitivity = Player.cameraZoomSensitivity[entity];
-      const lookX = InputState.lookX[entity];
-      const lookY = InputState.lookY[entity];
-      const scrollDelta = InputState.scrollDelta[entity];
-      const rightMouseHeld = InputState.rightMouse[entity] === 1;
-
-      if (rightMouseHeld) {
-        OrbitCamera.targetYaw[cameraEntity] -= lookX * sensitivity;
-
-        const currentPitch = OrbitCamera.targetPitch[cameraEntity];
-        const newPitch = currentPitch + lookY * sensitivity;
-        const minPitch = OrbitCamera.minPitch[cameraEntity];
-        const maxPitch = OrbitCamera.maxPitch[cameraEntity];
-
-        OrbitCamera.targetPitch[cameraEntity] = Math.max(
-          minPitch,
-          Math.min(maxPitch, newPitch)
-        );
-      }
-
-      if (scrollDelta !== 0) {
-        const currentDistance = OrbitCamera.targetDistance[cameraEntity];
-        const minDistance = OrbitCamera.minDistance[cameraEntity];
-        const maxDistance = OrbitCamera.maxDistance[cameraEntity];
-
-        const distanceScale = Math.max(0.3, currentDistance * 0.08);
-        const zoomDelta = scrollDelta * zoomSensitivity * distanceScale;
-        const newDistance = currentDistance + zoomDelta;
-
-        OrbitCamera.targetDistance[cameraEntity] = Math.max(
-          minDistance,
-          Math.min(maxDistance, newDistance)
-        );
+        OrbitCamera.inputSource[camera] = player;
       }
     }
   },

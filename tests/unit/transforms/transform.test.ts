@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State } from 'vibegame';
-import { Parent, TransformsPlugin, Transform, WorldTransform } from 'vibegame/transforms';
+import {
+  Parent,
+  TransformsPlugin,
+  Transform,
+  WorldTransform,
+} from 'vibegame/transforms';
 
 describe('Transform Components', () => {
   let state: State;

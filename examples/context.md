@@ -33,12 +33,19 @@ examples/
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.ts
-└── visualization/  # Minimal visualization with tree-shaking
+├── visualization/  # Minimal visualization with tree-shaking
+│   ├── context.md
+│   ├── src/main.ts
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.ts
+└── sequencer/  # Sequencer package example
     ├── context.md
     ├── src/main.ts
     ├── index.html
     ├── package.json
-    └── vite.config.ts
+    ├── vite.config.ts
+    └── tsconfig.json
 ```
 
 ## Running Examples

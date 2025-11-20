@@ -1,5 +1,9 @@
 import { State, XMLParser, defineQuery, parseXMLToEntities } from 'vibegame';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
+import {
+  Transform,
+  TransformsPlugin,
+  WorldTransform,
+} from 'vibegame/transforms';
 import { Tween, TweenPlugin, TweenValue } from 'vibegame/tweening';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';

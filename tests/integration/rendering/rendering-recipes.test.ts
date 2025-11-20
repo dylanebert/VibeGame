@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import {
-  State,
-  XMLParser,
-  defineQuery,
-  parseXMLToEntities,
-} from 'vibegame';
+import { State, XMLParser, defineQuery, parseXMLToEntities } from 'vibegame';
 import {
   MainCamera,
   RenderContext,

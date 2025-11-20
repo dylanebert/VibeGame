@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "vibegame-example",
+      "name": "vibegame-sequencer-example",
       "devDependencies": {
         "vite": "^5.4.10",
       },
