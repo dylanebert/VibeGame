@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import type { ParsedElement, XMLValue } from '../xml/types';
 import { XMLParser } from '../xml/parser';
+import type { ParsedElement, XMLValue } from '../xml/types';
+import { formatZodError } from './error-formatter';
 import {
   recipeSchemas,
-  type RecipeName,
   type RecipeAttributes,
+  type RecipeName,
 } from './schemas';
-import { formatZodError } from './error-formatter';
 
 interface ValidationOptions {
   filename?: string;
@@ -71,9 +71,12 @@ const hierarchyRules: Record<string, string[]> = {
     'kinematic-part',
     'player',
     'camera',
+    'tween',
+    'sequence',
   ],
   entity: [
     'tween',
+    'sequence',
     'entity',
     'static-part',
     'dynamic-part',
@@ -81,12 +84,14 @@ const hierarchyRules: Record<string, string[]> = {
     'player',
     'camera',
   ],
-  'static-part': ['tween'],
-  'dynamic-part': ['tween'],
-  'kinematic-part': ['tween'],
-  player: ['tween'],
+  'static-part': ['entity', 'tween', 'sequence'],
+  'dynamic-part': ['entity', 'tween', 'sequence'],
+  'kinematic-part': ['entity', 'tween', 'sequence'],
+  player: ['entity', 'tween', 'sequence'],
   camera: [],
   tween: [],
+  sequence: ['tween', 'pause'],
+  pause: [],
 };
 
 function isAllowedChild(parentTag: string, childTag: string): boolean {
@@ -195,10 +200,6 @@ export function validateHTMLContent(
 
 export function isValidRecipeName(name: string): name is RecipeName {
   return name in recipeSchemas;
-}
-
-export function getAvailableRecipeNames(): RecipeName[] {
-  return Object.keys(recipeSchemas) as RecipeName[];
 }
 
 export function getRecipeSchema<T extends RecipeName>(

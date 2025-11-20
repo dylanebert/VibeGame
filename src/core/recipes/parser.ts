@@ -1,6 +1,7 @@
 import type { ParsedElement, Recipe, State, XMLValue } from '../';
 import { toCamelCase } from '../';
 import { formatUnknownAttribute, formatUnknownElement } from './diagnostics';
+import { ParseContext } from './parse-context';
 import { parseComponentProperties } from './property-parser';
 import { expandShorthands } from './shorthand-expander';
 import type { EntityCreationResult } from './types';
@@ -17,10 +18,11 @@ function toNumber(value: XMLValue): number {
   return 0;
 }
 
-export function createEntityFromRecipe(
+function createEntityFromRecipeInternal(
   state: State,
   recipeName: string,
-  attributes: Record<string, XMLValue> = {}
+  attributes: Record<string, XMLValue>,
+  context: ParseContext
 ): number {
   const recipe = state.getRecipe(recipeName);
   if (!recipe) {
@@ -70,9 +72,18 @@ export function createEntityFromRecipe(
     }
   }
 
-  applyAttributesFromRecipe(entity, recipe, attributes, state);
+  applyAttributesFromRecipe(entity, recipe, attributes, state, context);
 
   return entity;
+}
+
+export function createEntityFromRecipe(
+  state: State,
+  recipeName: string,
+  attributes: Record<string, XMLValue> = {}
+): number {
+  const context = new ParseContext(state);
+  return createEntityFromRecipeInternal(state, recipeName, attributes, context);
 }
 
 function setComponentField(
@@ -167,6 +178,7 @@ function getAvailableAttributes(recipe: Recipe, state: State): string[] {
   }
 
   attrs.add('id');
+  attrs.add('name');
 
   return Array.from(attrs).sort();
 }
@@ -175,7 +187,8 @@ function applyAttributesFromRecipe(
   entity: number,
   recipe: Recipe,
   attributes: Record<string, XMLValue>,
-  state: State
+  state: State,
+  context: ParseContext
 ): void {
   const expandedAttributes = expandShorthands(attributes, recipe, state);
 
@@ -185,8 +198,16 @@ function applyAttributesFromRecipe(
     }
   }
 
+  const hasParser = !!state.getParser(recipe.name);
+
   for (const [attrName, attrValue] of Object.entries(expandedAttributes)) {
     if (attrName === 'id') continue;
+    if (attrName === 'name') {
+      if (typeof attrValue === 'string') {
+        context.setName(attrValue, entity);
+      }
+      continue;
+    }
 
     const component = state.getComponent(attrName);
     if (component && typeof attrValue === 'string') {
@@ -205,7 +226,8 @@ function applyAttributesFromRecipe(
         attrName,
         attrValue,
         component as ComponentWithFields,
-        state
+        state,
+        context
       );
 
       for (const [fieldName, value] of Object.entries(parsed)) {
@@ -222,7 +244,7 @@ function applyAttributesFromRecipe(
         state
       );
 
-      if (!handled) {
+      if (!handled && !hasParser) {
         const availableAttrs = getAvailableAttributes(recipe, state);
         const availableShorthands: string[] = [];
 
@@ -261,20 +283,28 @@ export function parseXMLToEntities(
   xmlContent: ParsedElement
 ): EntityCreationResult[] {
   const results: EntityCreationResult[] = [];
+  const context = new ParseContext(state);
 
   function processElement(element: ParsedElement): EntityCreationResult | null {
     if (state.hasRecipe(element.tagName)) {
-      const entity = createEntityFromRecipe(
+      const entity = createEntityFromRecipeInternal(
         state,
         element.tagName,
-        element.attributes
+        element.attributes,
+        context
       );
+
+      const parser = state.getParser(element.tagName);
+      if (parser) {
+        parser({ entity, element, state, context });
+        return { entity, tagName: element.tagName, children: [] };
+      }
 
       const childResults: EntityCreationResult[] = [];
       for (const childElement of element.children) {
-        const parser = state.getParser(childElement.tagName);
-        if (parser) {
-          parser(entity, childElement, state);
+        const childParser = state.getParser(childElement.tagName);
+        if (childParser) {
+          childParser({ entity, element: childElement, state, context });
         } else if (state.hasRecipe(childElement.tagName)) {
           const childResult = processElement(childElement);
           if (childResult) {

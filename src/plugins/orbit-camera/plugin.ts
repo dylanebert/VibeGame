@@ -1,11 +1,15 @@
 import type { Plugin } from '../../core';
 import { OrbitCamera } from './components';
-import { cameraRecipe } from './recipes';
-import { OrbitCameraSystem } from './systems';
+import { orbitCameraRecipe } from './recipes';
+import {
+  OrbitCameraSetupSystem,
+  OrbitCameraInputSystem,
+  OrbitCameraSystem,
+} from './systems';
 
 export const OrbitCameraPlugin: Plugin = {
-  systems: [OrbitCameraSystem],
-  recipes: [cameraRecipe],
+  systems: [OrbitCameraSetupSystem, OrbitCameraInputSystem, OrbitCameraSystem],
+  recipes: [orbitCameraRecipe],
   components: {
     OrbitCamera,
   },
@@ -13,6 +17,7 @@ export const OrbitCameraPlugin: Plugin = {
     defaults: {
       'orbit-camera': {
         target: 0,
+        inputSource: 0,
         currentDistance: 4,
         targetDistance: 4,
         currentYaw: 0,
@@ -27,6 +32,8 @@ export const OrbitCameraPlugin: Plugin = {
         offsetX: 0,
         offsetY: 1.25,
         offsetZ: 0,
+        sensitivity: 0.007,
+        zoomSensitivity: 1.5,
       },
     },
   },

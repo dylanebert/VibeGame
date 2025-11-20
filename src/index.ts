@@ -5,6 +5,7 @@ import { disposeAllRuntimes } from './core/runtime-manager';
 
 export * from './core';
 export type { BuilderOptions };
+export type { GameRuntime } from './runtime';
 
 let globalBuilder: GameBuilder | null = null;
 

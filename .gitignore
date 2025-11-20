@@ -41,3 +41,7 @@ yarn-error.log*
 # Claude
 .claude/settings.local.json
 .cursor/
+
+# Sandbox
+playground/
+sandbox/

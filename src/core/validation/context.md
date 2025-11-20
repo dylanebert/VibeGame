@@ -46,15 +46,18 @@ validation/
 
 - `vector3Schema` - 3D vectors
 - `colorSchema` - Color values
-- `recipeSchemas` - All recipe validators
+- `recipeSchemas` - All recipe validators including tween, pause, sequence
 - `easingSchema` - Animation easings
 - `loopModeSchema` - Animation loop modes
 
 ### Functions
 
 - `validateRecipeAttributes(recipeName, attributes)` - Validate recipe
+- `safeValidateRecipeAttributes(recipeName, attributes, options?)` - Safe validation with result
 - `validateXMLContent(xmlString, options?)` - Validate XML
 - `validateParsedElement(element, options?, parentTag?)` - Validate with hierarchy
+- `isValidRecipeName(name)` - Check if recipe name exists
+- `getRecipeSchema(recipeName)` - Get Zod schema for recipe
 - `formatZodError(error, context)` - Format errors
 
 ### Types

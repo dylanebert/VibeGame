@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { defineComponent, Types } from 'bitecs';
-import type { ParsedElement, Plugin } from 'vibegame';
-import { State, TIME_CONSTANTS } from 'vibegame';
+import type { ParsedElement, Plugin, ParserParams } from 'vibegame';
+import { State, TIME_CONSTANTS, ParseContext } from 'vibegame';
 
 describe('Plugin System', () => {
   let state: State;
@@ -141,10 +141,10 @@ describe('Plugin System', () => {
   it('should register custom parser via plugin config', () => {
     let parserCalled = false;
     let parentEntity = -1;
-    let elementReceived: any = null;
-    let stateReceived: any = null;
+    let elementReceived: ParsedElement | undefined;
+    let stateReceived: State | undefined;
 
-    const customParser = (entity: number, element: any, state: any) => {
+    const customParser = ({ entity, element, state }: ParserParams) => {
       parserCalled = true;
       parentEntity = entity;
       elementReceived = element;
@@ -170,7 +170,8 @@ describe('Plugin System', () => {
       attributes: {},
       children: [],
     };
-    parser?.(testEntity, testElement, state);
+    const context = new ParseContext(state);
+    parser?.({ entity: testEntity, element: testElement, state, context });
 
     expect(parserCalled).toBe(true);
     expect(parentEntity).toBe(testEntity);

@@ -2,6 +2,7 @@ import { defineQuery, type System } from '../../core';
 import { Transform, WorldTransform } from '../transforms';
 import * as THREE from 'three';
 import { OrbitCamera } from './components';
+import { InputState } from '../input';
 import {
   calculateCameraPosition,
   smoothCameraRotation,
@@ -9,6 +10,94 @@ import {
 } from './operations';
 
 const orbitCameraQuery = defineQuery([OrbitCamera, Transform]);
+const orbitCameraInputQuery = defineQuery([OrbitCamera]);
+const inputStateQuery = defineQuery([InputState]);
+
+export const OrbitCameraSetupSystem: System = {
+  group: 'setup',
+  update: (state) => {
+    const cameraEntities = orbitCameraQuery(state.world);
+
+    for (const entity of cameraEntities) {
+      if (OrbitCamera.target[entity] === 0) {
+        const target = state.createEntity();
+        state.addComponent(target, Transform, {
+          scaleX: 1,
+          scaleY: 1,
+          scaleZ: 1,
+        });
+        OrbitCamera.target[entity] = target;
+      }
+
+      if (OrbitCamera.inputSource[entity] === 0) {
+        const inputSources = inputStateQuery(state.world);
+        if (inputSources.length > 0) {
+          OrbitCamera.inputSource[entity] = inputSources[0];
+        } else {
+          const source = state.createEntity();
+          state.addComponent(source, InputState);
+          OrbitCamera.inputSource[entity] = source;
+        }
+      }
+    }
+  },
+};
+
+export const OrbitCameraInputSystem: System = {
+  group: 'simulation',
+  update: (state) => {
+    const cameraEntities = orbitCameraInputQuery(state.world);
+
+    for (const entity of cameraEntities) {
+      let inputSource = OrbitCamera.inputSource[entity];
+
+      if (!inputSource && state.hasComponent(entity, InputState)) {
+        inputSource = entity;
+        OrbitCamera.inputSource[entity] = entity;
+      }
+
+      if (!inputSource || !state.hasComponent(inputSource, InputState)) {
+        continue;
+      }
+
+      const sensitivity = OrbitCamera.sensitivity[entity];
+      const zoomSensitivity = OrbitCamera.zoomSensitivity[entity];
+      const lookX = InputState.lookX[inputSource];
+      const lookY = InputState.lookY[inputSource];
+      const scrollDelta = InputState.scrollDelta[inputSource];
+      const rightMouseHeld = InputState.rightMouse[inputSource] === 1;
+
+      if (rightMouseHeld) {
+        OrbitCamera.targetYaw[entity] -= lookX * sensitivity;
+
+        const currentPitch = OrbitCamera.targetPitch[entity];
+        const newPitch = currentPitch + lookY * sensitivity;
+        const minPitch = OrbitCamera.minPitch[entity];
+        const maxPitch = OrbitCamera.maxPitch[entity];
+
+        OrbitCamera.targetPitch[entity] = Math.max(
+          minPitch,
+          Math.min(maxPitch, newPitch)
+        );
+      }
+
+      if (scrollDelta !== 0) {
+        const currentDistance = OrbitCamera.targetDistance[entity];
+        const minDistance = OrbitCamera.minDistance[entity];
+        const maxDistance = OrbitCamera.maxDistance[entity];
+
+        const distanceScale = Math.max(0.3, currentDistance * 0.08);
+        const zoomDelta = scrollDelta * zoomSensitivity * distanceScale;
+        const newDistance = currentDistance + zoomDelta;
+
+        OrbitCamera.targetDistance[entity] = Math.max(
+          minDistance,
+          Math.min(maxDistance, newDistance)
+        );
+      }
+    }
+  },
+};
 
 export const OrbitCameraSystem: System = {
   group: 'draw',

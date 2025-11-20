@@ -150,50 +150,6 @@ describe('Tween API', () => {
     }
   });
 
-  it('should handle numeric loop mode', () => {
-    const TestComponent = defineComponent({ value: Types.f32 });
-    state.registerComponent('test', TestComponent);
-
-    const entity = state.createEntity();
-    state.addComponent(entity, TestComponent);
-
-    const tweenEntity = createTween(state, entity, 'test.value', {
-      from: 0,
-      to: 100,
-      duration: 1,
-      loop: 2,
-    });
-
-    expect(tweenEntity).not.toBeNull();
-    expect(Tween.loopMode[tweenEntity!]).toBe(2);
-  });
-
-  it('should handle string loop mode', () => {
-    const TestComponent = defineComponent({ value: Types.f32 });
-    state.registerComponent('test', TestComponent);
-
-    const entity = state.createEntity();
-    state.addComponent(entity, TestComponent);
-
-    const loopModes = [
-      { name: 'once', value: 0 },
-      { name: 'loop', value: 1 },
-      { name: 'ping-pong', value: 2 },
-    ];
-
-    for (const mode of loopModes) {
-      const tweenEntity = createTween(state, entity, 'test.value', {
-        from: 0,
-        to: 100,
-        duration: 1,
-        loop: mode.name,
-      });
-
-      expect(tweenEntity).not.toBeNull();
-      expect(Tween.loopMode[tweenEntity!]).toBe(mode.value);
-    }
-  });
-
   it('should use default values when options are omitted', () => {
     const TestComponent = defineComponent({ value: Types.f32 });
     state.registerComponent('test', TestComponent);
@@ -208,7 +164,6 @@ describe('Tween API', () => {
     expect(tweenEntity).not.toBeNull();
     expect(Tween.duration[tweenEntity!]).toBe(1);
     expect(Tween.easingIndex[tweenEntity!]).toBe(0);
-    expect(Tween.loopMode[tweenEntity!]).toBe(0);
   });
 
   it('should handle array values for single property', () => {

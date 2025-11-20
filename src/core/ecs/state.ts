@@ -35,6 +35,7 @@ export class State {
   private readonly recipes = new Map<string, Recipe>();
   private readonly components = new Map<string, Component>();
   private readonly plugins: Plugin[] = [];
+  private readonly entityNames = new Map<string, number>();
   private isDisposed = false;
 
   constructor() {
@@ -123,6 +124,14 @@ export class State {
 
   getComponentNames(): string[] {
     return Array.from(this.components.keys());
+  }
+
+  setEntityName(name: string, entity: number): void {
+    this.entityNames.set(name, entity);
+  }
+
+  getEntityByName(name: string): number | null {
+    return this.entityNames.get(name) ?? null;
   }
 
   private getComponentName(component: Component): string | undefined {

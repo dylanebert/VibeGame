@@ -14,7 +14,6 @@ export const PostprocessingPlugin: Plugin = {
       bloom: {
         intensity: 1.0,
         luminanceThreshold: 1.0,
-        luminanceSmoothing: 0.03,
         mipmapBlur: 1,
         radius: 0.85,
         levels: 8,

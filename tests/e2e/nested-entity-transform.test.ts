@@ -93,10 +93,10 @@ describe('E2E: Nested Entity Transform Hierarchy', () => {
   it('should rotate child with parent when parent rotates', () => {
     const xml = `
       <world>
-        <entity transform="pos: 0 0 0">
-          <tween target="rotation" from="0 0 0" to="0 180 0" duration="1"></tween>
+        <entity name="parent" transform="pos: 0 0 0">
           <entity transform="pos: 2 0 0"></entity>
         </entity>
+        <tween target="parent" attr="rotation" from="0 0 0" to="0 180 0" duration="1"></tween>
       </world>
     `;
 

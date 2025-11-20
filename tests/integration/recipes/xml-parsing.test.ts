@@ -142,10 +142,9 @@ describe('XML Recipe Integration', () => {
 
     state.registerConfig({
       parsers: {
-        custom: (parent, _element, _state) => {
+        custom: ({ entity }) => {
           parserCalled = true;
-          parentEntity = parent;
-          return null;
+          parentEntity = entity;
         },
       },
     });
@@ -496,7 +495,7 @@ describe('XML Recipe Integration', () => {
     parseXMLToEntities(state, parsed.root);
 
     expect(warning).toContain('[entity] Unknown attribute "my-component"');
-    expect(warning).toContain('Available: id, parent');
+    expect(warning).toContain('Available: id, name, parent');
 
     const MyComponent = defineComponent({ value: Types.f32 });
     state.registerComponent('my-component', MyComponent);

@@ -1,9 +1,13 @@
-import { State, XMLParser, defineQuery, parseXMLToEntities } from 'vibegame';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
-import { Tween, TweenPlugin, TweenValue } from 'vibegame/tweening';
+import { defineComponent, Types } from 'bitecs';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { defineComponent, Types } from 'bitecs';
+import { defineQuery, parseXMLToEntities, State, XMLParser } from 'vibegame';
+import {
+  Transform,
+  TransformsPlugin,
+  WorldTransform,
+} from 'vibegame/transforms';
+import { Tween, TweenPlugin, TweenValue } from 'vibegame/tweening';
 
 describe('Tween XML Integration', () => {
   let state: State;
@@ -20,16 +24,15 @@ describe('Tween XML Integration', () => {
   it('should create tween from XML', () => {
     const xml = `
       <root>
-        <entity transform="pos: 0 0 0">
-          <tween target="transform.pos-x" to="10" duration="2"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 0 0"></entity>
+        <tween target="cube" attr="transform.pos-x" to="10" duration="2"></tween>
       </root>
     `;
 
     const parsed = XMLParser.parse(xml);
     const results = parseXMLToEntities(state, parsed.root);
 
-    expect(results.length).toBe(1);
+    expect(results.length).toBe(2);
     const entity = results[0].entity;
 
     expect(state.hasComponent(entity, Transform)).toBe(true);
@@ -44,9 +47,8 @@ describe('Tween XML Integration', () => {
   it('should animate entity from XML tween', () => {
     const xml = `
       <root>
-        <entity transform="pos: 0 0 0">
-          <tween target="transform.pos-x" from="0" to="10" duration="1"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 0 0"></entity>
+        <tween target="cube" attr="transform.pos-x" from="0" to="10" duration="1"></tween>
       </root>
     `;
 
@@ -67,9 +69,8 @@ describe('Tween XML Integration', () => {
   it('should support easing from XML', () => {
     const xml = `
       <root>
-        <entity transform="pos: 0 0 0">
-          <tween target="transform.pos-y" to="100" duration="1" easing="quad-out"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 0 0"></entity>
+        <tween target="cube" attr="transform.pos-y" to="100" duration="1" easing="quad-out"></tween>
       </root>
     `;
 
@@ -78,40 +79,15 @@ describe('Tween XML Integration', () => {
     const entity = results[0].entity;
 
     state.step(0.25);
-    // Quad-out easing should be faster at the start
     expect(Transform.posY[entity]).toBeGreaterThan(25);
-  });
-
-  it('should support loop modes from XML', () => {
-    const xml = `
-      <root>
-        <entity transform="pos: 0 0 0">
-          <tween target="transform.pos-z" to="10" duration="1" loop="ping-pong"></tween>
-        </entity>
-      </root>
-    `;
-
-    const parsed = XMLParser.parse(xml);
-    const results = parseXMLToEntities(state, parsed.root);
-    const entity = results[0].entity;
-
-    state.step(0.5);
-    const midValue = Transform.posZ[entity];
-    expect(midValue).toBeGreaterThan(0);
-
-    state.step(1.0);
-    // After 1.5 seconds in ping-pong, should be coming back
-    const returnValue = Transform.posZ[entity];
-    expect(returnValue).toBeLessThan(10);
   });
 
   it('should handle multiple tweens on same entity', () => {
     const xml = `
       <root>
-        <entity transform="pos: 0 0 0">
-          <tween target="transform.pos-x" to="10" duration="1"></tween>
-          <tween target="transform.pos-y" to="5" duration="0.5"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 0 0"></entity>
+        <tween target="cube" attr="transform.pos-x" to="10" duration="1"></tween>
+        <tween target="cube" attr="transform.pos-y" to="5" duration="0.5"></tween>
       </root>
     `;
 
@@ -131,10 +107,9 @@ describe('Tween XML Integration', () => {
   it('should handle position and rotation tweens simultaneously', () => {
     const xml = `
       <root>
-        <entity transform="pos: 0 1 5">
-          <tween target="transform.pos-y" to="3" duration="2"></tween>
-          <tween target="rotation" to="0 360 0" duration="4"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 1 5"></entity>
+        <tween target="cube" attr="transform.pos-y" to="3" duration="2"></tween>
+        <tween target="cube" attr="rotation" to="0 360 0" duration="4"></tween>
       </root>
     `;
 
@@ -178,9 +153,8 @@ describe('Tween XML Integration', () => {
 
     const xml = `
       <root>
-        <entity transform="pos: 0 10 0" velocity="velocity-x: 0">
-          <tween target="velocity.velocity-x" from="0" to="10" duration="1" easing="quad-out"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 10 0" velocity="velocity-x: 0"></entity>
+        <tween target="cube" attr="velocity.velocity-x" from="0" to="10" duration="1" easing="quad-out"></tween>
       </root>
     `;
 
@@ -201,9 +175,8 @@ describe('Tween XML Integration', () => {
   it('should handle rotation shorthand with array values', () => {
     const xml = `
       <root>
-        <entity transform="">
-          <tween target="rotation" to="90 180 270" duration="1"></tween>
-        </entity>
+        <entity name="cube" transform=""></entity>
+        <tween target="cube" attr="rotation" to="90 180 270" duration="1"></tween>
       </root>
     `;
 
@@ -223,9 +196,8 @@ describe('Tween XML Integration', () => {
   it('should handle at shorthand for position', () => {
     const xml = `
       <root>
-        <entity transform="">
-          <tween target="at" from="0 0 0" to="10 20 30" duration="1"></tween>
-        </entity>
+        <entity name="cube" transform=""></entity>
+        <tween target="cube" attr="at" from="0 0 0" to="10 20 30" duration="1"></tween>
       </root>
     `;
 
@@ -247,9 +219,8 @@ describe('Tween XML Integration', () => {
   it('should handle scale shorthand with single value', () => {
     const xml = `
       <root>
-        <entity transform="scale: 1">
-          <tween target="scale" from="1 1 1" to="2 2 2" duration="1"></tween>
-        </entity>
+        <entity name="cube" transform="scale: 1"></entity>
+        <tween target="cube" attr="scale" from="1 1 1" to="2 2 2" duration="1"></tween>
       </root>
     `;
 
@@ -266,9 +237,8 @@ describe('Tween XML Integration', () => {
   it('should support easing attribute', () => {
     const xml = `
       <root>
-        <entity transform="pos: 0 0 0">
-          <tween target="transform.pos-x" to="100" duration="1" easing="elastic-out"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 0 0"></entity>
+        <tween target="cube" attr="transform.pos-x" to="100" duration="1" easing="elastic-out"></tween>
       </root>
     `;
 
@@ -284,15 +254,14 @@ describe('Tween XML Integration', () => {
     expect(value).not.toBeCloseTo(70, 10);
   });
 
-  it('should handle complex animation sequence', () => {
+  it('should handle multiple tweens', () => {
     const xml = `
       <root>
-        <entity transform="pos: 0 0 0">
-          <tween target="transform.pos-x" from="-5" to="5" duration="3" loop="ping-pong"></tween>
-          <tween target="transform.euler-y" to="360" duration="10" loop="loop"></tween>
-          <tween target="transform.scale-x" from="1" to="1.5" duration="1" ease="sine-in-out" loop="ping-pong"></tween>
-          <tween target="transform.scale-z" from="1" to="1.5" duration="1" ease="sine-in-out" loop="ping-pong"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 0 0 0"></entity>
+        <tween target="cube" attr="transform.pos-x" from="-5" to="5" duration="3"></tween>
+        <tween target="cube" attr="transform.euler-y" to="360" duration="10"></tween>
+        <tween target="cube" attr="transform.scale-x" from="1" to="1.5" duration="1"></tween>
+        <tween target="cube" attr="transform.scale-z" from="1" to="1.5" duration="1"></tween>
       </root>
     `;
 
@@ -309,17 +278,13 @@ describe('Tween XML Integration', () => {
 
     state.step(1.5);
     expect(Transform.posX[entity]).toBeCloseTo(5, 1);
-
-    state.step(3);
-    expect(Transform.posX[entity]).toBeCloseTo(-5, 1);
   });
 
   it('should use current value when from is omitted', () => {
     const xml = `
       <root>
-        <entity transform="pos: 5 10 15">
-          <tween target="transform.pos-y" to="20" duration="1"></tween>
-        </entity>
+        <entity name="cube" transform="pos: 5 10 15"></entity>
+        <tween target="cube" attr="transform.pos-y" to="20" duration="1"></tween>
       </root>
     `;
 
@@ -336,9 +301,8 @@ describe('Tween XML Integration', () => {
   it('should handle bounce easing', () => {
     const xml = `
       <root>
-        <entity transform="">
-          <tween target="transform.pos-y" from="0" to="10" duration="1" easing="bounce-out"></tween>
-        </entity>
+        <entity name="cube" transform=""></entity>
+        <tween target="cube" attr="transform.pos-y" from="0" to="10" duration="1" easing="bounce-out"></tween>
       </root>
     `;
 
@@ -357,9 +321,8 @@ describe('Tween XML Integration', () => {
   it('should handle back easing with overshoot', () => {
     const xml = `
       <root>
-        <entity transform="">
-          <tween target="transform.pos-x" from="0" to="10" duration="1" easing="back-out"></tween>
-        </entity>
+        <entity name="cube" transform=""></entity>
+        <tween target="cube" attr="transform.pos-x" from="0" to="10" duration="1" easing="back-out"></tween>
       </root>
     `;
 

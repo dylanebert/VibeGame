@@ -4,7 +4,6 @@ export const Tween = defineComponent({
   duration: Types.f32,
   elapsed: Types.f32,
   easingIndex: Types.ui8,
-  loopMode: Types.ui8,
 });
 
 export const TweenValue = defineComponent({
@@ -35,4 +34,16 @@ export const KinematicRotationTween = defineComponent({
   to: Types.f32,
   lastRotation: Types.f32,
   targetRotation: Types.f32,
+});
+
+export const enum SequenceState {
+  Idle = 0,
+  Playing = 1,
+}
+
+export const Sequence = defineComponent({
+  state: Types.ui8,
+  currentIndex: Types.ui32,
+  itemCount: Types.ui32,
+  pauseRemaining: Types.f32,
 });

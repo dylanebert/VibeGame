@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sequencer Example</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #000;
+        font-family: Arial, sans-serif;
+      }
+
+      #game-canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #controls {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+      }
+
+      #controls button {
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #333;
+        color: #fff;
+        transition: background 0.2s;
+      }
+
+      #controls button:hover {
+        background: #555;
+      }
+
+      #controls button:active {
+        background: #222;
+      }
+    </style>
+  </head>
+
+  <body>
+    <world canvas="#game-canvas" sky="#ffffff">
+      <entity ambient-light="intensity: 0.6"></entity>
+      <entity directional-light="intensity: 0.7; direction: -1 2 1"></entity>
+      <orbit-camera></orbit-camera>
+
+      <entity name="controller" cube-controller="target-x: 0"></entity>
+      <entity name="cube" transform="pos: 0 0 0" target-position="x: 0; y: 0; z: 0" renderer="shape: box; size: 2 2 2; color: #ff4444"></entity>
+
+      <sequence name="bounce">
+        <tween target="cube" attr="scale" from="1 1 1" to="1.1 1.1 1.1" duration="0.15" easing="back-out"></tween>
+        <pause duration="0.1"></pause>
+        <tween target="cube" attr="scale" from="1.1 1.1 1.1" to="1 1 1" duration="0.15" easing="sine-in-out"></tween>
+      </sequence>
+    </world>
+
+    <canvas id="game-canvas" width="1920" height="1080"></canvas>
+
+    <div id="controls">
+      <button id="btn-left">Left</button>
+      <button id="btn-center">Center</button>
+      <button id="btn-bounce">Bounce</button>
+      <button id="btn-right">Right</button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -230,7 +230,6 @@ Initializes Rapier WASM physics engine
     to="5"
     duration="3"
     ease="sine-in-out"
-    loop="ping-pong"
   />
 </kinematic-part>
 ```

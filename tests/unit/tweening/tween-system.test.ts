@@ -17,7 +17,6 @@ describe('Tween System', () => {
 
     Tween.duration[entity] = 2.0;
     Tween.elapsed[entity] = 0;
-    Tween.loopMode[entity] = 0;
 
     state.step(0.5);
     expect(Tween.elapsed[entity]).toBe(0.5);
@@ -32,41 +31,12 @@ describe('Tween System', () => {
 
     Tween.duration[entity] = 1.0;
     Tween.elapsed[entity] = 0;
-    Tween.loopMode[entity] = 0;
 
     expect(state.hasComponent(entity, Tween)).toBe(true);
 
     state.step(1.1);
 
     expect(state.hasComponent(entity, Tween)).toBe(false);
-  });
-
-  it('should keep looping tweens alive', () => {
-    const entity = state.createEntity();
-    state.addComponent(entity, Tween);
-
-    Tween.duration[entity] = 1.0;
-    Tween.elapsed[entity] = 0;
-    Tween.loopMode[entity] = 1;
-
-    state.step(2.5);
-
-    expect(state.hasComponent(entity, Tween)).toBe(true);
-    expect(Tween.elapsed[entity]).toBe(2.5);
-  });
-
-  it('should keep ping-pong tweens alive', () => {
-    const entity = state.createEntity();
-    state.addComponent(entity, Tween);
-
-    Tween.duration[entity] = 1.0;
-    Tween.elapsed[entity] = 0;
-    Tween.loopMode[entity] = 2;
-
-    state.step(3.0);
-
-    expect(state.hasComponent(entity, Tween)).toBe(true);
-    expect(Tween.elapsed[entity]).toBe(3.0);
   });
 
   it('should interpolate values with linear easing', () => {
@@ -118,36 +88,6 @@ describe('Tween System', () => {
     expect(TestComponent.value[entity]).toBeGreaterThan(35);
   });
 
-  it('should handle ping-pong forward and reverse cycles', () => {
-    const TestComponent = defineComponent({ value: Types.f32 });
-    state.registerComponent('test', TestComponent);
-
-    const entity = state.createEntity();
-    state.addComponent(entity, TestComponent);
-
-    createTween(state, entity, 'test.value', {
-      from: 0,
-      to: 10,
-      duration: 1,
-      loop: 'ping-pong',
-    });
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(5, 1);
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(10, 1);
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(5, 1);
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(0, 1);
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(5, 1);
-  });
-
   it('should clean up TweenValue entities when parent Tween is destroyed', () => {
     const TestComponent = defineComponent({ value: Types.f32 });
     state.registerComponent('test', TestComponent);
@@ -159,7 +99,6 @@ describe('Tween System', () => {
       from: 0,
       to: 100,
       duration: 1,
-      loop: 'once',
     });
 
     const tweenValues = defineQuery([TweenValue])(state.world);
@@ -169,35 +108,5 @@ describe('Tween System', () => {
 
     const remainingTweenValues = defineQuery([TweenValue])(state.world);
     expect(remainingTweenValues.length).toBe(0);
-  });
-
-  it('should handle loop mode cycling correctly', () => {
-    const TestComponent = defineComponent({ value: Types.f32 });
-    state.registerComponent('test', TestComponent);
-
-    const entity = state.createEntity();
-    state.addComponent(entity, TestComponent);
-
-    createTween(state, entity, 'test.value', {
-      from: 0,
-      to: 10,
-      duration: 1,
-      loop: 'loop',
-    });
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(5, 1);
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(0, 1);
-
-    state.step(0.25);
-    expect(TestComponent.value[entity]).toBeCloseTo(2.5, 1);
-
-    state.step(0.25);
-    expect(TestComponent.value[entity]).toBeCloseTo(5, 1);
-
-    state.step(0.5);
-    expect(TestComponent.value[entity]).toBeCloseTo(0, 1);
   });
 });

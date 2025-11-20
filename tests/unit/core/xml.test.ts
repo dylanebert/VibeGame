@@ -3,6 +3,7 @@ import { JSDOM } from 'jsdom';
 import type { ParsedElement, Parser } from 'vibegame';
 import {
   findElements,
+  ParseContext,
   State,
   traverseElements,
   XMLParser,
@@ -274,7 +275,7 @@ describe('XML Parser', () => {
       let receivedEntity = -1;
       let receivedElement: ParsedElement | undefined;
 
-      const customParser: Parser = (entity, element, _state) => {
+      const customParser: Parser = ({ entity, element }) => {
         parserCalled = true;
         receivedEntity = entity;
         receivedElement = element;
@@ -301,8 +302,9 @@ describe('XML Parser', () => {
         attributes: { pos: { x: 1, y: 2, z: 3 } },
         children: [],
       };
+      const context = new ParseContext(state);
 
-      parser?.(testEntity, testElement, state);
+      parser?.({ entity: testEntity, element: testElement, state, context });
 
       expect(parserCalled).toBe(true);
       expect(receivedEntity).toBe(testEntity);

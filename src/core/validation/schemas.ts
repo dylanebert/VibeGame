@@ -172,6 +172,7 @@ export const staticPartRecipeSchema = z
     friction: numberSchema.optional(),
 
     id: z.string().optional(),
+    name: z.string().optional(),
   })
   .strict();
 
@@ -194,6 +195,7 @@ export const dynamicPartRecipeSchema = z
     friction: numberSchema.optional(),
 
     id: z.string().optional(),
+    name: z.string().optional(),
   })
   .strict();
 
@@ -213,6 +215,7 @@ export const kinematicPartRecipeSchema = z
     euler: vector3Schema.optional(),
 
     id: z.string().optional(),
+    name: z.string().optional(),
   })
   .strict();
 
@@ -303,15 +306,29 @@ export const loopModeSchema = z.enum(['once', 'loop', 'ping-pong']);
 
 export const tweenElementSchema = z
   .object({
-    target: z.string().regex(/^[a-z-]+\.[a-z-]+(-[a-z]+)*$/),
+    target: z.string(),
+    attr: z.string(),
     from: z.union([numberSchema, numberStringSchema, vector3Schema]).optional(),
     to: z.union([numberSchema, numberStringSchema, vector3Schema]),
     duration: z.union([numberSchema, numberStringSchema]).default(1),
     delay: z.union([numberSchema, numberStringSchema]).optional(),
     easing: easingSchema.optional(),
-    loop: loopModeSchema.optional(),
 
     id: z.string().optional(),
+    name: z.string().optional(),
+  })
+  .strict();
+
+export const pauseElementSchema = z
+  .object({
+    duration: z.union([numberSchema, numberStringSchema]).default(0),
+  })
+  .strict();
+
+export const sequenceElementSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().optional(),
   })
   .strict();
 
@@ -324,6 +341,8 @@ export const recipeSchemas = {
   camera: cameraRecipeSchema,
   world: worldRecipeSchema,
   tween: tweenElementSchema,
+  pause: pauseElementSchema,
+  sequence: sequenceElementSchema,
 } as const;
 
 export type RecipeSchemas = typeof recipeSchemas;

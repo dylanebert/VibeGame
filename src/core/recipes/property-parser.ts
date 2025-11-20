@@ -8,6 +8,7 @@ import {
   formatValueCountError,
   getComponentProperties,
 } from './diagnostics';
+import type { ParseContext } from './parse-context';
 
 export interface PropertyParseResult {
   [fieldName: string]: number;
@@ -110,7 +111,8 @@ export function parseComponentProperties(
   componentName: string,
   propertyString: string,
   component: ComponentWithFields,
-  state: State
+  state: State,
+  context?: ParseContext
 ): PropertyParseResult {
   const result: PropertyParseResult = {};
 
@@ -273,6 +275,19 @@ export function parseComponentProperties(
         const enumValue = getEnumValue(componentName, camelProp, value, state);
         if (enumValue !== null) {
           result[camelProp] = enumValue;
+        } else if (context) {
+          const entityId = context.getEntityByName(value);
+          if (entityId !== null) {
+            result[camelProp] = entityId;
+          } else {
+            const error = formatTypeMismatch(
+              componentName,
+              propName,
+              'number or entity name',
+              `string "${value}"`
+            );
+            throw new Error(error);
+          }
         } else {
           const error = formatTypeMismatch(
             componentName,
@@ -313,6 +328,19 @@ export function parseComponentProperties(
         );
         if (enumValue !== null) {
           result[fullCamelProp] = enumValue;
+        } else if (context) {
+          const entityId = context.getEntityByName(value);
+          if (entityId !== null) {
+            result[fullCamelProp] = entityId;
+          } else {
+            const error = formatTypeMismatch(
+              componentName,
+              propName,
+              'number or entity name',
+              `string "${value}"`
+            );
+            throw new Error(error);
+          }
         } else {
           const error = formatTypeMismatch(
             componentName,

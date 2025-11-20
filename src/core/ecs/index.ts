@@ -8,6 +8,7 @@ export type {
   EnumMapping,
   GameTime,
   Parser,
+  ParserParams,
   Plugin,
   Recipe,
   ShorthandMapping,

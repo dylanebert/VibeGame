@@ -247,26 +247,27 @@ describe('Recipe Validation Integration', () => {
   describe('tween validation', () => {
     it('should validate tween element attributes', () => {
       const attributes = {
-        target: 'body.pos-x',
+        target: 'platform',
+        attr: 'body.pos-x',
         from: '-5',
         to: '5',
         duration: '3',
-        loop: 'ping-pong',
         easing: 'ease-in-out',
       };
 
       const result = validateRecipeAttributes('tween', attributes);
-      expect(result.target).toBe('body.pos-x');
+      expect(result.target).toBe('platform');
+      expect(result.attr).toBe('body.pos-x');
       expect(result.from).toBe(-5);
       expect(result.to).toBe(5);
       expect(result.duration).toBe(3);
-      expect(result.loop).toBe('ping-pong');
       expect(result.easing).toBe('ease-in-out');
     });
 
     it('should validate tween with vector3 values', () => {
       const attributes = {
-        target: 'transform.pos',
+        target: 'cube',
+        attr: 'transform.pos',
         from: '0 0 0',
         to: '10 5 -3',
         duration: 2,
@@ -277,9 +278,9 @@ describe('Recipe Validation Integration', () => {
       expect(result.to).toEqual({ x: 10, y: 5, z: -3 });
     });
 
-    it('should reject invalid target format', () => {
+    it('should reject missing target', () => {
       const attributes = {
-        target: 'invalid_format',
+        attr: 'body.pos-x',
         to: '5',
       };
 
@@ -288,7 +289,8 @@ describe('Recipe Validation Integration', () => {
 
     it('should reject invalid easing value', () => {
       const attributes = {
-        target: 'body.pos-y',
+        target: 'cube',
+        attr: 'body.pos-y',
         to: '5',
         easing: 'invalid-easing',
       };
@@ -298,27 +300,29 @@ describe('Recipe Validation Integration', () => {
   });
 
   describe('hierarchical validation', () => {
-    it('should allow tween as child of entity types', () => {
+    it('should allow tween as sibling of entity types', () => {
       const xml = `
-        <static-part pos="0 3 0" shape="box" size="3 0.5 3" color="#0000ff">
-          <tween target="body.pos-x" from="-5" to="5" duration="3" loop="ping-pong"></tween>
-        </static-part>
+        <entity>
+          <static-part name="platform" pos="0 3 0" shape="box" size="3 0.5 3" color="#0000ff"></static-part>
+          <tween target="platform" attr="body.pos-x" from="-5" to="5" duration="3"></tween>
+        </entity>
       `;
 
       const result = validateXMLContent(xml);
+      if (!result.success) console.error('Validation error:', result.error);
       expect(result.success).toBe(true);
     });
 
-    it('should reject tween as direct child of world', () => {
+    it('should allow tween in world with target', () => {
       const xml = `
         <world canvas="#game">
-          <tween target="something" to="5"></tween>
+          <entity name="cube" transform=""></entity>
+          <tween target="cube" attr="transform.pos-x" to="5"></tween>
         </world>
       `;
 
       const result = validateXMLContent(xml);
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('not allowed as a child of <world>');
+      expect(result.success).toBe(true);
     });
 
     it('should allow nested entities', () => {
@@ -357,12 +361,13 @@ describe('Recipe Validation Integration', () => {
       expect(result.error).toContain('not allowed as a child of <entity>');
     });
 
-    it('should allow multiple tweens on kinematic part', () => {
+    it('should allow multiple tweens targeting same entity', () => {
       const xml = `
-        <kinematic-part pos="0 3 0" shape="box" size="3 0.5 3" color="#0000ff">
-          <tween target="body.pos-x" from="-5" to="5" duration="3" loop="ping-pong"></tween>
-          <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
-        </kinematic-part>
+        <entity>
+          <kinematic-part name="platform" pos="0 3 0" shape="box" size="3 0.5 3" color="#0000ff"></kinematic-part>
+          <tween target="platform" attr="body.pos-x" from="-5" to="5" duration="3"></tween>
+          <tween target="platform" attr="body.euler-y" from="0" to="360" duration="2"></tween>
+        </entity>
       `;
 
       const result = validateXMLContent(xml);
@@ -377,9 +382,8 @@ describe('Recipe Validation Integration', () => {
           <entity ambient-light="sky-color: 0x87ceeb; intensity: 0.6" directional-light="color: 0xffffff; intensity: 1; direction-x: -1; direction-y: -2; direction-z: -1"></entity>
           <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
           <dynamic-part pos="-2 4 -3" shape="sphere" size="1" color="#ff4500"></dynamic-part>
-          <kinematic-part pos="5 2 0" shape="box" size="3 0.5 3" color="#0000ff">
-            <tween target="body.pos-y" from="2" to="5" duration="3" loop="ping-pong"></tween>
-          </kinematic-part>
+          <kinematic-part name="platform" pos="5 2 0" shape="box" size="3 0.5 3" color="#0000ff"></kinematic-part>
+          <tween target="platform" attr="body.pos-y" from="2" to="5" duration="3"></tween>
           <player pos="0 1 0" speed="8"></player>
           <camera distance="10"></camera>
         </world>
@@ -395,12 +399,10 @@ describe('Recipe Validation Integration', () => {
           <static-part pos="-5 2 0" shape="box" size="3 0.5 3" color="#808080"></static-part>
           <static-part pos="0 4 0" shape="box" size="3 0.5 3" color="#808080"></static-part>
           <static-part pos="5 6 0" shape="box" size="3 0.5 3" color="#808080"></static-part>
-          <kinematic-part pos="0 3 5" shape="box" size="4 0.5 4" color="#4169e1">
-            <tween target="body.pos-x" from="-10" to="10" duration="5" loop="ping-pong"></tween>
-          </kinematic-part>
-          <kinematic-part pos="2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700">
-            <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
-          </kinematic-part>
+          <kinematic-part name="moving-platform" pos="0 3 5" shape="box" size="4 0.5 4" color="#4169e1"></kinematic-part>
+          <tween target="moving-platform" attr="body.pos-x" from="-10" to="10" duration="5"></tween>
+          <kinematic-part name="spinner" pos="2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700"></kinematic-part>
+          <tween target="spinner" attr="body.euler-y" from="0" to="360" duration="2"></tween>
         </entity>
       `;
 

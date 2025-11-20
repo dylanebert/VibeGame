@@ -1,5 +1,5 @@
+import { consoleForwarding, vibegame } from 'vibegame/vite';
 import { defineConfig } from 'vite';
-import { vibegame, consoleForwarding } from 'vibegame/vite';
 
 export default defineConfig({
   plugins: [vibegame(), consoleForwarding()],

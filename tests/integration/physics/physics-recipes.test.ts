@@ -17,7 +17,7 @@ import { TweenPlugin } from 'vibegame/tweening';
 describe('Physics Recipes', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
@@ -350,28 +350,28 @@ beforeEach(async () => {
     it('should create kinematic platform with tween animation', () => {
       const xml = `
         <root>
-          <kinematic-part
+          <kinematic-part name="platform"
             pos="0 2 0"
             shape="box"
             size="3 0.2 3"
             color="#4169e1"
           >
-            <tween
-              target="body.pos-y"
-              from="2"
-              to="5"
-              duration="3"
-              ease="sine-in-out"
-              loop="ping-pong"
-            />
           </kinematic-part>
+          <tween
+            target="platform"
+            attr="body.pos-y"
+            from="2"
+            to="5"
+            duration="3"
+            easing="sine-in-out"
+          />
         </root>
       `;
 
       const parsed = XMLParser.parse(xml);
       const entities = parseXMLToEntities(state, parsed.root);
 
-      expect(entities.length).toBe(1);
+      expect(entities.length).toBe(2);
       const platform = entities[0].entity;
 
       expect(state.hasComponent(platform, Body)).toBe(true);

@@ -40,7 +40,6 @@ postprocessing/
 #### Bloom
 - intensity: f32 (1.0) - Bloom intensity
 - luminanceThreshold: f32 (1.0) - Luminance threshold for bloom
-- luminanceSmoothing: f32 (0.03) - Smoothness of luminance threshold
 - mipmapBlur: ui8 (1) - Enable mipmap blur
 - radius: f32 (0.85) - Blur radius for mipmap blur
 - levels: ui8 (8) - Number of MIP levels for mipmap blur
@@ -93,7 +92,7 @@ postprocessing/
 <camera bloom></camera>
 
 <!-- Camera with custom bloom settings -->
-<camera bloom="intensity: 2; luminance-threshold: 0.8; luminance-smoothing: 0.05"></camera>
+<camera bloom="intensity: 2; luminance-threshold: 0.8"></camera>
 
 <!-- Camera with mipmap blur settings -->
 <camera bloom="mipmap-blur: 1; radius: 0.9; levels: 10"></camera>
@@ -136,7 +135,6 @@ state.addComponent(cameraEntity, GAME.MainCamera);
 state.addComponent(cameraEntity, GAME.Bloom, {
   intensity: 1.5,
   luminanceThreshold: 0.9,
-  luminanceSmoothing: 0.05,
 });
 
 // Add dithering

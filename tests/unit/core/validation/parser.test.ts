@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import {
-  validateRecipeAttributes,
-  safeValidateRecipeAttributes,
-  isValidRecipeName,
-  getAvailableRecipeNames,
   getRecipeSchema,
+  isValidRecipeName,
+  safeValidateRecipeAttributes,
+  validateRecipeAttributes,
 } from 'vibegame/core/validation';
 
 describe('Validation Parser', () => {
@@ -157,21 +156,6 @@ describe('Validation Parser', () => {
       expect(isValidRecipeName('unknown')).toBe(false);
       expect(isValidRecipeName('custom-recipe')).toBe(false);
       expect(isValidRecipeName('')).toBe(false);
-    });
-  });
-
-  describe('getAvailableRecipeNames', () => {
-    it('should return all recipe names', () => {
-      const names = getAvailableRecipeNames();
-      expect(names).toContain('entity');
-      expect(names).toContain('static-part');
-      expect(names).toContain('dynamic-part');
-      expect(names).toContain('kinematic-part');
-      expect(names).toContain('player');
-      expect(names).toContain('camera');
-      expect(names).toContain('world');
-      expect(names).toContain('tween');
-      expect(names.length).toBe(8);
     });
   });
 

@@ -1,15 +1,15 @@
 # Orbit Camera Plugin
 
 <!-- LLM:OVERVIEW -->
-Orbital camera controller for third-person views and smooth target following.
+Standalone orbital camera controller with direct input handling for third-person views and smooth target following.
 <!-- /LLM:OVERVIEW -->
 
 ## Purpose
 
 - Orbital camera movement around target
+- Direct mouse/scroll input handling
 - Smooth camera interpolation
-- Mouse/touch orbit controls
-- Zoom and pan support
+- Independent camera control (no player dependency)
 
 ## Layout
 
@@ -19,7 +19,7 @@ orbit-camera/
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
 ├── components.ts  # OrbitCamera component
-├── systems.ts  # OrbitCameraSystem
+├── systems.ts  # OrbitCameraInputSystem, OrbitCameraSystem
 ├── recipes.ts  # Camera recipes
 ├── operations.ts  # Camera operations
 ├── constants.ts  # Camera constants
@@ -34,35 +34,37 @@ orbit-camera/
 ## Entry Points
 
 - **plugin.ts**: OrbitCameraPlugin definition
-- **systems.ts**: OrbitCameraSystem for updates
-- **recipes.ts**: orbitCamera recipe
+- **systems.ts**: OrbitCameraSetupSystem, OrbitCameraInputSystem, OrbitCameraSystem
+- **recipes.ts**: orbit-camera recipe
 
 ## Dependencies
 
-- **Internal**: Core ECS, input, transforms
+- **Internal**: Core ECS, input plugin, transforms plugin
 - **External**: Three.js Camera
 
 ## Components
 
-- **OrbitCamera**: Camera configuration and state
+- **OrbitCamera**: Camera configuration, state, and sensitivity
 
 ## Systems
 
-- **OrbitCameraSystem**: Updates camera position/rotation
+- **OrbitCameraInputSystem**: Handles mouse look and scroll zoom from InputState
+- **OrbitCameraSystem**: Updates camera position/rotation around target
 
 ## Recipes
 
-- **orbitCamera**: Default orbital camera setup
+- **orbit-camera**: Default orbital camera setup
 
 <!-- LLM:REFERENCE -->
 ### Components
 
 #### OrbitCamera
-- target: eid (0) - Target entity ID
-- current-yaw: f32 (π) - Current horizontal angle
+- target: eid (0) - Target entity to orbit around
+- input-source: eid (0) - Entity with InputState component (player or self)
+- current-yaw: f32 (0) - Current horizontal angle
 - current-pitch: f32 (π/6) - Current vertical angle
 - current-distance: f32 (4) - Current distance
-- target-yaw: f32 (π) - Target horizontal angle
+- target-yaw: f32 (0) - Target horizontal angle
 - target-pitch: f32 (π/6) - Target vertical angle
 - target-distance: f32 (4) - Target distance
 - min-distance: f32 (1)
@@ -73,18 +75,31 @@ orbit-camera/
 - offset-x: f32 (0)
 - offset-y: f32 (1.25)
 - offset-z: f32 (0)
+- sensitivity: f32 (0.007) - Mouse look sensitivity
+- zoom-sensitivity: f32 (1.5) - Scroll zoom sensitivity
 
 ### Systems
 
+#### OrbitCameraSetupSystem
+- Group: setup
+- Auto-creates target entity at origin if target is unassigned (eid 0)
+- Auto-assigns inputSource from existing InputState entity, or creates one if none found
+
+#### OrbitCameraInputSystem
+- Group: simulation
+- Reads InputState from inputSource entity (player or camera)
+- Updates camera yaw/pitch/distance based on mouse and scroll input
+
 #### OrbitCameraSystem
 - Group: draw
-- Updates camera position and rotation around target
+- Smoothly interpolates camera to target values
+- Calculates and updates camera position around target
 
 ### Recipes
 
-#### camera
-- Creates orbital camera with default settings
-- Components: orbit-camera, transform, world-transform, main-camera
+#### orbit-camera
+- Creates orbital camera with auto-setup for target and input handling
+- Components: orbit-camera, transform, main-camera
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -93,19 +108,15 @@ orbit-camera/
 ### Basic Camera
 
 ```xml
-<!-- Create default orbital camera -->
-<camera />
+<orbit-camera />
 ```
 
 ### Camera Following Player
 
 ```xml
 <world>
-  <!-- Player entity -->
   <player id="player" pos="0 0 0" />
-  
-  <!-- Camera following player -->
-  <camera 
+  <orbit-camera
     target="#player"
     target-distance="10"
     min-distance="5"
@@ -132,45 +143,11 @@ orbit-camera/
 />
 ```
 
-### Programmatic Usage
-
-```typescript
-import * as GAME from 'vibegame';
-import { OrbitCamera } from 'vibegame/orbit-camera';
-
-const cameraQuery = GAME.defineQuery([OrbitCamera]);
-const CameraControlSystem = {
-  update: (state) => {
-    const cameras = cameraQuery(state.world);
-
-    for (const camera of cameras) {
-      // Rotate camera on input
-      if (state.input.mouse.deltaX) {
-        OrbitCamera.targetYaw[camera] += state.input.mouse.deltaX * 0.01;
-      }
-
-      // Zoom on scroll
-      if (state.input.mouse.wheel) {
-        OrbitCamera.targetDistance[camera] = Math.max(
-          OrbitCamera.minDistance[camera],
-          Math.min(
-            OrbitCamera.maxDistance[camera],
-            OrbitCamera.targetDistance[camera] - state.input.mouse.wheel * 0.5
-          )
-        );
-      }
-    }
-  }
-};
-```
-
 ### Dynamic Target Switching
 
 ```typescript
-import * as GAME from 'vibegame';
 import { OrbitCamera } from 'vibegame/orbit-camera';
 
-// Switch camera target
 const switchTarget = (state, cameraEntity, newTargetEntity) => {
   OrbitCamera.target[cameraEntity] = newTargetEntity;
 };

@@ -1,5 +1,6 @@
 import type { Component } from 'bitecs';
 import type { ParsedElement, XMLValue } from '../xml';
+import type { ParseContext } from '../recipes/parse-context';
 
 export type { XMLValue };
 import type { State } from './state';
@@ -15,11 +16,14 @@ export interface System {
   readonly after?: readonly System[];
 }
 
-export type Parser = (
-  entity: number,
-  element: ParsedElement,
-  state: State
-) => void;
+export interface ParserParams {
+  entity: number;
+  element: ParsedElement;
+  state: State;
+  context: ParseContext;
+}
+
+export type Parser = (params: ParserParams) => void;
 
 export type ShorthandMapping = string | string[];
 

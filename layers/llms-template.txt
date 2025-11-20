@@ -90,10 +90,8 @@ bun dev    # Start dev server with hot reload
   <dynamic-part pos="0 5 0" shape="sphere" size="1" color="#ff0000"></dynamic-part>
   
   <!-- 3. Kinematic: Script-controlled movement (moving platforms, doors) -->
-  <kinematic-part pos="5 2 0" shape="box" size="3 0.5 3" color="#0000ff">
-    <!-- Animate the platform up and down -->
-    <tween target="body.pos-y" from="2" to="5" duration="3" loop="ping-pong"></tween>
-  </kinematic-part>
+  <kinematic-part name="lift" pos="5 2 0" shape="box" size="3 0.5 3" color="#0000ff"></kinematic-part>
+  <tween target="lift" attr="body.pos-y" from="2" to="5" duration="3" easing="sine-in-out"></tween>
 </world>
 ```
 
@@ -167,8 +165,8 @@ While auto-creation is recommended, you can manually create these for customizat
   <!-- Custom player spawn position and properties -->
   <player pos="0 10 0" speed="8" jump-height="3"></player>
 
-  <!-- Custom camera settings -->
-  <camera orbit-camera="distance: 10; target-pitch: 0.5"></camera>
+  <!-- Custom camera (auto-creates target and input if not specified) -->
+  <orbit-camera target-distance="10" target-pitch="0.5" sensitivity="0.01"></orbit-camera>
 
   <!-- Custom lighting (combined entity) -->
   <entity
@@ -193,16 +191,16 @@ GAME
 
 ```xml
 <!-- Bloom effect for glow -->
-<camera bloom="intensity: 2; luminance-threshold: 0.8"></camera>
+<orbit-camera bloom="intensity: 2; luminance-threshold: 0.8"></orbit-camera>
 
 <!-- Retro dithering (reduces color palette) -->
-<camera dithering="color-bits: 3; scale: 2; noise: 1"></camera>
+<orbit-camera dithering="color-bits: 3; scale: 2; noise: 1"></orbit-camera>
 
 <!-- Tonemapping for HDR-like visuals -->
-<camera tonemapping="mode: aces-filmic"></camera>
+<orbit-camera tonemapping="mode: aces-filmic"></orbit-camera>
 
 <!-- Combined cinematic style -->
-<camera bloom="intensity: 1.5" tonemapping="mode: aces-filmic"></camera>
+<orbit-camera bloom="intensity: 1.5" tonemapping="mode: aces-filmic"></orbit-camera>
 ```
 
 ## Common Game Patterns
@@ -219,10 +217,9 @@ GAME
   <static-part pos="5 6 0" shape="box" size="3 0.5 3" color="#808080"></static-part>
   
   <!-- Moving platform -->
-  <kinematic-part pos="0 3 5" shape="box" size="4 0.5 4" color="#4169e1">
-    <tween target="body.pos-x" from="-10" to="10" duration="5" loop="ping-pong"></tween>
-  </kinematic-part>
-  
+  <kinematic-part name="moving-platform" pos="0 3 5" shape="box" size="4 0.5 4" color="#4169e1"></kinematic-part>
+  <tween target="moving-platform" attr="body.pos-x" from="-10" to="10" duration="5" easing="sine-in-out"></tween>
+
   <!-- Goal area -->
   <static-part pos="10 8 0" shape="box" size="5 0.5 5" color="#ffd700"></static-part>
 </world>
@@ -233,14 +230,10 @@ GAME
 <world canvas="#game-canvas">
   <static-part pos="0 -0.5 0" shape="box" size="20 1 20" color="#90ee90"></static-part>
 
-  <!-- Spinning coins -->
-  <kinematic-part pos="2 1 0" shape="box" size="0.5 0.5 0.1" color="#ffd700">
-    <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
-  </kinematic-part>
+  <!-- Rotating coins (create new tween when complete for continuous rotation) -->
+  <kinematic-part pos="2 1 0" shape="box" size="0.5 0.5 0.1" color="#ffd700"></kinematic-part>
 
-  <kinematic-part pos="-2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700">
-    <tween target="body.euler-y" from="0" to="360" duration="2" loop="loop"></tween>
-  </kinematic-part>
+  <kinematic-part pos="-2 1 0" shape="box" size="0.5 0.1 0.5" color="#ffd700"></kinematic-part>
 </world>
 ```
 
@@ -271,11 +264,14 @@ GAME
 
 | Recipe | Purpose | Key Attributes | Common Use |
 |--------|---------|---------------|------------|
-| `<static-part>` | Immovable objects | `pos`, `shape`, `size`, `color` | Grounds, walls, platforms |
-| `<dynamic-part>` | Gravity-affected objects | `pos`, `shape`, `size`, `color`, `mass` | Balls, crates, falling objects |
-| `<kinematic-part>` | Script-controlled physics | `pos`, `shape`, `size`, `color` | Moving platforms, doors |
+| `<static-part>` | Immovable objects | `name`, `pos`, `shape`, `size`, `color` | Grounds, walls, platforms |
+| `<dynamic-part>` | Gravity-affected objects | `name`, `pos`, `shape`, `size`, `color`, `mass` | Balls, crates, falling objects |
+| `<kinematic-part>` | Script-controlled physics | `name`, `pos`, `shape`, `size`, `color` | Moving platforms, doors |
 | `<player>` | Player character | `pos`, `speed`, `jump-height` | Main character (auto-created) |
-| `<entity>` | Base entity | Any components via attributes | Custom entities |
+| `<entity>` | Base entity | `name`, any components via attributes | Custom entities |
+| `<tween>` | Animation | `target`, `attr`, `to`, `from`, `duration`, `easing` | Animate named entities |
+| `<sequence>` | Animation group | `name`, `autoplay` | Reusable animation sequences |
+| `<pause>` | Sequence timing | `duration` | Separate parallel tween groups |
 
 ### Shape Options
 - `box` - Rectangular solid (default)
@@ -285,6 +281,158 @@ GAME
 - Box: `size="width height depth"` or `size="2 1 2"`
 - Sphere: `size="diameter"` or `size="1"`
 - Broadcast: `size="2"` becomes `size="2 2 2"`
+
+## Name Resolution Pattern
+
+Entities with `name` attribute are registered at parse time. Names resolve to entity IDs for cross-entity references.
+
+```xml
+<!-- Name registered when parsed -->
+<kinematic-part name="door" pos="0 0 0" shape="box" size="2 4 0.2"></kinematic-part>
+
+<!-- "door" resolved to entity ID -->
+<tween target="door" attr="body.pos-y" to="3" duration="2"></tween>
+```
+
+Runtime lookup: `state.getEntityByName('door')` returns entity ID or null.
+
+## Tweening (Animation)
+
+Tweens are one-shot animations that auto-destroy on completion. They reference entities by `name`.
+
+### Tween Attributes
+| Attribute | Required | Description |
+|-----------|----------|-------------|
+| `target` | Yes | Name of entity to animate |
+| `attr` | Yes | Property path or shorthand (`at`, `scale`, `rotation`) |
+| `to` | Yes | End value (single or "x y z") |
+| `from` | No | Start value (defaults to current) |
+| `duration` | No | Seconds (default: 1) |
+| `easing` | No | Easing function (default: linear) |
+
+### Shorthand Targets
+
+Shorthands expand to 3 tweens (one per axis):
+
+| Shorthand | Expands To | Values |
+|-----------|------------|--------|
+| `at` | transform.posX/Y/Z | `"x y z"` position |
+| `scale` | transform.scaleX/Y/Z | `"x y z"` scale |
+| `rotation` | body or transform euler | `"x y z"` degrees |
+
+### Property Paths
+- `body.pos-x/y/z` - Physics position (use for kinematic-part)
+- `transform.pos-x/y/z` - Transform position
+- `transform.scale-x/y/z` - Scale
+- `body.euler-x/y/z` or `transform.euler-x/y/z` - Rotation
+
+### Easing Functions
+`linear` (default), `sine-in/out/in-out`, `quad-in/out/in-out`, `cubic-in/out/in-out`, `back-in/out/in-out`, `elastic-in/out/in-out`, `bounce-in/out/in-out`
+
+### XML Tween Examples
+
+```xml
+<!-- Single property -->
+<kinematic-part name="lift" pos="0 0 0" shape="box" size="4 0.5 4"></kinematic-part>
+<tween target="lift" attr="body.pos-y" from="0" to="5" duration="3" easing="sine-in-out"></tween>
+
+<!-- Shorthand: animate position -->
+<entity name="cube" transform renderer="shape: box"></entity>
+<tween target="cube" attr="at" from="0 0 0" to="10 5 0" duration="2"></tween>
+
+<!-- Shorthand: animate scale -->
+<tween target="cube" attr="scale" from="1 1 1" to="2 2 2" duration="1" easing="back-out"></tween>
+```
+
+### TypeScript Tween Examples
+
+```typescript
+import { createTween } from 'vibegame/tweening';
+
+// Single field
+createTween(state, entity, 'transform.pos-x', { from: 0, to: 10, duration: 2, easing: 'sine-out' });
+
+// Shorthand with array values
+createTween(state, entity, 'at', { from: [0, 0, 0], to: [10, 5, 0], duration: 1.5 });
+createTween(state, entity, 'scale', { from: [1, 1, 1], to: [2, 2, 2], duration: 0.5, easing: 'back-out' });
+```
+
+## Sequences (Animation Groups)
+
+Sequences orchestrate multiple tweens with timing control. Tweens before `<pause>` run in parallel; pause separates sequential groups.
+
+### Sequence Attributes
+| Attribute | Description |
+|-----------|-------------|
+| `name` | Register sequence for later playback (starts paused) |
+| `autoplay` | Start immediately when parsed |
+
+### Sequence Execution Model
+1. All tweens before first `<pause>` start simultaneously
+2. `<pause>` waits for active tweens to complete + pause duration
+3. Next group starts after pause
+4. Sequence resets to Idle when complete
+
+### XML Sequence Examples
+
+```xml
+<!-- Named sequence (starts paused, trigger via playSequence) -->
+<sequence name="bounce">
+  <tween target="cube" attr="scale" from="1 1 1" to="1.3 1.3 1.3" duration="0.15" easing="back-out"></tween>
+  <pause duration="0.1"></pause>
+  <tween target="cube" attr="scale" from="1.3 1.3 1.3" to="1 1 1" duration="0.15" easing="sine-in-out"></tween>
+</sequence>
+
+<!-- Autoplay with parallel + sequential groups -->
+<sequence autoplay="true">
+  <!-- Group 1: These run in parallel -->
+  <tween target="cube" attr="at" from="-10 0 0" to="0 0 0" duration="1" easing="sine-out"></tween>
+  <tween target="cube" attr="scale" from="0 0 0" to="1 1 1" duration="0.5" easing="back-out"></tween>
+  <pause duration="0.3"></pause>
+  <!-- Group 2: Runs after pause -->
+  <tween target="cube" attr="scale" to="1.2 1.2 1.2" duration="0.2"></tween>
+</sequence>
+```
+
+### TypeScript Sequence Control
+
+```typescript
+import { playSequence, resetSequence, stopSequence } from 'vibegame/tweening';
+
+// Get sequence by name and trigger
+const bounce = state.getEntityByName('bounce');
+resetSequence(state, bounce);  // Reset to beginning
+playSequence(state, bounce);   // Start playback
+
+// Stop mid-animation
+stopSequence(state, bounce);
+```
+
+### Event-Driven Sequence Pattern
+
+```typescript
+// Define trigger component
+const TriggerSequence = GAME.defineComponent({});
+const triggerQuery = GAME.defineQuery([TriggerSequence, Sequence]);
+
+// System processes triggers each frame
+const TriggerSequenceSystem: GAME.System = {
+  group: 'simulation',
+  update(state) {
+    for (const eid of triggerQuery(state.world)) {
+      resetSequence(state, eid);
+      playSequence(state, eid);
+      state.removeComponent(eid, TriggerSequence);
+    }
+  }
+};
+
+// Trigger from DOM
+document.getElementById('btn')?.addEventListener('click', () => {
+  const seq = state.getEntityByName('my-sequence');
+  if (seq !== null) state.addComponent(seq, TriggerSequence);
+});
+```
 
 ## How Recipes and Shorthands Work
 
@@ -532,14 +680,12 @@ const health = Health.current[entity];
 ### ❌ Wrong Physics Type
 ```xml
 <!-- BAD: Dynamic platform (falls with gravity) -->
-<dynamic-part pos="0 3 0" shape="box">
-  <tween target="body.pos-x" from="-5" to="5"></tween>
-</dynamic-part>
+<dynamic-part name="platform" pos="0 3 0" shape="box"></dynamic-part>
+<tween target="platform" attr="body.pos-x" from="-5" to="5"></tween>
 
 <!-- GOOD: Kinematic for controlled movement -->
-<kinematic-part pos="0 3 0" shape="box">
-  <tween target="body.pos-x" from="-5" to="5"></tween>
-</kinematic-part>
+<kinematic-part name="platform" pos="0 3 0" shape="box"></kinematic-part>
+<tween target="platform" attr="body.pos-x" from="-5" to="5"></tween>
 ```
 
 ## Custom Components and Systems
@@ -646,7 +792,7 @@ GAME
 - **RenderingPlugin** - Three.js meshes, lights, camera
 - **PhysicsPlugin** - Rapier physics simulation
 - **InputPlugin** - Keyboard, mouse, gamepad input
-- **OrbitCameraPlugin** - Third-person camera
+- **OrbitCameraPlugin** - Standalone orbital camera with direct input handling
 - **PlayerPlugin** - Character controller
 - **TweenPlugin** - Animation system
 - **RespawnPlugin** - Fall detection and reset

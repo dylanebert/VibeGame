@@ -1,15 +1,20 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import {
-  State,
-  XMLParser,
-  defineQuery,
-  parseXMLToEntities,
-} from 'vibegame';
+import { State, XMLParser, defineQuery, parseXMLToEntities } from 'vibegame';
 import { DefaultPlugins } from 'vibegame/defaults';
-import { AmbientLight, DirectionalLight, MainCamera, RenderingPlugin } from 'vibegame/rendering';
+import {
+  AmbientLight,
+  DirectionalLight,
+  MainCamera,
+  RenderingPlugin,
+} from 'vibegame/rendering';
 import { AnimatedCharacter, HasAnimator } from 'vibegame/animation';
-import { Body, CharacterController, CharacterMovement, Collider } from 'vibegame/physics';
+import {
+  Body,
+  CharacterController,
+  CharacterMovement,
+  Collider,
+} from 'vibegame/physics';
 import { InputState } from 'vibegame/input';
 import { OrbitCamera } from 'vibegame/orbit-camera';
 import { Parent, Transform, TransformsPlugin } from 'vibegame/transforms';
@@ -116,7 +121,7 @@ describe('Startup Plugin - Preventing Auto-Creation', () => {
 
   it('should not create camera when one already exists from XML', () => {
     const xml =
-      '<root><camera orbit-camera="target-distance: 20; target-pitch: -45" /></root>';
+      '<root><orbit-camera target-distance="20" target-pitch="-45" /></root>';
     const parsed = XMLParser.parse(xml);
     parseXMLToEntities(state, parsed.root);
 
@@ -330,7 +335,7 @@ describe('Startup Plugin - Component Defaults', () => {
   });
 
   it('should match camera defaults between XML and startup system', () => {
-    const xml = '<root><player /><camera /></root>';
+    const xml = '<root><player /><orbit-camera /></root>';
     const parsed = XMLParser.parse(xml);
     parseXMLToEntities(state, parsed.root);
     state.scheduler.step(state, 0);

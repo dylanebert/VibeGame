@@ -92,7 +92,7 @@ describe('Parser Diagnostics', () => {
       expect(() => {
         parseXMLToEntities(state, xml.root);
       }).toThrow(
-        /\[transform.pos-x\] Type mismatch - expected number, got string "hello"/
+        /\[transform.pos-x\] Type mismatch - expected number or entity name, got string "hello"/
       );
     });
   });

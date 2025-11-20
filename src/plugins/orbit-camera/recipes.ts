@@ -1,6 +1,6 @@
 import type { Recipe } from '../../core';
 
-export const cameraRecipe: Recipe = {
-  name: 'camera',
+export const orbitCameraRecipe: Recipe = {
+  name: 'orbit-camera',
   components: ['orbit-camera', 'transform', 'main-camera'],
 };

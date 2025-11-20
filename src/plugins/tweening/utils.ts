@@ -6,21 +6,11 @@ import { Body, BodyType } from '../physics';
 import {
   KinematicRotationTween,
   KinematicTween,
+  Sequence,
+  SequenceState,
   Tween,
   TweenValue,
 } from './components';
-
-export enum LoopMode {
-  Once = 0,
-  Loop = 1,
-  PingPong = 2,
-}
-
-export const LoopModeNames: Record<string, LoopMode> = {
-  once: LoopMode.Once,
-  loop: LoopMode.Loop,
-  'ping-pong': LoopMode.PingPong,
-};
 
 export const EasingNames: Record<string, string> = {
   linear: 'linear',
@@ -165,8 +155,8 @@ export function expandShorthand(
     for (let i = 0; i < fields.length; i++) {
       results.push({
         field: `transform.${fields[i]}`,
-        from: fromArray[i] || 1,
-        to: toArray[i] || 1,
+        from: fromArray[i] ?? 1,
+        to: toArray[i] ?? 1,
       });
     }
   }
@@ -179,7 +169,6 @@ export interface TweenOptions {
   to: number | number[];
   duration?: number;
   easing?: string;
-  loop?: string | number;
 }
 
 const easingKeys = Object.values(EasingNames);
@@ -187,6 +176,45 @@ const easingIndexMap = new Map<string, number>();
 easingKeys.forEach((key, index) => easingIndexMap.set(key, index));
 
 export const tweenFieldRegistry = new Map<number, Float32Array>();
+
+export interface SequenceItemSpec {
+  type: 'tween' | 'pause';
+  duration: number;
+  target?: number;
+  attr?: string;
+  from?: number | number[];
+  to?: number | number[];
+  easing?: string;
+}
+
+export const sequenceRegistry = new Map<number, SequenceItemSpec[]>();
+export const sequenceActiveTweens = new Map<number, Set<number>>();
+
+export function playSequence(state: State, entity: number): void {
+  if (!state.hasComponent(entity, Sequence)) return;
+  Sequence.state[entity] = SequenceState.Playing;
+}
+
+export function stopSequence(state: State, entity: number): void {
+  if (!state.hasComponent(entity, Sequence)) return;
+  Sequence.state[entity] = SequenceState.Idle;
+
+  const activeTweens = sequenceActiveTweens.get(entity);
+  if (activeTweens) {
+    for (const tweenEntity of activeTweens) {
+      if (state.exists(tweenEntity)) {
+        state.destroyEntity(tweenEntity);
+      }
+    }
+    activeTweens.clear();
+  }
+}
+
+export function resetSequence(state: State, entity: number): void {
+  stopSequence(state, entity);
+  Sequence.currentIndex[entity] = 0;
+  Sequence.pauseRemaining[entity] = 0;
+}
 
 export function createTween(
   state: State,
@@ -204,12 +232,6 @@ export function createTween(
     ? EasingNames[options.easing] || options.easing
     : 'linear';
   Tween.easingIndex[tweenEntity] = easingIndexMap.get(easingKey) ?? 0;
-
-  if (typeof options.loop === 'string') {
-    Tween.loopMode[tweenEntity] = LoopModeNames[options.loop] ?? LoopMode.Once;
-  } else {
-    Tween.loopMode[tweenEntity] = options.loop ?? LoopMode.Once;
-  }
 
   const shorthandFields = expandShorthand(target, options, entity, state);
   if (shorthandFields.length > 0) {

@@ -9,11 +9,7 @@ import {
 } from 'vibegame';
 import { DefaultPlugins } from 'vibegame/defaults';
 import { InputState } from 'vibegame/input';
-import {
-  Body,
-  CharacterController,
-  CharacterMovement,
-} from 'vibegame/physics';
+import { Body, CharacterController, CharacterMovement } from 'vibegame/physics';
 import { Player } from 'vibegame/player';
 
 describe('E2E: Player Jump Mechanics', () => {

@@ -102,6 +102,8 @@ The engine uses a semi-fixed timestep model with three execution phases:
 - getRecipe(name): Recipe | undefined
 - getComponent(name): Component | undefined
 - getParser(tag): Parser | undefined
+- setEntityName(name, entity): void
+- getEntityByName(name): number | null
 - step(deltaTime?): void
 - dispose(): void
 
@@ -296,10 +298,10 @@ const result = GAME.XMLParser.parse(xml);
 // result.root contains ParsedElement tree
 
 // Custom parser for a tag
-const customParser: GAME.Parser = (entity, element, state) => {
-  const pos = element.attributes.pos as number[];
+const customParser: GAME.Parser = ({ entity, element, state }) => {
+  const pos = element.attributes.pos as { x: number; y: number; z: number };
   state.addComponent(entity, GAME.Transform, {
-    posX: pos[0], posY: pos[1], posZ: pos[2]
+    posX: pos.x, posY: pos.y, posZ: pos.z
   });
 };
 

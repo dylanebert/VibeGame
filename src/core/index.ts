@@ -20,17 +20,19 @@ export type {
   EnumMapping,
   GameTime,
   Parser,
+  ParserParams,
   Plugin,
   Recipe,
   ShorthandMapping,
   System,
   ValidationRule,
 } from './ecs';
-export { lerp, slerp, eulerToQuaternion, quaternionToEuler } from './math';
+export { eulerToQuaternion, lerp, quaternionToEuler, slerp } from './math';
 export {
-  parseXMLToEntities,
   entityRecipe,
   fromEuler,
+  ParseContext,
+  parseXMLToEntities,
   type EntityCreationResult,
 } from './recipes';
 export { toCamelCase, toKebabCase } from './utils';
@@ -43,29 +45,28 @@ export {
 export type { ParsedElement, XMLValue } from './xml';
 
 export {
-  validateRecipeAttributes,
-  safeValidateRecipeAttributes,
-  validateXMLContent,
-  validateHTMLContent,
-  isValidRecipeName,
-  getAvailableRecipeNames,
   getRecipeSchema,
+  isValidRecipeName,
+  safeValidateRecipeAttributes,
+  validateHTMLContent,
+  validateRecipeAttributes,
+  validateXMLContent,
 } from './validation';
 
 export type {
-  Vector3,
-  Vector2,
-  Color,
-  Shape,
   BodyTypeValue,
-  RecipeName,
+  Color,
   RecipeAttributes,
-  ValidationResult,
+  RecipeName,
+  Shape,
   ValidationOptions,
+  ValidationResult,
+  Vector2,
+  Vector3,
 } from './validation';
 
 export {
+  disposeAllRuntimes,
   registerRuntime,
   unregisterRuntime,
-  disposeAllRuntimes,
 } from './runtime-manager';

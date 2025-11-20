@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import {
-  State,
-  TIME_CONSTANTS,
-  XMLParser,
-  parseXMLToEntities,
-} from 'vibegame';
+import { State, TIME_CONSTANTS, XMLParser, parseXMLToEntities } from 'vibegame';
 import {
   Body,
   BodyType,
@@ -13,19 +8,22 @@ import {
   CharacterMovement,
   Collider,
   ColliderShape,
-  
   PhysicsPlugin,
 } from 'vibegame/physics';
 import { InputState } from 'vibegame/input';
 import { OrbitCameraPlugin } from 'vibegame/orbit-camera';
 import { Player, PlayerPlugin } from 'vibegame/player';
 import { Respawn, RespawnPlugin } from 'vibegame/respawn';
-import { Transform, TransformsPlugin, WorldTransform } from 'vibegame/transforms';
+import {
+  Transform,
+  TransformsPlugin,
+  WorldTransform,
+} from 'vibegame/transforms';
 
 describe('Respawn Plugin', () => {
   let state: State;
 
-beforeEach(async () => {
+  beforeEach(async () => {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
     global.DOMParser = dom.window.DOMParser;
 
