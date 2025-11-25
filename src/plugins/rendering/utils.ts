@@ -1,5 +1,6 @@
 import type { State } from '../../core';
 import * as THREE from 'three';
+import { MainCamera } from './components';
 
 const INITIAL_INSTANCES = 1000;
 const MAX_TOTAL_INSTANCES = 50000;
@@ -11,30 +12,91 @@ export const RendererShape = {
   SPHERE: 1,
 } as const;
 
-export const threeCameras = new Map<number, THREE.PerspectiveCamera>();
+export const CameraProjection = {
+  PERSPECTIVE: 0,
+  ORTHOGRAPHIC: 1,
+} as const;
+
+export const threeCameras = new Map<number, THREE.Camera>();
 const canvasElements = new Map<number, HTMLCanvasElement>();
 
-function createThreeCamera(
-  entity: number,
-  state: State
-): THREE.PerspectiveCamera {
-  let aspectRatio = 16 / 9;
-
+function getCanvasAspect(state: State): { width: number; height: number; aspect: number } {
   const context = stateToRenderingContext.get(state);
   const canvas = context?.canvas;
 
+  let width = 16;
+  let height = 9;
+
   if (canvas && canvas.clientWidth && canvas.clientHeight) {
-    aspectRatio = canvas.clientWidth / canvas.clientHeight;
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
   } else if (typeof window !== 'undefined') {
-    aspectRatio = window.innerWidth / window.innerHeight;
+    width = window.innerWidth;
+    height = window.innerHeight;
   }
 
-  const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
+  return { width, height, aspect: width / height };
+}
+
+function createThreeCamera(
+  entity: number,
+  state: State,
+  projection: number,
+  fov: number,
+  orthoSize: number
+): THREE.Camera {
+  const { aspect } = getCanvasAspect(state);
+
+  let camera: THREE.Camera;
+
+  if (projection === CameraProjection.ORTHOGRAPHIC) {
+    const halfHeight = orthoSize / 2;
+    const halfWidth = halfHeight * aspect;
+    camera = new THREE.OrthographicCamera(
+      -halfWidth,
+      halfWidth,
+      halfHeight,
+      -halfHeight,
+      0.1,
+      1000
+    );
+  } else {
+    camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
+  }
+
   threeCameras.set(entity, camera);
   return camera;
 }
 
-export { createThreeCamera };
+function syncCameraSettings(
+  camera: THREE.Camera,
+  entity: number,
+  state: State
+): void {
+  const { aspect } = getCanvasAspect(state);
+
+  if (camera instanceof THREE.OrthographicCamera) {
+    const orthoSize = MainCamera.orthoSize[entity];
+    const halfHeight = orthoSize / 2;
+    const halfWidth = halfHeight * aspect;
+
+    if (camera.top !== halfHeight || camera.right !== halfWidth) {
+      camera.left = -halfWidth;
+      camera.right = halfWidth;
+      camera.top = halfHeight;
+      camera.bottom = -halfHeight;
+      camera.updateProjectionMatrix();
+    }
+  } else if (camera instanceof THREE.PerspectiveCamera) {
+    const fov = MainCamera.fov[entity];
+    if (camera.fov !== fov) {
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+    }
+  }
+}
+
+export { createThreeCamera, getCanvasAspect, syncCameraSettings };
 
 export function findAvailableInstanceSlot(
   mesh: THREE.InstancedMesh,
@@ -121,9 +183,11 @@ export function resizeInstancedMesh(
 export interface RenderingContext {
   scene: THREE.Scene;
   meshPools: Map<number, THREE.InstancedMesh>;
+  unlitMeshPools: Map<number, THREE.InstancedMesh>;
   geometries: Map<number, THREE.BufferGeometry>;
   material: THREE.MeshStandardMaterial;
-  entityInstances: Map<number, { poolId: number; instanceId: number }>;
+  unlitMaterial: THREE.MeshBasicMaterial;
+  entityInstances: Map<number, { poolId: number; instanceId: number; unlit: boolean }>;
   lights: {
     ambient: THREE.HemisphereLight;
     directional: THREE.DirectionalLight;
@@ -159,11 +223,13 @@ export function initializeContext(): RenderingContext {
   return {
     scene,
     meshPools: new Map(),
+    unlitMeshPools: new Map(),
     geometries: createGeometries(),
     material: new THREE.MeshStandardMaterial({
       metalness: 0.0,
       roughness: 1.0,
     }),
+    unlitMaterial: new THREE.MeshBasicMaterial(),
     entityInstances: new Map(),
     lights: {
       ambient: ambient,
@@ -235,20 +301,21 @@ export function handleWindowResize(
   const context = getRenderingContext(state);
   const canvas = context.canvas;
 
-  if (canvas) {
-    const width = canvas.clientWidth || window.innerWidth;
-    const height = canvas.clientHeight || window.innerHeight;
-    renderer.setSize(width, height, false);
+  const width = canvas?.clientWidth || window.innerWidth;
+  const height = canvas?.clientHeight || window.innerHeight;
+  const aspect = width / height;
 
-    for (const [, camera] of threeCameras) {
-      camera.aspect = width / height;
+  renderer.setSize(width, height, false);
+
+  for (const [, camera] of threeCameras) {
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.aspect = aspect;
       camera.updateProjectionMatrix();
-    }
-  } else {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    for (const [, camera] of threeCameras) {
-      camera.aspect = window.innerWidth / window.innerHeight;
+    } else if (camera instanceof THREE.OrthographicCamera) {
+      const halfHeight = (camera.top - camera.bottom) / 2;
+      const halfWidth = halfHeight * aspect;
+      camera.left = -halfWidth;
+      camera.right = halfWidth;
       camera.updateProjectionMatrix();
     }
   }

@@ -23,3 +23,7 @@ export const Tonemapping = defineComponent({
   averageLuminance: Types.f32,
   adaptationRate: Types.f32,
 });
+
+export const SMAA = defineComponent({
+  preset: Types.ui8,
+});

@@ -7,6 +7,7 @@ export {
 } from './components';
 export { RenderingPlugin } from './plugin';
 export {
+  CameraProjection,
   getRenderingContext,
   getScene,
   setCanvasElement,

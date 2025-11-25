@@ -23,16 +23,19 @@ const mainCameraTransformQuery = defineQuery([MainCamera, WorldTransform]);
 
 export function getOrCreateMesh(
   context: RenderingContext,
-  shapeId: number
+  shapeId: number,
+  unlit: boolean = false
 ): THREE.InstancedMesh | null {
-  let mesh = context.meshPools.get(shapeId);
+  const pools = unlit ? context.unlitMeshPools : context.meshPools;
+  const material = unlit ? context.unlitMaterial : context.material;
+  let mesh = pools.get(shapeId);
 
   if (!mesh) {
     const geometry = context.geometries.get(shapeId);
     if (!geometry) return null;
 
-    mesh = initializeInstancedMesh(geometry, context.material);
-    context.meshPools.set(shapeId, mesh);
+    mesh = initializeInstancedMesh(geometry, material);
+    pools.set(shapeId, mesh);
     context.scene.add(mesh);
   }
 
@@ -43,7 +46,8 @@ export function updateInstance(
   mesh: THREE.InstancedMesh,
   entity: number,
   context: RenderingContext,
-  state: State
+  state: State,
+  unlit: boolean = false
 ): THREE.InstancedMesh {
   let instanceInfo = context.entityInstances.get(entity);
 
@@ -62,19 +66,22 @@ export function updateInstance(
       const geometry = context.geometries.get(shapeId);
       if (!geometry) return mesh;
 
+      const pools = unlit ? context.unlitMeshPools : context.meshPools;
+      const material = unlit ? context.unlitMaterial : context.material;
+
       mesh = resizeInstancedMesh(
         mesh,
         geometry,
-        context.material,
+        material,
         context.scene
       );
-      context.meshPools.set(shapeId, mesh);
+      pools.set(shapeId, mesh);
 
       instanceId = findAvailableInstanceSlot(mesh, matrix);
       if (instanceId === null) return mesh;
     }
 
-    instanceInfo = { poolId: Renderer.shape[entity], instanceId };
+    instanceInfo = { poolId: Renderer.shape[entity], instanceId, unlit };
     context.entityInstances.set(entity, instanceInfo);
     context.totalInstanceCount++;
 

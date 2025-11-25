@@ -1,7 +1,7 @@
 import type { Component } from 'bitecs';
 import { gsap } from 'gsap';
 import type { State } from '../../core';
-import { toCamelCase } from '../../core';
+import { defineQuery, toCamelCase } from '../../core';
 import { Body, BodyType } from '../physics';
 import {
   KinematicRotationTween,
@@ -75,9 +75,11 @@ const easingFunctions = {
 };
 
 export function applyEasing(t: number, easingKey: string): number {
-  const easingFn =
-    easingFunctions[easingKey as keyof typeof easingFunctions] ||
-    easingFunctions.linear;
+  const easingFn = easingFunctions[easingKey as keyof typeof easingFunctions];
+  if (!easingFn) {
+    console.warn(`Unknown easing key "${easingKey}", falling back to linear`);
+    return easingFunctions.linear(t);
+  }
   return easingFn(t);
 }
 
@@ -123,39 +125,69 @@ export function expandShorthand(
 
   if (target === 'rotation') {
     const toArray = parseNumberOrArray(options.to, [0, 0, 0]);
-    const fromArray = parseNumberOrArray(options.from, [0, 0, 0]);
     const fields = ['eulerX', 'eulerY', 'eulerZ'];
     const hasBody = state.hasComponent(entity, Body);
     const prefix = hasBody ? 'body' : 'transform';
 
     for (let i = 0; i < fields.length; i++) {
+      const resolved = resolveComponentField(
+        `${prefix}.${fields[i]}`,
+        entity,
+        state
+      );
+      const currentValue = resolved ? resolved.array[entity] : 0;
+      const fromValue =
+        options.from !== undefined
+          ? parseNumberOrArray(options.from, [0, 0, 0])[i] ?? currentValue
+          : currentValue;
+
       results.push({
         field: `${prefix}.${fields[i]}`,
-        from: fromArray[i] || 0,
+        from: fromValue,
         to: toArray[i] || 0,
       });
     }
   } else if (target === 'at') {
     const toArray = parseNumberOrArray(options.to, [0, 0, 0]);
-    const fromArray = parseNumberOrArray(options.from, [0, 0, 0]);
     const fields = ['posX', 'posY', 'posZ'];
 
     for (let i = 0; i < fields.length; i++) {
+      const resolved = resolveComponentField(
+        `transform.${fields[i]}`,
+        entity,
+        state
+      );
+      const currentValue = resolved ? resolved.array[entity] : 0;
+      const fromValue =
+        options.from !== undefined
+          ? parseNumberOrArray(options.from, [0, 0, 0])[i] ?? currentValue
+          : currentValue;
+
       results.push({
         field: `transform.${fields[i]}`,
-        from: fromArray[i] || 0,
+        from: fromValue,
         to: toArray[i] || 0,
       });
     }
   } else if (target === 'scale') {
     const toArray = parseNumberOrArray(options.to, [1, 1, 1]);
-    const fromArray = parseNumberOrArray(options.from, [1, 1, 1]);
     const fields = ['scaleX', 'scaleY', 'scaleZ'];
 
     for (let i = 0; i < fields.length; i++) {
+      const resolved = resolveComponentField(
+        `transform.${fields[i]}`,
+        entity,
+        state
+      );
+      const currentValue = resolved ? resolved.array[entity] : 1;
+      const fromValue =
+        options.from !== undefined
+          ? parseNumberOrArray(options.from, [1, 1, 1])[i] ?? currentValue
+          : currentValue;
+
       results.push({
         field: `transform.${fields[i]}`,
-        from: fromArray[i] ?? 1,
+        from: fromValue,
         to: toArray[i] ?? 1,
       });
     }
@@ -214,6 +246,82 @@ export function resetSequence(state: State, entity: number): void {
   stopSequence(state, entity);
   Sequence.currentIndex[entity] = 0;
   Sequence.pauseRemaining[entity] = 0;
+}
+
+export function completeSequence(state: State, entity: number): void {
+  if (!state.hasComponent(entity, Sequence)) return;
+  if (Sequence.state[entity] !== SequenceState.Playing) return;
+
+  const activeTweens = sequenceActiveTweens.get(entity);
+  if (activeTweens) {
+    for (const tweenEntity of activeTweens) {
+      completeTweenValues(state, tweenEntity);
+      if (state.exists(tweenEntity)) {
+        state.destroyEntity(tweenEntity);
+      }
+    }
+    activeTweens.clear();
+  }
+
+  const items = sequenceRegistry.get(entity);
+  if (items) {
+    const startIndex = Sequence.currentIndex[entity];
+    for (let i = startIndex; i < items.length; i++) {
+      const item = items[i];
+      if (item.type === 'tween' && item.target !== undefined && item.attr) {
+        applyFinalValue(state, item.target, item.attr, item.to ?? 0);
+      }
+    }
+  }
+
+  Sequence.state[entity] = SequenceState.Idle;
+  Sequence.currentIndex[entity] = 0;
+  Sequence.pauseRemaining[entity] = 0;
+}
+
+const tweenValueQuery = defineQuery([TweenValue]);
+
+function completeTweenValues(state: State, tweenEntity: number): void {
+  const toDestroy: number[] = [];
+
+  for (const valueEntity of tweenValueQuery(state.world)) {
+    if (TweenValue.source[valueEntity] !== tweenEntity) continue;
+
+    const targetEntity = TweenValue.target[valueEntity];
+    const array = tweenFieldRegistry.get(valueEntity);
+    if (array && targetEntity < array.length) {
+      array[targetEntity] = TweenValue.to[valueEntity];
+    }
+    tweenFieldRegistry.delete(valueEntity);
+    toDestroy.push(valueEntity);
+  }
+
+  for (const entity of toDestroy) {
+    state.destroyEntity(entity);
+  }
+}
+
+function applyFinalValue(
+  state: State,
+  entity: number,
+  target: string,
+  value: number | number[]
+): void {
+  const shorthandFields = expandShorthand(target, { to: value }, entity, state);
+
+  if (shorthandFields.length > 0) {
+    for (const fieldData of shorthandFields) {
+      const resolved = resolveComponentField(fieldData.field, entity, state);
+      if (resolved) {
+        resolved.array[entity] = fieldData.to;
+      }
+    }
+  } else {
+    const resolved = resolveComponentField(target, entity, state);
+    if (resolved) {
+      resolved.array[entity] = typeof value === 'number' ? value : value[0];
+    }
+  }
 }
 
 export function createTween(

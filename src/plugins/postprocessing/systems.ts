@@ -3,6 +3,8 @@ import {
   EffectComposer,
   EffectPass,
   RenderPass,
+  SMAAEffect,
+  SMAAPreset,
   ToneMappingEffect,
   ToneMappingMode,
   type Effect,
@@ -17,7 +19,7 @@ import {
   getScene,
   threeCameras,
 } from '../rendering';
-import { Bloom, Dithering, Tonemapping } from './components';
+import { Bloom, Dithering, SMAA, Tonemapping } from './components';
 import { DitheringEffect } from './effects/dithering-effect';
 import { getPostprocessingContext } from './utils';
 
@@ -50,10 +52,26 @@ export const PostprocessingSystem: System = {
       const effectsMap = postContext.effects.get(entity)!;
       const currentBloomEffect = effectsMap.get('bloom');
       const currentDitheringEffect = effectsMap.get('dithering');
+      const currentSmaaEffect = effectsMap.get('smaa');
       const currentTonemappingEffect = effectsMap.get('tonemapping');
       const hasBloom = state.hasComponent(entity, Bloom);
       const hasDithering = state.hasComponent(entity, Dithering);
+      const hasSMAA = state.hasComponent(entity, SMAA);
       const hasTonemapping = state.hasComponent(entity, Tonemapping);
+
+      if (hasSMAA) {
+        if (!currentSmaaEffect) {
+          const presetValue = SMAA.preset[entity];
+          const smaaEffect = new SMAAEffect({
+            preset: presetValue as SMAAPreset,
+          });
+          effectsMap.set('smaa', smaaEffect);
+          rebuildEffectPass(composer, effectsMap, camera);
+        }
+      } else if (currentSmaaEffect) {
+        effectsMap.delete('smaa');
+        rebuildEffectPass(composer, effectsMap, camera);
+      }
 
       if (hasBloom) {
         if (!currentBloomEffect) {
@@ -161,6 +179,9 @@ function rebuildEffectPass(
 
   if (effectsMap.size > 0) {
     const effects: Effect[] = [];
+    if (effectsMap.has('smaa')) {
+      effects.push(effectsMap.get('smaa')!);
+    }
     if (effectsMap.has('bloom')) {
       effects.push(effectsMap.get('bloom')!);
     }

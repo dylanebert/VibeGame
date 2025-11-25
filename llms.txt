@@ -397,15 +397,18 @@ Sequences orchestrate multiple tweens with timing control. Tweens before `<pause
 ### TypeScript Sequence Control
 
 ```typescript
-import { playSequence, resetSequence, stopSequence } from 'vibegame/tweening';
+import { completeSequence, playSequence, resetSequence, stopSequence } from 'vibegame/tweening';
 
 // Get sequence by name and trigger
 const bounce = state.getEntityByName('bounce');
-resetSequence(state, bounce);  // Reset to beginning
-playSequence(state, bounce);   // Start playback
+resetSequence(state, bounce);    // Reset to beginning
+playSequence(state, bounce);     // Start playback
 
 // Stop mid-animation
-stopSequence(state, bounce);
+stopSequence(state, bounce);     // Stop, clear active tweens
+
+// Skip to end instantly
+completeSequence(state, bounce); // Apply all final values immediately
 ```
 
 ### Event-Driven Sequence Pattern
@@ -1656,6 +1659,9 @@ Post-processing effects layer using the postprocessing library for Three.js rend
 - scale: f32 (1.0) - Pattern scale (higher = coarser dithering)
 - noise: f32 (1.0) - Noise threshold intensity
 
+#### SMAA
+- preset: ui8 (2) - Anti-aliasing quality (0=low, 1=medium, 2=high, 3=ultra)
+
 #### Tonemapping
 - mode: ui8 (7) - Tonemapping mode (0-9)
 - middleGrey: f32 (0.6) - Middle grey value
@@ -1719,14 +1725,24 @@ Post-processing effects layer using the postprocessing library for Three.js rend
 <camera dithering="grayscale: 1; color-bits: 4"></camera>
 ```
 
+### SMAA Anti-Aliasing
+
+```xml
+<!-- Default SMAA (high quality) -->
+<camera smaa></camera>
+
+<!-- Ultra quality SMAA -->
+<camera smaa="preset: ultra"></camera>
+```
+
 ### Combined Effects
 
 ```xml
 <!-- Combined bloom and dithering for retro aesthetic -->
 <camera bloom="intensity: 1.5" dithering="color-bits: 2; grayscale: 1; scale: 3"></camera>
 
-<!-- Bloom with tonemapping -->
-<camera bloom="intensity: 2" tonemapping="mode: 7; middle-grey: 0.6"></camera>
+<!-- Bloom with SMAA -->
+<camera bloom="intensity: 2" smaa="preset: high"></camera>
 ```
 
 ### Imperative Usage
@@ -1764,13 +1780,16 @@ Lightweight Three.js rendering wrapper with meshes, lights, and cameras.
 - sizeX, sizeY, sizeZ: f32 (1)
 - color: ui32 (0xffffff)
 - visible: ui8 (1)
+- unlit: ui8 (0) - Use unlit material (ignores lighting)
 
 #### RenderContext
 - clearColor: ui32 (0x000000)
 - hasCanvas: ui8
 
 #### MainCamera
-Tag component (no properties)
+- projection: ui8 (0) - 0=perspective, 1=orthographic
+- fov: f32 (75) - Field of view in degrees (perspective only)
+- orthoSize: f32 (10) - Vertical size in world units (orthographic only)
 
 #### AmbientLight
 - skyColor: ui32 (0x87ceeb)
@@ -1911,6 +1930,23 @@ GAME.Renderer.visible[entity] = 1; // Show
 
 // In XML
 <entity renderer="visible: 0"></entity>  <!-- Initially hidden -->
+```
+
+### Unlit Rendering
+
+```xml
+<!-- Emissive/unlit objects (not affected by lighting) -->
+<entity renderer="shape: sphere; color: 0xffff00; unlit: 1"></entity>
+```
+
+### Orthographic Camera
+
+```xml
+<!-- Orthographic projection for 2D-style rendering -->
+<camera main-camera="projection: orthographic; ortho-size: 20"></camera>
+
+<!-- Perspective (default) with custom FOV -->
+<camera main-camera="projection: perspective; fov: 60"></camera>
 ```
 
 ### Respawn
@@ -2284,9 +2320,10 @@ For `<kinematic-part>` entities, tweens on body.pos-* or body.euler-* fields aut
 createTween(state, entity, target, options): number | null
 
 // Sequence control
-playSequence(state, entity): void   // Start from current position
-stopSequence(state, entity): void   // Stop and clear active tweens
-resetSequence(state, entity): void  // Stop and reset to beginning
+playSequence(state, entity): void      // Start from current position
+stopSequence(state, entity): void      // Stop and clear active tweens
+resetSequence(state, entity): void     // Stop and reset to beginning
+completeSequence(state, entity): void  // Jump to end, apply final values
 ```
 
 ### Easing Functions

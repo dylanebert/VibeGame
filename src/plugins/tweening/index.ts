@@ -14,6 +14,8 @@ export {
   TweenSystem,
 } from './systems';
 export {
+  applyEasing,
+  completeSequence,
   createTween,
   playSequence,
   resetSequence,

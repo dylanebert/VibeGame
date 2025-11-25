@@ -51,6 +51,9 @@ postprocessing/
 - scale: f32 (1.0) - Pattern scale (higher = coarser dithering)
 - noise: f32 (1.0) - Noise threshold intensity
 
+#### SMAA
+- preset: ui8 (2) - Anti-aliasing quality (0=low, 1=medium, 2=high, 3=ultra)
+
 #### Tonemapping
 - mode: ui8 (7) - Tonemapping mode (0-9)
 - middleGrey: f32 (0.6) - Middle grey value
@@ -114,14 +117,24 @@ postprocessing/
 <camera dithering="grayscale: 1; color-bits: 4"></camera>
 ```
 
+### SMAA Anti-Aliasing
+
+```xml
+<!-- Default SMAA (high quality) -->
+<camera smaa></camera>
+
+<!-- Ultra quality SMAA -->
+<camera smaa="preset: ultra"></camera>
+```
+
 ### Combined Effects
 
 ```xml
 <!-- Combined bloom and dithering for retro aesthetic -->
 <camera bloom="intensity: 1.5" dithering="color-bits: 2; grayscale: 1; scale: 3"></camera>
 
-<!-- Bloom with tonemapping -->
-<camera bloom="intensity: 2" tonemapping="mode: 7; middle-grey: 0.6"></camera>
+<!-- Bloom with SMAA -->
+<camera bloom="intensity: 2" smaa="preset: high"></camera>
 ```
 
 ### Imperative Usage

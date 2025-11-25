@@ -1,5 +1,5 @@
 import type { Plugin } from '../../core';
-import { Bloom, Dithering, Tonemapping } from './components';
+import { Bloom, Dithering, SMAA, Tonemapping } from './components';
 import { PostprocessingSystem, PostprocessingRenderSystem } from './systems';
 
 export const PostprocessingPlugin: Plugin = {
@@ -7,6 +7,7 @@ export const PostprocessingPlugin: Plugin = {
   components: {
     Bloom,
     Dithering,
+    SMAA,
     Tonemapping,
   },
   config: {
@@ -25,6 +26,9 @@ export const PostprocessingPlugin: Plugin = {
         scale: 1.0,
         noise: 1.0,
       },
+      smaa: {
+        preset: 2,
+      },
       tonemapping: {
         mode: 7,
         middleGrey: 0.6,
@@ -34,6 +38,14 @@ export const PostprocessingPlugin: Plugin = {
       },
     },
     enums: {
+      smaa: {
+        preset: {
+          low: 0,
+          medium: 1,
+          high: 2,
+          ultra: 3,
+        },
+      },
       tonemapping: {
         mode: {
           linear: 0,

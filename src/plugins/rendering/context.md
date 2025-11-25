@@ -14,8 +14,7 @@ rendering/
 ├── components.ts  # Rendering components
 ├── systems.ts  # Rendering systems
 ├── operations.ts  # Mesh and shadow operations
-├── utils.ts  # Canvas and context utilities
-└── constants.ts  # Default values
+└── utils.ts  # Canvas, context utilities, and constants
 ```
 
 ## Scope
@@ -53,13 +52,16 @@ Renderer and camera use `canvas.clientWidth/clientHeight` for sizing and aspect 
 - sizeX, sizeY, sizeZ: f32 (1)
 - color: ui32 (0xffffff)
 - visible: ui8 (1)
+- unlit: ui8 (0) - Use unlit material (ignores lighting)
 
 #### RenderContext
 - clearColor: ui32 (0x000000)
 - hasCanvas: ui8
 
 #### MainCamera
-Tag component (no properties)
+- projection: ui8 (0) - 0=perspective, 1=orthographic
+- fov: f32 (75) - Field of view in degrees (perspective only)
+- orthoSize: f32 (10) - Vertical size in world units (orthographic only)
 
 #### AmbientLight
 - skyColor: ui32 (0x87ceeb)
@@ -200,6 +202,23 @@ GAME.Renderer.visible[entity] = 1; // Show
 
 // In XML
 <entity renderer="visible: 0"></entity>  <!-- Initially hidden -->
+```
+
+### Unlit Rendering
+
+```xml
+<!-- Emissive/unlit objects (not affected by lighting) -->
+<entity renderer="shape: sphere; color: 0xffff00; unlit: 1"></entity>
+```
+
+### Orthographic Camera
+
+```xml
+<!-- Orthographic projection for 2D-style rendering -->
+<camera main-camera="projection: orthographic; ortho-size: 20"></camera>
+
+<!-- Perspective (default) with custom FOV -->
+<camera main-camera="projection: perspective; fov: 60"></camera>
 ```
 
 <!-- /LLM:EXAMPLES -->

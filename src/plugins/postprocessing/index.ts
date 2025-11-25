@@ -1,2 +1,2 @@
-export { Bloom, Dithering, Tonemapping } from './components';
+export { Bloom, Dithering, SMAA, Tonemapping } from './components';
 export { PostprocessingPlugin } from './plugin';

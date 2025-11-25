@@ -103,9 +103,10 @@ For `<kinematic-part>` entities, tweens on body.pos-* or body.euler-* fields aut
 createTween(state, entity, target, options): number | null
 
 // Sequence control
-playSequence(state, entity): void   // Start from current position
-stopSequence(state, entity): void   // Stop and clear active tweens
-resetSequence(state, entity): void  // Stop and reset to beginning
+playSequence(state, entity): void      // Start from current position
+stopSequence(state, entity): void      // Stop and clear active tweens
+resetSequence(state, entity): void     // Stop and reset to beginning
+completeSequence(state, entity): void  // Jump to end, apply final values
 ```
 
 ### Easing Functions

@@ -397,15 +397,18 @@ Sequences orchestrate multiple tweens with timing control. Tweens before `<pause
 ### TypeScript Sequence Control
 
 ```typescript
-import { playSequence, resetSequence, stopSequence } from 'vibegame/tweening';
+import { completeSequence, playSequence, resetSequence, stopSequence } from 'vibegame/tweening';
 
 // Get sequence by name and trigger
 const bounce = state.getEntityByName('bounce');
-resetSequence(state, bounce);  // Reset to beginning
-playSequence(state, bounce);   // Start playback
+resetSequence(state, bounce);    // Reset to beginning
+playSequence(state, bounce);     // Start playback
 
 // Stop mid-animation
-stopSequence(state, bounce);
+stopSequence(state, bounce);     // Stop, clear active tweens
+
+// Skip to end instantly
+completeSequence(state, bounce); // Apply all final values immediately
 ```
 
 ### Event-Driven Sequence Pattern

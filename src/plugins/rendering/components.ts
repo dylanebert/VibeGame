@@ -7,6 +7,7 @@ export const Renderer = defineComponent({
   sizeZ: Types.f32,
   color: Types.ui32,
   visible: Types.ui8,
+  unlit: Types.ui8,
 });
 
 export const RenderContext = defineComponent({
@@ -14,7 +15,11 @@ export const RenderContext = defineComponent({
   hasCanvas: Types.ui8,
 });
 
-export const MainCamera = defineComponent();
+export const MainCamera = defineComponent({
+  projection: Types.ui8,
+  fov: Types.f32,
+  orthoSize: Types.f32,
+});
 
 export const AmbientLight = defineComponent({
   skyColor: Types.ui32,

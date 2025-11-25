@@ -24,6 +24,7 @@ import {
   getScene,
   handleWindowResize,
   SHADOW_CONFIG,
+  syncCameraSettings,
   threeCameras,
 } from './utils';
 
@@ -41,7 +42,8 @@ export const MeshInstanceSystem: System = {
 
     for (const [entity, instanceInfo] of context.entityInstances) {
       if (!state.exists(entity)) {
-        const mesh = context.meshPools.get(instanceInfo.poolId);
+        const pools = instanceInfo.unlit ? context.unlitMeshPools : context.meshPools;
+        const mesh = pools.get(instanceInfo.poolId);
         if (mesh) {
           hideInstance(mesh, entity, context);
         }
@@ -52,7 +54,8 @@ export const MeshInstanceSystem: System = {
 
     const rendererEntities = rendererQuery(state.world);
     for (const entity of rendererEntities) {
-      let mesh = getOrCreateMesh(context, Renderer.shape[entity]);
+      const unlit = Renderer.unlit[entity] === 1;
+      let mesh = getOrCreateMesh(context, Renderer.shape[entity], unlit);
       if (!mesh) continue;
 
       if (Renderer.visible[entity] !== 1) {
@@ -60,7 +63,7 @@ export const MeshInstanceSystem: System = {
         continue;
       }
 
-      mesh = updateInstance(mesh, entity, context, state);
+      mesh = updateInstance(mesh, entity, context, state, unlit);
     }
 
     updateShadowCamera(context, state);
@@ -166,7 +169,13 @@ export const CameraSyncSystem: System = {
     for (const entity of cameraEntities) {
       let camera = threeCameras.get(entity);
       if (!camera) {
-        camera = createThreeCamera(entity, state);
+        camera = createThreeCamera(
+          entity,
+          state,
+          MainCamera.projection[entity],
+          MainCamera.fov[entity],
+          MainCamera.orthoSize[entity]
+        );
       }
 
       camera.position.set(
@@ -181,6 +190,8 @@ export const CameraSyncSystem: System = {
         WorldTransform.rotZ[entity],
         WorldTransform.rotW[entity]
       );
+
+      syncCameraSettings(camera, entity, state);
     }
   },
 };

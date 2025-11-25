@@ -50,6 +50,12 @@ export const RenderingPlugin: Plugin = {
         sizeY: 1,
         sizeZ: 1,
         color: 0xffffff,
+        unlit: 0,
+      },
+      mainCamera: {
+        projection: 0,
+        fov: 75,
+        orthoSize: 10,
       },
     },
     enums: {
@@ -57,6 +63,12 @@ export const RenderingPlugin: Plugin = {
         shape: {
           box: 0,
           sphere: 1,
+        },
+      },
+      mainCamera: {
+        projection: {
+          perspective: 0,
+          orthographic: 1,
         },
       },
     },
