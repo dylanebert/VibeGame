@@ -11,4 +11,5 @@ export {
   handleMouseDown,
   handleMouseUp,
   setTargetCanvas,
+  getFocusedCanvas,
 } from './utils';

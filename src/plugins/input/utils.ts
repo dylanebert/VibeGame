@@ -46,10 +46,19 @@ const bufferedActions = {
 };
 
 let targetCanvas: HTMLCanvasElement | null = null;
-let canvasHasFocus = false;
+let focusedCanvas: HTMLCanvasElement | null = null;
+
+function isValidTarget(target: EventTarget | null): target is HTMLCanvasElement {
+  if (!(target instanceof HTMLCanvasElement)) return false;
+  return targetCanvas === null || target === targetCanvas;
+}
+
+function isFocusedCanvas(target: EventTarget | null): boolean {
+  return target instanceof HTMLCanvasElement && target === focusedCanvas;
+}
 
 export function handleKeyDown(event: KeyboardEvent): void {
-  if (!canvasHasFocus) return;
+  if (!focusedCanvas) return;
 
   inputData.keys.add(event.code);
 
@@ -63,7 +72,7 @@ export function handleKeyDown(event: KeyboardEvent): void {
 }
 
 export function handleKeyUp(event: KeyboardEvent): void {
-  if (!canvasHasFocus) return;
+  if (!focusedCanvas) return;
 
   inputData.keys.delete(event.code);
 
@@ -114,82 +123,55 @@ export function handleContextMenu(event: Event): void {
   event.preventDefault();
 }
 
+function handleFocus(event: FocusEvent): void {
+  if (isValidTarget(event.target)) {
+    focusedCanvas = event.target;
+  }
+}
+
+function handleBlur(event: FocusEvent): void {
+  if (event.target === focusedCanvas) {
+    focusedCanvas = null;
+    clearAllInput();
+  }
+}
+
 function handleMouseDownDelegated(event: MouseEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
+  if (isValidTarget(event.target)) {
+    event.target.tabIndex = event.target.tabIndex === -1 ? 0 : event.target.tabIndex;
+    event.target.focus();
     handleMouseDown(event);
-    if (document.activeElement !== targetCanvas) {
-      targetCanvas.focus();
-    }
   }
 }
 
 function handleMouseUpDelegated(event: MouseEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
+  if (focusedCanvas) {
     handleMouseUp(event);
   }
 }
 
 function handleMouseMoveDelegated(event: MouseEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
+  if (isFocusedCanvas(event.target)) {
     handleMouseMove(event);
   }
 }
 
 function handleWheelDelegated(event: WheelEvent): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
+  if (isFocusedCanvas(event.target)) {
     handleWheel(event);
   }
 }
 
 function handleContextMenuDelegated(event: Event): void {
-  if (
-    event.target instanceof HTMLCanvasElement &&
-    event.target === targetCanvas
-  ) {
+  if (focusedCanvas) {
     handleContextMenu(event);
   }
 }
 
-function handleFocus(): void {
-  canvasHasFocus = true;
-}
-
-function handleBlur(): void {
-  canvasHasFocus = false;
-  clearAllInput();
-}
-
 export function setTargetCanvas(canvas: HTMLCanvasElement | null): void {
-  if (targetCanvas) {
-    targetCanvas.removeEventListener('focus', handleFocus);
-    targetCanvas.removeEventListener('blur', handleBlur);
-  }
-
   targetCanvas = canvas;
-
-  if (targetCanvas) {
-    targetCanvas.tabIndex =
-      targetCanvas.tabIndex === -1 ? 0 : targetCanvas.tabIndex;
-    targetCanvas.addEventListener('focus', handleFocus);
-    targetCanvas.addEventListener('blur', handleBlur);
-
-    if (document.activeElement === targetCanvas) {
-      canvasHasFocus = true;
-    }
-  } else {
-    canvasHasFocus = false;
+  if (canvas === null) {
+    focusedCanvas = null;
   }
 }
 
@@ -204,6 +186,8 @@ export function setupEventListeners(): void {
     capture: true,
   });
   document.addEventListener('contextmenu', handleContextMenuDelegated, true);
+  document.addEventListener('focusin', handleFocus, true);
+  document.addEventListener('focusout', handleBlur, true);
 
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('keyup', handleKeyUp);
@@ -217,11 +201,14 @@ export function cleanupEventListeners(): void {
   document.removeEventListener('mousemove', handleMouseMoveDelegated, true);
   document.removeEventListener('wheel', handleWheelDelegated, true);
   document.removeEventListener('contextmenu', handleContextMenuDelegated, true);
+  document.removeEventListener('focusin', handleFocus, true);
+  document.removeEventListener('focusout', handleBlur, true);
 
   window.removeEventListener('keydown', handleKeyDown);
   window.removeEventListener('keyup', handleKeyUp);
 
-  setTargetCanvas(null);
+  targetCanvas = null;
+  focusedCanvas = null;
 }
 
 export function getMovementAxis(
@@ -351,4 +338,8 @@ export function consumePrimary(): boolean {
 
 export function consumeSecondary(): boolean {
   return consumeAction(bufferedActions.secondary);
+}
+
+export function getFocusedCanvas(): HTMLCanvasElement | null {
+  return focusedCanvas;
 }
