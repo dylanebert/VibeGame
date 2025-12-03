@@ -20,8 +20,8 @@ text/
 
 ## Scope
 
-- **In-scope**: 3D text rendering, text content, basic typography
-- **Out-of-scope**: Custom fonts, rich text, billboarding
+- **In-scope**: 3D text rendering, text content, basic typography, custom fonts
+- **Out-of-scope**: Rich text, billboarding
 
 ## Entry Points
 
@@ -62,6 +62,9 @@ Sets the text content for a text entity (required since bitECS only supports num
 
 #### getTextContent(state, entity)
 Gets the text content for a text entity
+
+#### setDefaultFont(state, fontUrl)
+Sets the default font URL for all text entities (supports .ttf, .woff, .woff2)
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -97,12 +100,14 @@ Gets the text content for a text entity
 
 ```typescript
 import { State } from 'vibegame';
-import { Text, TextPlugin, setTextContent } from 'vibegame/text';
+import { Text, TextPlugin, setTextContent, setDefaultFont } from 'vibegame/text';
 import { Transform, WorldTransform, TransformsPlugin } from 'vibegame/transforms';
 
 const state = new State();
 state.registerPlugin(TransformsPlugin);
 state.registerPlugin(TextPlugin);
+
+setDefaultFont(state, 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5Q.ttf');
 
 const textEntity = state.createEntity();
 state.addComponent(textEntity, Transform);

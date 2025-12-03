@@ -3,7 +3,7 @@ import { Transform } from 'vibegame/transforms';
 import { Renderer, RenderContext, setCanvasElement } from 'vibegame/rendering';
 import { TransformsPlugin } from 'vibegame/transforms';
 import { RenderingPlugin } from 'vibegame/rendering';
-import { TextPlugin, Text } from 'vibegame/text';
+import { TextPlugin, Text, setDefaultFont } from 'vibegame/text';
 import { LinePlugin, Line } from 'vibegame/line';
 
 const rendererQuery = GAME.defineQuery([Transform, Renderer]);
@@ -85,6 +85,11 @@ async function initializeState(instance: CanvasInstance): Promise<void> {
   state.registerPlugin(TextPlugin);
   state.registerPlugin(LinePlugin);
   state.registerSystem(createAnimationSystem(speedMultiplier));
+
+  setDefaultFont(
+    state,
+    'https://fonts.gstatic.com/s/ibmplexsans/v23/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSDNF5zAA.ttf',
+  );
 
   await state.initializePlugins();
 

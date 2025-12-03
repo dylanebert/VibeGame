@@ -1,6 +1,6 @@
 {
   "name": "create-vibegame",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Create a new VibeGame game project",
   "type": "module",
   "bin": {

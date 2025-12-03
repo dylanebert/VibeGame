@@ -1,6 +1,6 @@
 {
   "name": "vibegame",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "a 3D game engine designed for vibe coding",
   "type": "module",
   "module": "./dist/index.js",

@@ -26,6 +26,9 @@ export const TextSystem: System = {
 
       if (!textMesh) {
         textMesh = new Text();
+        if (context.defaultFont) {
+          textMesh.font = context.defaultFont;
+        }
         scene.add(textMesh);
         context.textMeshes.set(entity, textMesh);
         TextComponent.dirty[entity] = 1;
