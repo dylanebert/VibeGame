@@ -65,6 +65,9 @@ Gets the text content for a text entity
 
 #### setDefaultFont(state, fontUrl)
 Sets the default font URL for all text entities (supports .ttf, .woff, .woff2)
+
+#### measureText(state, entity, callback)
+Measures text bounds asynchronously. Callback receives TextBounds with width, height, blockBounds, visibleBounds.
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->

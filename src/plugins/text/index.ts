@@ -5,4 +5,6 @@ export {
   setTextContent,
   getTextContent,
   setDefaultFont,
+  measureText,
+  type TextBounds,
 } from './utils';
