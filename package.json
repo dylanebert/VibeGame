@@ -1,6 +1,6 @@
 {
   "name": "vibegame",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "a 3D game engine designed for vibe coding",
   "type": "module",
   "module": "./dist/index.js",
@@ -62,6 +62,10 @@
     "./tweening": {
       "types": "./dist/plugins/tweening/index.d.ts",
       "import": "./dist/plugins/tweening/index.js"
+    },
+    "./line": {
+      "types": "./dist/plugins/line/index.d.ts",
+      "import": "./dist/plugins/line/index.js"
     },
     "./vite": {
       "types": "./dist/vite/index.d.ts",

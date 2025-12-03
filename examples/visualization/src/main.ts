@@ -4,9 +4,11 @@ import { Renderer, RenderContext, setCanvasElement } from 'vibegame/rendering';
 import { TransformsPlugin } from 'vibegame/transforms';
 import { RenderingPlugin } from 'vibegame/rendering';
 import { TextPlugin, Text } from 'vibegame/text';
+import { LinePlugin, Line } from 'vibegame/line';
 
 const rendererQuery = GAME.defineQuery([Transform, Renderer]);
 const textQuery = GAME.defineQuery([Transform, Text]);
+const lineQuery = GAME.defineQuery([Transform, Line]);
 
 const createAnimationSystem = (speedMultiplier = 1): GAME.System => ({
   group: 'draw',
@@ -43,6 +45,25 @@ const createAnimationSystem = (speedMultiplier = 1): GAME.System => ({
 
       index++;
     }
+
+    const lineEntities = lineQuery(state.world);
+    const lineCount = lineEntities.length;
+    index = 0;
+    for (const eid of lineEntities) {
+      const offset = (index * Math.PI * 2) / lineCount;
+      const phase = time + offset;
+
+      Transform.posX[eid] = Math.cos(phase) * 4;
+      Transform.posZ[eid] = Math.sin(phase) * 4;
+      Transform.posY[eid] = 3;
+
+      const length = 2 + Math.sin(time * 2 + offset) * 1;
+      Line.offsetX[eid] = Math.cos(phase + Math.PI / 2) * length;
+      Line.offsetY[eid] = Math.sin(time * 3 + offset) * length;
+      Line.offsetZ[eid] = Math.sin(phase + Math.PI / 2) * length;
+
+      index++;
+    }
   },
 });
 
@@ -62,6 +83,7 @@ async function initializeState(instance: CanvasInstance): Promise<void> {
   state.registerPlugin(TransformsPlugin);
   state.registerPlugin(RenderingPlugin);
   state.registerPlugin(TextPlugin);
+  state.registerPlugin(LinePlugin);
   state.registerSystem(createAnimationSystem(speedMultiplier));
 
   await state.initializePlugins();

@@ -11,5 +11,6 @@ export {
   getRenderingContext,
   getScene,
   setCanvasElement,
+  setRenderingCanvas,
   threeCameras,
 } from './utils';

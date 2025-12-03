@@ -44,6 +44,7 @@ vibegame/
 │   ├── plugins/  # Plugin modules
 │   │   ├── animation/  # Animation system
 │   │   ├── input/  # Input handling
+│   │   ├── line/  # 2D line rendering
 │   │   ├── orbit-camera/  # Orbital camera
 │   │   ├── physics/  # Rapier 3D physics
 │   │   ├── player/  # Player controller
@@ -138,16 +139,17 @@ Optional files:
 
 1. **animation** - Animation mixer and clip management (AnimationPlugin)
 2. **input** - Mouse, keyboard, gamepad input handling (InputPlugin)
-3. **orbit-camera** - Standalone orbital camera with direct input handling (OrbitCameraPlugin)
-4. **physics** - Rapier 3D WASM physics integration (PhysicsPlugin)
-5. **player** - Player character controller (PlayerPlugin)
-6. **postprocessing** - Post-processing effects (PostprocessingPlugin)
-7. **rendering** - Three.js rendering pipeline (RenderingPlugin)
-8. **text** - 3D text rendering with troika-three-text (TextPlugin)
-9. **respawn** - Entity respawn system (RespawnPlugin)
-10. **startup** - Initialization and setup systems (StartupPlugin)
-11. **transforms** - Transform component hierarchy (TransformsPlugin)
-12. **tweening** - Tween-based animations (TweenPlugin)
+3. **line** - 2D billboard line rendering with arrowheads (LinePlugin)
+4. **orbit-camera** - Standalone orbital camera with direct input handling (OrbitCameraPlugin)
+5. **physics** - Rapier 3D WASM physics integration (PhysicsPlugin)
+6. **player** - Player character controller (PlayerPlugin)
+7. **postprocessing** - Post-processing effects (PostprocessingPlugin)
+8. **rendering** - Three.js rendering pipeline (RenderingPlugin)
+9. **text** - 3D text rendering with troika-three-text (TextPlugin)
+10. **respawn** - Entity respawn system (RespawnPlugin)
+11. **startup** - Initialization and setup systems (StartupPlugin)
+12. **transforms** - Transform component hierarchy (TransformsPlugin)
+13. **tweening** - Tween-based animations (TweenPlugin)
 
 **Note**: Recipe system is core functionality, not a plugin. Individual plugins define their own recipes.
 

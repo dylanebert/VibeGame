@@ -42,6 +42,8 @@ export default [
         DOMParser: 'readonly',
         Input: 'readonly',
         Event: 'readonly',
+        EventTarget: 'readonly',
+        FocusEvent: 'readonly',
         require: 'readonly',
       },
     },

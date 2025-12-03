@@ -208,6 +208,28 @@ GAME
 <entity transform="pos: 0 2 0" text="text: Score; font-size: 2; color: 0xff0000"></entity>
 ```
 
+## Vector Lines
+
+Requires including the LinePlugin in the builder, as it is not included in the DefaultPlugins.
+```typescript
+import { LinePlugin } from 'vibegame/line';
+
+GAME
+  .withPlugin(LinePlugin)
+  .run();
+```
+
+```xml
+<!-- Simple line from entity position -->
+<entity transform="pos: 0 0 0" line="offset: 5 0 0"></entity>
+
+<!-- Vector arrow with arrowhead -->
+<entity transform line="offset: 3 2 0; color: 0xff0000; arrow-end: 1; arrow-size: 0.3"></entity>
+
+<!-- Styled line with both arrowheads -->
+<entity transform line="offset: 0 5 0; thickness: 4; arrow-start: 1; arrow-end: 1"></entity>
+```
+
 ```xml
 <!-- Bloom effect for glow -->
 <orbit-camera bloom="intensity: 2; luminance-threshold: 0.8"></orbit-camera>
@@ -567,6 +589,7 @@ Recipes are registered component bundles with defaults:
 - **Visual effects** - Tweening colors, positions, rotations
 - **Post-processing** - Bloom, dithering, and tonemapping effects for visual styling
 - **3D Text** - In-world text labels, scores, and UI elements
+- **Vector Lines** - Line rendering with arrowheads for visualizations
 - **Game UI/HUD** - HTML/CSS overlays with GSAP animations, ECS state integration
 
 ### Example Prompts That Work
@@ -1074,6 +1097,96 @@ import * as GAME from 'vibegame';
 // Use the exported handlers directly if needed
 canvas.addEventListener('mousedown', GAME.handleMouseDown);
 canvas.addEventListener('mouseup', GAME.handleMouseUp);
+```
+
+### Line
+
+2D billboard line rendering plugin using Three.js Line2 for GPU-accelerated fat lines with consistent screen-space thickness. Designed for mathematical visualization with optional arrowheads.
+
+### Components
+
+#### Line
+- offsetX: f32 (1) - End point X offset from entity position
+- offsetY: f32 (0) - End point Y offset from entity position
+- offsetZ: f32 (0) - End point Z offset from entity position
+- color: ui32 (0xffffff) - Line color as hex
+- thickness: f32 (2) - Line width in pixels
+- opacity: f32 (1) - Line opacity 0-1
+- visible: ui8 (1) - Visibility flag
+- arrowStart: ui8 (0) - Draw arrow at start point
+- arrowEnd: ui8 (0) - Draw arrow at end point
+- arrowSize: f32 (0.2) - Arrow head size in world units
+- dirty: ui8 (1) - Update flag (internal)
+
+### Systems
+
+#### LineSystem
+- Group: draw
+- Creates and syncs Line2 objects with component data
+- Start position from WorldTransform, end from start + offset
+- Cleans up lines when entities are removed
+
+#### Examples
+
+## Examples
+
+### Basic Line
+
+```xml
+<!-- Simple horizontal line -->
+<entity transform="pos: 0 0 0" line="offset: 5 0 0"></entity>
+
+<!-- Diagonal line with custom color -->
+<entity transform="pos: 0 0 0" line="offset: 3 3 0; color: 0xff0000"></entity>
+```
+
+### Styled Line
+
+```xml
+<!-- Thick semi-transparent line -->
+<entity
+  transform="pos: 0 0 0"
+  line="offset: 5 0 0; thickness: 5; opacity: 0.5">
+</entity>
+
+<!-- Line with arrow at end -->
+<entity
+  transform="pos: 0 0 0"
+  line="offset: 0 5 0; arrow-end: 1; arrow-size: 0.3">
+</entity>
+
+<!-- Vector arrow (both ends) -->
+<entity
+  transform="pos: 0 0 0"
+  line="offset: 4 2 0; arrow-start: 1; arrow-end: 1; arrow-size: 0.25; color: 0x00ff00">
+</entity>
+```
+
+### Imperative Usage
+
+```typescript
+import { State } from 'vibegame';
+import { Line, LinePlugin } from 'vibegame/line';
+import { Transform, WorldTransform, TransformsPlugin } from 'vibegame/transforms';
+
+const state = new State();
+state.registerPlugin(TransformsPlugin);
+state.registerPlugin(LinePlugin);
+
+const lineEntity = state.createEntity();
+state.addComponent(lineEntity, Transform);
+state.addComponent(lineEntity, WorldTransform);
+state.addComponent(lineEntity, Line);
+
+// Set line from origin to (5, 3, 0)
+Line.offsetX[lineEntity] = 5;
+Line.offsetY[lineEntity] = 3;
+Line.offsetZ[lineEntity] = 0;
+Line.color[lineEntity] = 0xff0000;
+Line.thickness[lineEntity] = 3;
+Line.arrowEnd[lineEntity] = 1;
+Line.arrowSize[lineEntity] = 0.3;
+Line.dirty[lineEntity] = 1;
 ```
 
 ### Orbit Camera

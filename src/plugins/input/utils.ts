@@ -178,6 +178,10 @@ export function setTargetCanvas(canvas: HTMLCanvasElement | null): void {
   }
 }
 
+export function setFocusedCanvas(canvas: HTMLCanvasElement | null): void {
+  focusedCanvas = canvas;
+}
+
 export function setupEventListeners(): void {
   if (typeof window === 'undefined') return;
 

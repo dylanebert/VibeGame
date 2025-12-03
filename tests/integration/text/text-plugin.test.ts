@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, defineQuery } from 'vibegame';
 import {
-  Text3D,
+  Text,
   TextPlugin,
   setTextContent,
   getTextContent,
@@ -24,19 +24,19 @@ describe('Text Plugin Integration', () => {
     expect(true).toBe(true);
   });
 
-  it('should process entities with Text3D component', () => {
+  it('should process entities with Text component', () => {
     state.registerPlugin(TextPlugin);
 
     const entity = state.createEntity();
-    state.addComponent(entity, Text3D);
+    state.addComponent(entity, Text);
 
-    Text3D.fontSize[entity] = 1.0;
-    Text3D.color[entity] = 0xffffff;
-    Text3D.anchorX[entity] = 1;
-    Text3D.anchorY[entity] = 1;
-    Text3D.dirty[entity] = 1;
+    Text.fontSize[entity] = 1.0;
+    Text.color[entity] = 0xffffff;
+    Text.anchorX[entity] = 1;
+    Text.anchorY[entity] = 1;
+    Text.dirty[entity] = 1;
 
-    expect(state.hasComponent(entity, Text3D)).toBe(true);
+    expect(state.hasComponent(entity, Text)).toBe(true);
   });
 
   it('should work with transforms for text positioning', () => {
@@ -44,7 +44,7 @@ describe('Text Plugin Integration', () => {
     state.registerPlugin(TextPlugin);
 
     const textEntity = state.createEntity();
-    state.addComponent(textEntity, Text3D);
+    state.addComponent(textEntity, Text);
     state.addComponent(textEntity, Transform);
     state.addComponent(textEntity, WorldTransform);
 
@@ -52,7 +52,7 @@ describe('Text Plugin Integration', () => {
     Transform.posY[textEntity] = 10;
     Transform.posZ[textEntity] = 0;
 
-    expect(state.hasComponent(textEntity, Text3D)).toBe(true);
+    expect(state.hasComponent(textEntity, Text)).toBe(true);
     expect(state.hasComponent(textEntity, Transform)).toBe(true);
     expect(state.hasComponent(textEntity, WorldTransform)).toBe(true);
   });
@@ -61,14 +61,14 @@ describe('Text Plugin Integration', () => {
     state.registerPlugin(TextPlugin);
 
     const entity = state.createEntity();
-    state.addComponent(entity, Text3D);
+    state.addComponent(entity, Text);
 
     setTextContent(state, entity, 'Initial');
-    Text3D.dirty[entity] = 1;
+    Text.dirty[entity] = 1;
     expect(getTextContent(state, entity)).toBe('Initial');
 
     setTextContent(state, entity, 'Updated');
-    Text3D.dirty[entity] = 1;
+    Text.dirty[entity] = 1;
     expect(getTextContent(state, entity)).toBe('Updated');
   });
 
@@ -79,10 +79,10 @@ describe('Text Plugin Integration', () => {
     const text2 = state.createEntity();
     const nonText = state.createEntity();
 
-    state.addComponent(text1, Text3D);
-    state.addComponent(text2, Text3D);
+    state.addComponent(text1, Text);
+    state.addComponent(text2, Text);
 
-    const textEntities = defineQuery([Text3D])(state.world);
+    const textEntities = defineQuery([Text])(state.world);
     expect(textEntities).toContain(text1);
     expect(textEntities).toContain(text2);
     expect(textEntities).not.toContain(nonText);
@@ -94,17 +94,17 @@ describe('Text Plugin Integration', () => {
     const entities = [];
     for (let i = 0; i < 3; i++) {
       const entity = state.createEntity();
-      state.addComponent(entity, Text3D);
+      state.addComponent(entity, Text);
 
-      Text3D.fontSize[entity] = i + 1;
-      Text3D.color[entity] = 0xff0000 + i * 0x001100;
+      Text.fontSize[entity] = i + 1;
+      Text.color[entity] = 0xff0000 + i * 0x001100;
       setTextContent(state, entity, `Text ${i}`);
 
       entities.push(entity);
     }
 
     for (let i = 0; i < entities.length; i++) {
-      expect(Text3D.fontSize[entities[i]]).toBe(i + 1);
+      expect(Text.fontSize[entities[i]]).toBe(i + 1);
       expect(getTextContent(state, entities[i])).toBe(`Text ${i}`);
     }
   });
@@ -113,43 +113,43 @@ describe('Text Plugin Integration', () => {
     state.registerPlugin(TextPlugin);
 
     const entity = state.createEntity();
-    state.addComponent(entity, Text3D);
+    state.addComponent(entity, Text);
 
-    Text3D.anchorX[entity] = 0;
-    Text3D.anchorY[entity] = 0;
-    expect(Text3D.anchorX[entity]).toBe(0);
-    expect(Text3D.anchorY[entity]).toBe(0);
+    Text.anchorX[entity] = 0;
+    Text.anchorY[entity] = 0;
+    expect(Text.anchorX[entity]).toBe(0);
+    expect(Text.anchorY[entity]).toBe(0);
 
-    Text3D.anchorX[entity] = 2;
-    Text3D.anchorY[entity] = 2;
-    expect(Text3D.anchorX[entity]).toBe(2);
-    expect(Text3D.anchorY[entity]).toBe(2);
+    Text.anchorX[entity] = 2;
+    Text.anchorY[entity] = 2;
+    expect(Text.anchorX[entity]).toBe(2);
+    expect(Text.anchorY[entity]).toBe(2);
   });
 
   it('should handle text alignment configuration', () => {
     state.registerPlugin(TextPlugin);
 
     const entity = state.createEntity();
-    state.addComponent(entity, Text3D);
+    state.addComponent(entity, Text);
 
-    Text3D.textAlign[entity] = 0;
-    expect(Text3D.textAlign[entity]).toBe(0);
+    Text.textAlign[entity] = 0;
+    expect(Text.textAlign[entity]).toBe(0);
 
-    Text3D.textAlign[entity] = 3;
-    expect(Text3D.textAlign[entity]).toBe(3);
+    Text.textAlign[entity] = 3;
+    expect(Text.textAlign[entity]).toBe(3);
   });
 
   it('should handle maxWidth for text wrapping', () => {
     state.registerPlugin(TextPlugin);
 
     const entity = state.createEntity();
-    state.addComponent(entity, Text3D);
+    state.addComponent(entity, Text);
 
-    Text3D.maxWidth[entity] = 0;
-    expect(Text3D.maxWidth[entity]).toBe(0);
+    Text.maxWidth[entity] = 0;
+    expect(Text.maxWidth[entity]).toBe(0);
 
-    Text3D.maxWidth[entity] = 10;
-    expect(Text3D.maxWidth[entity]).toBe(10);
+    Text.maxWidth[entity] = 10;
+    expect(Text.maxWidth[entity]).toBe(10);
   });
 
   it('should support combined query with WorldTransform', () => {
@@ -159,15 +159,13 @@ describe('Text Plugin Integration', () => {
     const text1 = state.createEntity();
     const text2 = state.createEntity();
 
-    state.addComponent(text1, Text3D);
+    state.addComponent(text1, Text);
     state.addComponent(text1, Transform);
     state.addComponent(text1, WorldTransform);
 
-    state.addComponent(text2, Text3D);
+    state.addComponent(text2, Text);
 
-    const textWithTransform = defineQuery([Text3D, WorldTransform])(
-      state.world
-    );
+    const textWithTransform = defineQuery([Text, WorldTransform])(state.world);
     expect(textWithTransform).toContain(text1);
     expect(textWithTransform).not.toContain(text2);
   });

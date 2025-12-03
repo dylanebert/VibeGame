@@ -152,21 +152,19 @@
       </p>
 
       <div class="visualization-container">
-        <div class="visualization-title">Visualization 3: Mixed Geometry</div>
-        <world canvas="#canvas-3" sky="#ffffff">
+        <div class="visualization-title">Visualization 3: Vector Lines</div>
+        <world canvas="#canvas-3" sky="#1a1a2e">
           <entity transform pos="0 8 15" euler="-20 0 0" main-camera="projection: 1; ortho-size: 20"></entity>
-          <entity ambient-light="intensity: 0.6"></entity>
-          <entity directional-light="intensity: 0.7"></entity>
-          <entity transform renderer="shape: box" size="0.8" color="#E91E63"></entity>
-          <entity transform renderer="shape: box" size="0.8" color="#9C27B0"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#673AB7"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#3F51B5"></entity>
-          <entity transform renderer="shape: box" size="0.8" color="#2196F3"></entity>
-          <entity transform renderer="shape: box" size="0.8" color="#00BCD4"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#009688"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#4CAF50"></entity>
-          <entity transform renderer="shape: box" size="0.8" color="#8BC34A"></entity>
-          <entity transform renderer="shape: box" size="0.8" color="#CDDC39"></entity>
+          <entity ambient-light="intensity: 0.4"></entity>
+          <entity directional-light="intensity: 0.5"></entity>
+          <entity transform line="offset: 2 0 0; color: 0xFF6B6B; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
+          <entity transform line="offset: 2 0 0; color: 0x4ECDC4; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
+          <entity transform line="offset: 2 0 0; color: 0xFFE66D; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
+          <entity transform line="offset: 2 0 0; color: 0x95E1D3; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
+          <entity transform line="offset: 2 0 0; color: 0xF38181; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
+          <entity transform line="offset: 2 0 0; color: 0xAA96DA; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
+          <entity transform line="offset: 2 0 0; color: 0xFCBF49; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
+          <entity transform line="offset: 2 0 0; color: 0x00B4D8; thickness: 3; arrow-end: 1; arrow-size: 0.3"></entity>
         </world>
         <canvas id="canvas-3" class="game-canvas"></canvas>
       </div>

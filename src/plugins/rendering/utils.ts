@@ -278,6 +278,14 @@ export function deleteCanvasElement(entity: number): void {
   canvasElements.delete(entity);
 }
 
+export function setRenderingCanvas(
+  state: State,
+  canvas: HTMLCanvasElement
+): void {
+  const context = getRenderingContext(state);
+  context.canvas = canvas;
+}
+
 export function createRenderer(
   canvas: HTMLCanvasElement,
   clearColor: number

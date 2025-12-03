@@ -54,9 +54,12 @@ export const TextSystem: System = {
         textMesh.text = getTextContent(state, entity);
         textMesh.fontSize = TextComponent.fontSize[entity];
         textMesh.color = TextComponent.color[entity];
-        textMesh.anchorX = anchorXMap[TextComponent.anchorX[entity]] || 'center';
-        textMesh.anchorY = anchorYMap[TextComponent.anchorY[entity]] || 'middle';
-        textMesh.textAlign = textAlignMap[TextComponent.textAlign[entity]] || 'left';
+        textMesh.anchorX =
+          anchorXMap[TextComponent.anchorX[entity]] || 'center';
+        textMesh.anchorY =
+          anchorYMap[TextComponent.anchorY[entity]] || 'middle';
+        textMesh.textAlign =
+          textAlignMap[TextComponent.textAlign[entity]] || 'left';
         textMesh.maxWidth = TextComponent.maxWidth[entity] || undefined;
         textMesh.lineHeight = TextComponent.lineHeight[entity] || 1.2;
         textMesh.sync();

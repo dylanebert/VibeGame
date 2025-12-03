@@ -30,6 +30,7 @@ visualization/
 - **Multiple instances**: Separate State per canvas (1-to-1-to-1)
 - **CSS sizing**: Canvas dimensions controlled by CSS, respected by renderer
 - **3D Text**: Demonstrates TextPlugin for labeled objects moving in tandem
+- **Vector Lines**: Demonstrates LinePlugin for animated vector arrows
 
 ## Running
 

@@ -13,7 +13,9 @@ import {
   handleMouseUp,
   handleWheel,
   setTargetCanvas,
+  setFocusedCanvas,
 } from 'vibegame/input';
+import { setRenderingCanvas } from 'vibegame/rendering';
 import { handleKeyDown, clearAllInput } from '../../../src/plugins/input/utils';
 
 describe('Input Plugin', () => {
@@ -44,11 +46,8 @@ describe('Input Plugin', () => {
       'game-canvas'
     ) as HTMLCanvasElement;
     setTargetCanvas(canvas);
-    Object.defineProperty(global.document, 'activeElement', {
-      configurable: true,
-      get: () => canvas,
-    });
-    canvas.dispatchEvent(new (global.window as any).FocusEvent('focus'));
+    setFocusedCanvas(canvas);
+    setRenderingCanvas(state, canvas);
   });
 
   describe('Plugin Registration', () => {
@@ -516,7 +515,8 @@ describe('Input Plugin', () => {
         'game-canvas'
       ) as HTMLCanvasElement;
       setTargetCanvas(canvas);
-      canvas.dispatchEvent(new (global.window as any).FocusEvent('focus'));
+      setFocusedCanvas(canvas);
+      setRenderingCanvas(newState, canvas);
 
       const keyEvent = new (global.window as any).KeyboardEvent('keydown', {
         code: 'KeyW',
