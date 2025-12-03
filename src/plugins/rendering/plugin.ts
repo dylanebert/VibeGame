@@ -6,6 +6,7 @@ import {
   RenderContext,
   Renderer,
 } from './components';
+import { rendererRecipe } from './recipes';
 import {
   CameraSyncSystem,
   LightSyncSystem,
@@ -14,6 +15,7 @@ import {
 } from './systems';
 
 export const RenderingPlugin: Plugin = {
+  recipes: [rendererRecipe],
   systems: [
     MeshInstanceSystem,
     LightSyncSystem,

@@ -15,7 +15,7 @@ Bevy-inspired modular architecture:
 - **Components**: Data definitions using bitECS
 - **Systems**: Logic organized by update phases (setup, fixed, simulation, draw)
 - **Recipes**: XML entity templates with preset components
-- **Config**: Defaults, shorthands, enums, validations, parsers
+- **Config**: Defaults, shorthands, enums, validations, parsers, adapters
 
 ### Update Phases
 1. **SetupBatch**: Input gathering and frame setup
@@ -201,11 +201,17 @@ GAME
 ```
 
 ```xml
-<!-- Simple centered text -->
-<entity transform="pos: 0 2 0" text="text: Hello World"></entity>
+<!-- Standalone word -->
+<word text="Hello" font-size="2" color="#ff0000"></word>
 
-<!-- Styled text -->
-<entity transform="pos: 0 2 0" text="text: Score; font-size: 2; color: 0xff0000"></entity>
+<!-- Paragraph with words (auto-arranged horizontally) -->
+<paragraph gap="0.3" align="center">
+  <word text="Hello" color="#ff4444"></word>
+  <word text="World" color="#44ff44"></word>
+</paragraph>
+
+<!-- Text effects (outline, stroke) -->
+<word text="Glow" outline-width="0.05" outline-blur="0.1"></word>
 ```
 
 ## Vector Lines
@@ -308,6 +314,9 @@ GAME
 | `<static-part>` | Immovable objects | `name`, `pos`, `shape`, `size`, `color` | Grounds, walls, platforms |
 | `<dynamic-part>` | Gravity-affected objects | `name`, `pos`, `shape`, `size`, `color`, `mass` | Balls, crates, falling objects |
 | `<kinematic-part>` | Script-controlled physics | `name`, `pos`, `shape`, `size`, `color` | Moving platforms, doors |
+| `<renderer>` | Visual entity (no physics) | `name`, `pos`, `shape`, `size`, `color` | Decorations, visual effects |
+| `<paragraph>` | Text container | `name`, `pos`, `gap`, `align` | Text layouts |
+| `<word>` | Text element | `name`, `text`, `font-size`, `color` | Individual words, labels |
 | `<player>` | Player character | `pos`, `speed`, `jump-height` | Main character (auto-created) |
 | `<entity>` | Base entity | `name`, any components via attributes | Custom entities |
 | `<tween>` | Animation | `target`, `attr`, `to`, `from`, `duration`, `easing` | Animate named entities |
@@ -378,7 +387,7 @@ Shorthands expand to 3 tweens (one per axis):
 <tween target="lift" attr="body.pos-y" from="0" to="5" duration="3" easing="sine-in-out"></tween>
 
 <!-- Shorthand: animate position -->
-<entity name="cube" transform renderer="shape: box"></entity>
+<renderer name="cube" shape="box"></renderer>
 <tween target="cube" attr="at" from="0 0 0" to="10 5 0" duration="2"></tween>
 
 <!-- Shorthand: animate scale -->
@@ -477,6 +486,66 @@ document.getElementById('btn')?.addEventListener('click', () => {
   if (seq !== null) state.addComponent(seq, TriggerSequence);
 });
 ```
+
+## Advanced Animation Patterns
+
+### Driver Pattern: One Value Controls Many Entities
+
+A driver is a single tweened component value that a system uses to control multiple entities. Useful for coordinated effects like breathing, pulsing, or wave animations.
+
+```xml
+<!-- Driver holds the tweened value -->
+<entity name="breathe-driver" breathe-driver="value: 0"></entity>
+
+<!-- Multiple entities with marker component -->
+<renderer name="cube1" shape="box" breathe></renderer>
+<renderer name="cube2" pos="3 0 0" shape="box" breathe></renderer>
+<renderer name="cube3" pos="-3 0 0" shape="box" breathe></renderer>
+
+<!-- Tween the driver to activate the effect -->
+<tween target="breathe-driver" attr="breathe-driver.value" from="0" to="1" duration="0.5"></tween>
+```
+
+```typescript
+// System reads driver, applies to all marked entities
+const BreatheSystem: System = {
+  group: 'simulation',
+  update(state) {
+    const driverValue = BreatheDriver.value[drivers[0]];
+    const oscillation = Math.sin(state.time.elapsed * 2) * 0.2 * driverValue;
+    for (const eid of breatheQuery(state.world)) {
+      Transform.scaleX[eid] = 1 + oscillation;
+      Transform.scaleY[eid] = 1 + oscillation;
+      Transform.scaleZ[eid] = 1 + oscillation;
+    }
+  }
+};
+```
+
+### Shakers: Layered Effects via Tweening
+
+Shakers allow multiple independent effects on the same property. Each shaker has an `intensity` (0-1) that can be tweened, enabling effects to fade in/out independently.
+
+```xml
+<renderer name="cube" shape="box"></renderer>
+
+<!-- Multiple shakers on same target -->
+<shaker name="pulse" target="cube" attr="scale" value="0.8" intensity="0" mode="multiplicative"></shaker>
+<shaker name="bounce" target="cube" attr="transform.scale-y" value="0.3" intensity="0" mode="additive"></shaker>
+
+<!-- Tween shaker intensities independently (use "shaker.intensity" - resolves automatically) -->
+<sequence name="activate">
+  <tween target="pulse" attr="shaker.intensity" to="1" duration="0.3" easing="expo-out"></tween>
+  <pause duration="0.1"></pause>
+  <tween target="bounce" attr="shaker.intensity" to="1" duration="0.2" easing="back-out"></tween>
+</sequence>
+```
+
+Key benefits:
+- **Safe composition**: Shakers modify at draw time, base values unchanged
+- **Independent control**: Each shaker's intensity tweens separately
+- **Order guarantees**: Additive first, then multiplicative
+- **Alias resolution**: `shaker.intensity` auto-resolves for transform shakers
 
 ## How Recipes and Shorthands Work
 
@@ -843,6 +912,67 @@ GAME
 - **TweenPlugin** - Animation system
 - **RespawnPlugin** - Fall detection and reset
 - **StartupPlugin** - Auto-create player/camera/lights
+
+## Headless CLI (AI Testing)
+
+For AI testing, validation, and video creation without browser/WebGL:
+
+```typescript
+import {
+  createHeadlessState,
+  parseWorldXml,
+  getEntityNames,
+  queryEntities,
+  hasComponentByName,
+  getComponentData,
+  getEntityData,
+  getAllSequences,
+  getSequenceInfo,
+  toJSON,
+} from 'vibegame/cli';
+import { playSequence, resetSequence } from 'vibegame/tweening';
+
+// Setup headless state
+const state = createHeadlessState({ plugins: DefaultPlugins });
+await state.initializePlugins();
+parseWorldXml(state, xmlContent);
+
+// Entity discovery (no hardcoded names)
+const names = getEntityNames(state);
+const sequences = getAllSequences(state);
+
+// Query by component name (no imports needed)
+const withTransform = queryEntities(state, 'transform');
+const hasParent = hasComponentByName(state, eid, 'parent');
+const transform = getComponentData(state, eid, 'transform');  // {posX, posY, posZ, ...}
+const allComponents = getEntityData(state, eid);  // {transform: {...}, parent: {...}}
+
+// Step and snapshot
+state.step(1/60);
+const snap = state.snapshot({
+  entities: names,
+  includeSequences: true,
+});
+console.log(toJSON(snap));  // Structured JSON for AI parsing
+
+// Sequence control
+const seq = state.getEntityByName('intro');
+resetSequence(state, seq);
+playSequence(state, seq);
+for (let i = 0; i < 60; i++) state.step(1/60);
+
+// Check sequence progress
+const info = getSequenceInfo(state, 'intro');
+console.log(info.state, info.progress);  // 'idle' | 'playing', 0-1
+
+state.dispose();
+```
+
+### Headless Differences
+- `state.headless = true` - Systems can check this to skip rendering
+- No canvas/WebGL required
+- Text measurement via Typr.js (requires `setHeadlessFont`)
+- DOM polyfills provided via jsdom
 
 ## Plugin Reference
 

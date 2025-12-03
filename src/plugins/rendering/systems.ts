@@ -38,6 +38,7 @@ const renderContextQuery = defineQuery([RenderContext]);
 export const MeshInstanceSystem: System = {
   group: 'draw',
   update(state: State) {
+    if (state.headless) return;
     const context = getRenderingContext(state);
 
     for (const [entity, instanceInfo] of context.entityInstances) {
@@ -75,6 +76,7 @@ export const MeshInstanceSystem: System = {
 export const LightSyncSystem: System = {
   group: 'draw',
   update(state: State) {
+    if (state.headless) return;
     const context = getRenderingContext(state);
     const scene = getScene(state);
     if (!scene) return;
@@ -166,6 +168,7 @@ export const LightSyncSystem: System = {
 export const CameraSyncSystem: System = {
   group: 'draw',
   update(state: State) {
+    if (state.headless) return;
     const cameraEntities = mainCameraTransformQuery(state.world);
 
     for (const entity of cameraEntities) {
@@ -202,6 +205,7 @@ export const WebGLRenderSystem: System = {
   group: 'draw',
   last: true,
   setup(state: State) {
+    if (state.headless) return;
     const contextEntities = renderContextQuery(state.world);
     if (contextEntities.length === 0) return;
 
@@ -221,6 +225,7 @@ export const WebGLRenderSystem: System = {
     );
   },
   update(state: State) {
+    if (state.headless) return;
     const context = getRenderingContext(state);
     if (!context.renderer) return;
 
@@ -237,6 +242,7 @@ export const WebGLRenderSystem: System = {
     context.renderer.render(scene, camera);
   },
   dispose(state: State) {
+    if (state.headless) return;
     const context = getRenderingContext(state);
     if (context.renderer) {
       context.renderer.dispose();

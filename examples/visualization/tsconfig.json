@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "vibegame": ["../../src/index.ts"],
+      "vibegame/cli": ["../../src/cli/index.ts"],
+      "vibegame/*": ["../../src/plugins/*/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

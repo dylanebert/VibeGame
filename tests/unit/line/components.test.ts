@@ -30,7 +30,6 @@ describe('Line Components', () => {
     Line.arrowStart[entity] = 0;
     Line.arrowEnd[entity] = 1;
     Line.arrowSize[entity] = 0.3;
-    Line.dirty[entity] = 1;
 
     expect(Line.offsetX[entity]).toBe(5.0);
     expect(Line.offsetY[entity]).toBe(3.0);
@@ -42,7 +41,6 @@ describe('Line Components', () => {
     expect(Line.arrowStart[entity]).toBe(0);
     expect(Line.arrowEnd[entity]).toBe(1);
     expect(Line.arrowSize[entity]).toBeCloseTo(0.3);
-    expect(Line.dirty[entity]).toBe(1);
   });
 
   it('should handle arrow flags', () => {

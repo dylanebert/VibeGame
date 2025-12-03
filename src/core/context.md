@@ -144,6 +144,8 @@ The engine uses a semi-fixed timestep model with three execution phases:
 - shorthands?: Record<string, Record<string, ShorthandMapping>>
 - enums?: Record<string, Record<string, EnumMapping>>
 - validations?: ValidationRule[]
+- skip?: Record<string, string[]> - Properties to skip during component application
+- adapters?: Record<string, Record<string, Adapter>> - Transform properties at parse time (e.g., set text content from string)
 
 #### GameTime
 - deltaTime: number

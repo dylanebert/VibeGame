@@ -61,6 +61,12 @@ vibegame/
 │   │   ├── index.ts  # Plugin exports
 │   │   ├── console-plugin.ts  # Console forwarding
 │   │   └── context.md  # Module context
+│   ├── cli/  # Headless CLI utilities
+│   │   ├── index.ts  # CLI exports
+│   │   ├── headless.ts  # Headless state creation
+│   │   ├── queries.ts  # Entity/sequence query utilities
+│   │   ├── text.ts  # Typr.js text measurement
+│   │   └── context.md  # Module context
 │   ├── builder.ts  # Builder pattern API
 │   ├── runtime.ts  # Game runtime engine
 │   └── index.ts  # Main exports
@@ -82,21 +88,25 @@ vibegame/
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   ├── visualization/  # Minimal visualization with tree-shaking
-│   │   ├── context.md
-│   │   ├── src/main.ts
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   └── vite.config.ts
-│   └── sequencer/  # Animation sequencing with video recording
+│   └── visualization/  # Blog-style visualization with sequencing
 │       ├── context.md
-│       ├── src/
-│       │   ├── plugin.ts   # Components, systems, event helpers
-│       │   ├── main.ts     # Interactive mode
-│       │   └── record.ts   # Playwright frame capture
-│       ├── render.sh       # Record + encode to MP4
-│       ├── index.html
-│       └── package.json
+│       ├── index.html       # Blog harness (includes content.html)
+│       ├── record.html      # Video recording page
+│       ├── vite.config.ts   # Build config with html-include plugin
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/
+│           ├── content.html     # World definition with entities
+│           ├── components.css   # Visualization styles
+│           ├── components.ts    # BreatheDriver component
+│           ├── systems.ts       # BreatheDriver systems
+│           ├── plugin.ts        # VisualizationPlugin
+│           ├── main.ts          # Blog entry point
+│           ├── record.ts        # Video recording entry point
+│           └── sequences/
+│               ├── index.ts     # Sequence loader + STEP_SEQUENCES map
+│               ├── step-0-1.xml # Camera sequences
+│               └── step-1-2.xml # Breathe sequences
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   ├── context-template.md  # Template for context files
@@ -145,11 +155,11 @@ Optional files:
 6. **player** - Player character controller (PlayerPlugin)
 7. **postprocessing** - Post-processing effects (PostprocessingPlugin)
 8. **rendering** - Three.js rendering pipeline (RenderingPlugin)
-9. **text** - 3D text rendering with troika-three-text (TextPlugin)
+9. **text** - 3D text with Paragraph/Word layout and troika effects (TextPlugin)
 10. **respawn** - Entity respawn system (RespawnPlugin)
 11. **startup** - Initialization and setup systems (StartupPlugin)
 12. **transforms** - Transform component hierarchy (TransformsPlugin)
-13. **tweening** - Tween-based animations (TweenPlugin)
+13. **tweening** - Tween animations and presentation shakers (TweenPlugin)
 
 **Note**: Recipe system is core functionality, not a plugin. Individual plugins define their own recipes.
 
@@ -175,6 +185,7 @@ Bevy-inspired ECS with explicit update phases:
 - **Core module**: src/core/index.ts (ECS foundation, types, utilities)
 - **Plugin modules**: src/plugins/\*/index.ts (individual plugin exports)
 - **Vite plugin**: src/vite/index.ts (WASM setup for Rapier physics)
+- **CLI module**: src/cli/index.ts (headless state, XML parsing)
 - **Builder API**: src/builder.ts (fluent builder pattern)
 - **Runtime**: src/runtime.ts (game runtime engine)
 - **Example apps**: examples/\*/src/main.ts (demo applications)

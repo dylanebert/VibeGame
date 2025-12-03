@@ -24,6 +24,12 @@ import type {
   System,
   XMLValue,
 } from './types';
+import {
+  createSnapshot,
+  formatSnapshot,
+  type SnapshotOptions,
+  type WorldSnapshot,
+} from './snapshot';
 import { createEntityFromRecipe } from '../recipes/parser';
 
 export class State {
@@ -32,6 +38,7 @@ export class State {
   public readonly scheduler = new Scheduler();
   public readonly systems = new Set<System>();
   public readonly config = new ConfigRegistry();
+  public headless = false;
   private readonly recipes = new Map<string, Recipe>();
   private readonly components = new Map<string, Component>();
   private readonly plugins: Plugin[] = [];
@@ -134,6 +141,17 @@ export class State {
     return this.entityNames.get(name) ?? null;
   }
 
+  getEntityName(eid: number): string | undefined {
+    for (const [name, entity] of this.entityNames) {
+      if (entity === eid) return name;
+    }
+    return undefined;
+  }
+
+  getNamedEntities(): Map<string, number> {
+    return new Map(this.entityNames);
+  }
+
   private getComponentName(component: Component): string | undefined {
     for (const [name, comp] of this.components.entries()) {
       if (comp === component) {
@@ -210,5 +228,15 @@ export class State {
     if (this.isDisposed) {
       throw new Error('[VibeGame] Cannot use disposed State');
     }
+  }
+
+  snapshot(
+    options?: SnapshotOptions
+  ): WorldSnapshot & { format: () => string } {
+    const snap = createSnapshot(this, options);
+    return {
+      ...snap,
+      format: () => formatSnapshot(snap),
+    };
   }
 }

@@ -20,7 +20,6 @@ export const LinePlugin: Plugin = {
         arrowStart: 0,
         arrowEnd: 0,
         arrowSize: 0.2,
-        dirty: 1,
       },
     },
   },

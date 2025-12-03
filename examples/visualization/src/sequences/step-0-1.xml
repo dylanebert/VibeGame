@@ -1,0 +1,11 @@
+<sequence name="step-0-1">
+  <tween target="camera" attr="orbit-camera.target-yaw" to="0.6" duration="0.7" easing="expo-out"></tween>
+  <tween target="camera" attr="orbit-camera.target-distance" to="10" duration="0.7" easing="expo-out"></tween>
+  <tween target="camera" attr="orbit-camera.target-pitch" to="0.4" duration="0.7" easing="expo-out"></tween>
+</sequence>
+
+<sequence name="step-1-0">
+  <tween target="camera" attr="orbit-camera.target-yaw" to="2.0" duration="0.7" easing="expo-out"></tween>
+  <tween target="camera" attr="orbit-camera.target-distance" to="25" duration="0.7" easing="expo-out"></tween>
+  <tween target="camera" attr="orbit-camera.target-pitch" to="0.2" duration="0.7" easing="expo-out"></tween>
+</sequence>

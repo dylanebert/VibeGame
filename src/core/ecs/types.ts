@@ -57,6 +57,8 @@ export interface ValidationRule {
   readonly warning: string;
 }
 
+export type Adapter = (entity: number, value: string, state: State) => void;
+
 export interface Config {
   readonly parsers?: Record<string, Parser>;
   readonly defaults?: Record<string, Record<string, number>>;
@@ -64,6 +66,7 @@ export interface Config {
   readonly enums?: Record<string, Record<string, EnumMapping>>;
   readonly validations?: ValidationRule[];
   readonly skip?: Record<string, readonly string[]>;
+  readonly adapters?: Record<string, Record<string, Adapter>>;
 }
 
 export interface Plugin {

@@ -137,6 +137,19 @@ function applyAttribute(
     }
   }
 
+  if (recipe.components) {
+    const stringValue =
+      typeof attrValue === 'string' ? attrValue : String(attrValue);
+
+    for (const componentName of recipe.components) {
+      const adapter = state.config.getAdapter(componentName, attrName);
+      if (adapter) {
+        adapter(entity, stringValue, state);
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
@@ -148,6 +161,11 @@ function getAvailableAttributes(recipe: Recipe, state: State): string[] {
       const shorthands = state.config.getShorthands(componentName);
       for (const shorthand of Object.keys(shorthands)) {
         attrs.add(shorthand);
+      }
+
+      const adapterProps = state.config.getAdapterProperties(componentName);
+      for (const prop of adapterProps) {
+        attrs.add(prop);
       }
     }
   }
@@ -227,7 +245,8 @@ function applyAttributesFromRecipe(
         attrValue,
         component as ComponentWithFields,
         state,
-        context
+        context,
+        entity
       );
 
       for (const [fieldName, value] of Object.entries(parsed)) {

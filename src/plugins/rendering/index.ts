@@ -6,6 +6,7 @@ export {
   Renderer,
 } from './components';
 export { RenderingPlugin } from './plugin';
+export { rendererRecipe } from './recipes';
 export {
   CameraProjection,
   getRenderingContext,

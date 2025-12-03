@@ -1,0 +1,47 @@
+<h1>Visualization Demo</h1>
+<p>
+  A demonstration of VibeGame's visualization and sequencing capabilities.
+</p>
+
+<div class="visualization-container">
+  <div class="visualization-title">Visualization</div>
+  <world canvas="#canvas-1" sky="#ffffff">
+    <orbit-camera
+      name="camera"
+      current-distance="25"
+      target-distance="25"
+      current-yaw="2.0"
+      target-yaw="2.0"
+      current-pitch="0.2"
+      target-pitch="0.2"
+      min-pitch="-1.57"
+      offset-y="0"
+      zoom-sensitivity="0"
+      main-camera="projection: perspective"
+    ></orbit-camera>
+    <entity ambient-light="intensity: 0.6"></entity>
+    <entity directional-light="intensity: 0.7; direction: -1 2 1"></entity>
+    <renderer name="cube-left" pos="-3 0 0" shape="box" size="2 2 2" color="#ff4444" breathe></renderer>
+    <renderer name="cube-center" pos="0 0 0" shape="box" size="2 2 2" color="#44ff44" breathe></renderer>
+    <renderer name="cube-right" pos="3 0 0" shape="box" size="2 2 2" color="#4444ff" breathe></renderer>
+    <entity name="breathe-driver" breathe-driver="value: 0"></entity>
+    <shaker name="scale-shaker" target="cube-right" attr="scale" value="0.5" intensity="0" mode="multiplicative"></shaker>
+    <paragraph name="text-row" pos-y="3" gap="0.3" align="center" damping="0">
+      <word name="text-hello" text="Hello" font-size="1.0" color="#ff4444"></word>
+      <word name="text-vibe" text="Vibe" font-size="1.0" color="#44ff44"></word>
+      <word name="text-game" text="Game!" font-size="1.0" color="#4444ff"></word>
+    </paragraph>
+  </world>
+  <canvas id="canvas-1" class="game-canvas"></canvas>
+  <div class="step-navigator">
+    <div class="step-controls">
+      <button id="btn-prev" class="step-btn" aria-label="Previous step">←</button>
+      <button id="btn-next" class="step-btn" aria-label="Next step">→</button>
+    </div>
+    <div class="step-info" role="region" aria-live="polite">
+      <div id="step-counter" class="step-counter">STEP 1 OF 4</div>
+      <div id="step-title" class="step-title">Initial State</div>
+      <div id="step-description" class="step-description">Scene at rest with default camera position.</div>
+    </div>
+  </div>
+</div>

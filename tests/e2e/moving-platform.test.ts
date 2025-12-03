@@ -1,12 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { JSDOM } from 'jsdom';
-import {
-  State,
-  TIME_CONSTANTS,
-  XMLParser,
-  defineQuery,
-  parseXMLToEntities,
-} from 'vibegame';
+import { State, TIME_CONSTANTS } from 'vibegame';
+import { createHeadlessState, parseWorldXml, queryEntities } from 'vibegame/cli';
 import { DefaultPlugins } from 'vibegame/defaults';
 import { Body, BodyType, CharacterController } from 'vibegame/physics';
 import { Player } from 'vibegame/player';
@@ -16,40 +10,25 @@ describe('E2E: Moving Platform Character Controller', () => {
   let state: State;
 
   beforeEach(async () => {
-    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
-    global.DOMParser = dom.window.DOMParser;
-
-    state = new State();
-
-    for (const plugin of DefaultPlugins) {
-      state.registerPlugin(plugin);
-    }
-
+    state = createHeadlessState({ plugins: DefaultPlugins });
     await state.initializePlugins();
   });
 
   it('should keep player at rest on stationary kinematic platform (base case)', () => {
-    const xml = `
-      <world>
-        <static-part
-          body="pos: 0 -10 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -10 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
 
-        <kinematic-part
-          body="pos: 0 2 0"
-          renderer="shape: box; size: 4 1 4; color: 0xff6600"
-          collider="shape: box; size: 4 1 4" />
-      </world>
-    `;
+      <kinematic-part
+        body="pos: 0 2 0"
+        renderer="shape: box; size: 4 1 4; color: 0xff6600"
+        collider="shape: box; size: 4 1 4" />
+    `);
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
-
-    // Find the kinematic platform entity
     let kinematicPlatform: number | undefined;
-    const bodyQuery = defineQuery([Body]);
-    const entities = bodyQuery(state.world);
+    const entities = queryEntities(state, 'body');
 
     for (const entity of entities) {
       // kinematic-part recipe uses KinematicVelocityBased
@@ -65,7 +44,7 @@ describe('E2E: Moving Platform Character Controller', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     expect(players.length).toBe(1);
     const playerEntity = players[0];
 
@@ -101,26 +80,21 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player downward with kinematic platform using tween', () => {
-    const xml = `
-      <world>
-        <static-part 
-          body="pos: 0 -10 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
-        
-        <kinematic-part name="platform"
-          body="pos: 0 5 0"
-          renderer="shape: box; size: 4 1 4; color: 0xff6600"
-          collider="shape: box; size: 4 1 4">
-        </kinematic-part>
-        <tween target="platform" attr="body.pos-y" from="5" to="0" duration="2"></tween>
-      </world>
-    `;
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -10 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
+      <kinematic-part name="platform"
+        body="pos: 0 5 0"
+        renderer="shape: box; size: 4 1 4; color: 0xff6600"
+        collider="shape: box; size: 4 1 4">
+      </kinematic-part>
+      <tween target="platform" attr="body.pos-y" from="5" to="0" duration="2"></tween>
+    `);
 
-    const platforms = defineQuery([Transform, Body])(state.world).filter(
+    const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
     );
     expect(platforms.length).toBeGreaterThan(0);
@@ -129,7 +103,7 @@ describe('E2E: Moving Platform Character Controller', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     expect(players.length).toBe(1);
     const playerEntity = players[0];
 
@@ -199,26 +173,21 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player upward with kinematic platform using tween', () => {
-    const xml = `
-      <world>
-        <static-part 
-          body="pos: 0 -5 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
-        
-        <kinematic-part name="platform"
-          body="pos: 0 0 0"
-          renderer="shape: box; size: 4 1 4; color: 0xff6600"
-          collider="shape: box; size: 4 1 4">
-        </kinematic-part>
-        <tween target="platform" attr="body.pos-y" from="0" to="5" duration="2"></tween>
-      </world>
-    `;
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -5 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
+      <kinematic-part name="platform"
+        body="pos: 0 0 0"
+        renderer="shape: box; size: 4 1 4; color: 0xff6600"
+        collider="shape: box; size: 4 1 4">
+      </kinematic-part>
+      <tween target="platform" attr="body.pos-y" from="0" to="5" duration="2"></tween>
+    `);
 
-    const platforms = defineQuery([Transform, Body])(state.world).filter(
+    const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
     );
     expect(platforms.length).toBeGreaterThan(0);
@@ -227,7 +196,7 @@ describe('E2E: Moving Platform Character Controller', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     expect(players.length).toBe(1);
     const playerEntity = players[0];
 
@@ -275,35 +244,30 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should handle player on multiple moving platforms', () => {
-    const xml = `
-      <world>
-        <static-part 
-          body="pos: 0 -10 0"
-          renderer="shape: box; size: 50 1 50; color: 0x90ee90"
-          collider="shape: box; size: 50 1 50" />
-        
-        <kinematic-part name="platform1"
-          body="pos: -3 0 0"
-          renderer="shape: box; size: 4 1 4; color: 0xff6600"
-          collider="shape: box; size: 4 1 4">
-        </kinematic-part>
-        <tween target="platform1" attr="body.pos-y" from="0" to="3" duration="1.5"></tween>
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -10 0"
+        renderer="shape: box; size: 50 1 50; color: 0x90ee90"
+        collider="shape: box; size: 50 1 50" />
 
-        <kinematic-part name="platform2"
-          body="pos: 3 2 0"
-          renderer="shape: box; size: 4 1 4; color: 0x00ff66"
-          collider="shape: box; size: 4 1 4">
-        </kinematic-part>
-        <tween target="platform2" attr="body.pos-y" from="2" to="6" duration="2"></tween>
-      </world>
-    `;
+      <kinematic-part name="platform1"
+        body="pos: -3 0 0"
+        renderer="shape: box; size: 4 1 4; color: 0xff6600"
+        collider="shape: box; size: 4 1 4">
+      </kinematic-part>
+      <tween target="platform1" attr="body.pos-y" from="0" to="3" duration="1.5"></tween>
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
+      <kinematic-part name="platform2"
+        body="pos: 3 2 0"
+        renderer="shape: box; size: 4 1 4; color: 0x00ff66"
+        collider="shape: box; size: 4 1 4">
+      </kinematic-part>
+      <tween target="platform2" attr="body.pos-y" from="2" to="6" duration="2"></tween>
+    `);
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     const playerEntity = players[0];
 
     Body.posX[playerEntity] = -3;
@@ -328,26 +292,21 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player horizontally with kinematic platform using tween', () => {
-    const xml = `
-      <world>
-        <static-part
-          body="pos: 0 -10 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -10 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
 
-        <kinematic-part name="platform"
-          body="pos: 0 2 0"
-          renderer="shape: box; size: 4 1 4; color: 0xff6600"
-          collider="shape: box; size: 4 1 4">
-        </kinematic-part>
-        <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
-      </world>
-    `;
+      <kinematic-part name="platform"
+        body="pos: 0 2 0"
+        renderer="shape: box; size: 4 1 4; color: 0xff6600"
+        collider="shape: box; size: 4 1 4">
+      </kinematic-part>
+      <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
+    `);
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
-
-    const platforms = defineQuery([Transform, Body])(state.world).filter(
+    const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
     );
     expect(platforms.length).toBeGreaterThan(0);
@@ -356,7 +315,7 @@ describe('E2E: Moving Platform Character Controller', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     expect(players.length).toBe(1);
     const playerEntity = players[0];
 
@@ -404,27 +363,22 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player diagonally upward with kinematic platform', () => {
-    const xml = `
-      <world>
-        <static-part
-          body="pos: 0 -5 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -5 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
 
-        <kinematic-part name="platform"
-          body="pos: 0 0 0"
-          renderer="shape: box; size: 4 1 4; color: 0xff6600"
-          collider="shape: box; size: 4 1 4">
-        </kinematic-part>
-        <tween target="platform" attr="body.pos-y" from="0" to="5" duration="2"></tween>
-        <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
-      </world>
-    `;
+      <kinematic-part name="platform"
+        body="pos: 0 0 0"
+        renderer="shape: box; size: 4 1 4; color: 0xff6600"
+        collider="shape: box; size: 4 1 4">
+      </kinematic-part>
+      <tween target="platform" attr="body.pos-y" from="0" to="5" duration="2"></tween>
+      <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
+    `);
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
-
-    const platforms = defineQuery([Transform, Body])(state.world).filter(
+    const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
     );
     expect(platforms.length).toBeGreaterThan(0);
@@ -433,7 +387,7 @@ describe('E2E: Moving Platform Character Controller', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     expect(players.length).toBe(1);
     const playerEntity = players[0];
 
@@ -528,27 +482,22 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player diagonally downward with kinematic platform', () => {
-    const xml = `
-      <world>
-        <static-part
-          body="pos: 0 -10 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -10 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
 
-        <kinematic-part name="platform"
-          body="pos: 0 5 0"
-          renderer="shape: box; size: 4 1 4; color: 0x00ff66"
-          collider="shape: box; size: 4 1 4">
-        </kinematic-part>
-        <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
-        <tween target="platform" attr="body.pos-y" from="5" to="2" duration="2"></tween>
-      </world>
-    `;
+      <kinematic-part name="platform"
+        body="pos: 0 5 0"
+        renderer="shape: box; size: 4 1 4; color: 0x00ff66"
+        collider="shape: box; size: 4 1 4">
+      </kinematic-part>
+      <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
+      <tween target="platform" attr="body.pos-y" from="5" to="2" duration="2"></tween>
+    `);
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
-
-    const platforms = defineQuery([Transform, Body])(state.world).filter(
+    const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
     );
     expect(platforms.length).toBeGreaterThan(0);
@@ -558,7 +507,7 @@ describe('E2E: Moving Platform Character Controller', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     expect(players.length).toBe(1);
     const playerEntity = players[0];
 
@@ -636,28 +585,23 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should handle platform moving with ping-pong loop', () => {
-    const xml = `
-      <world>
-        <static-part 
-          body="pos: 0 -5 0"
-          renderer="shape: box; size: 30 1 30; color: 0x90ee90"
-          collider="shape: box; size: 30 1 30" />
-        
-        <kinematic-part name="platform"
-          body="pos: 0 0 0"
-          renderer="shape: box; size: 6 1 6; color: 0xffff00"
-          collider="shape: box; size: 6 1 6">
-        </kinematic-part>
-        <tween target="platform" attr="body.pos-y" from="0" to="4" duration="1"></tween>
-      </world>
-    `;
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 -5 0"
+        renderer="shape: box; size: 30 1 30; color: 0x90ee90"
+        collider="shape: box; size: 30 1 30" />
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
+      <kinematic-part name="platform"
+        body="pos: 0 0 0"
+        renderer="shape: box; size: 6 1 6; color: 0xffff00"
+        collider="shape: box; size: 6 1 6">
+      </kinematic-part>
+      <tween target="platform" attr="body.pos-y" from="0" to="4" duration="1"></tween>
+    `);
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     const playerEntity = players[0];
 
     for (let i = 0; i < 30; i++) {

@@ -12,20 +12,32 @@ export {
   type IWorld,
 } from 'bitecs';
 
-export { NULL_ENTITY, Parent, State, TIME_CONSTANTS } from './ecs';
+export {
+  createSnapshot,
+  formatSnapshot,
+  NULL_ENTITY,
+  Parent,
+  State,
+  TIME_CONSTANTS,
+} from './ecs';
 export type {
+  Adapter,
   ComponentDefaults,
   ComponentEnums,
   Config,
+  EntitySnapshot,
   EnumMapping,
   GameTime,
   Parser,
   ParserParams,
   Plugin,
   Recipe,
+  SequenceSnapshot,
   ShorthandMapping,
+  SnapshotOptions,
   System,
   ValidationRule,
+  WorldSnapshot,
 } from './ecs';
 export { eulerToQuaternion, lerp, quaternionToEuler, slerp } from './math';
 export {

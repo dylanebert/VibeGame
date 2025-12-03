@@ -3,11 +3,17 @@ import { gsap } from 'gsap';
 import type { State } from '../../core';
 import { defineQuery, toCamelCase } from '../../core';
 import { Body, BodyType } from '../physics';
+import { Transform } from '../transforms';
 import {
   KinematicRotationTween,
   KinematicTween,
   Sequence,
   SequenceState,
+  Shaker,
+  ShakerMode,
+  TransformShaker,
+  TransformShakerAxes,
+  TransformShakerType,
   Tween,
   TweenValue,
 } from './components';
@@ -95,7 +101,16 @@ export function resolveComponentField(
   const [componentName, fieldName] = targetStr.split('.');
   if (!componentName || !fieldName) return null;
 
-  const component = state.getComponent(componentName);
+  // Shaker alias: resolve 'shaker' to 'transform-shaker' when appropriate
+  let resolvedComponentName = componentName;
+  if (componentName === 'shaker') {
+    const transformShaker = state.getComponent('transform-shaker');
+    if (transformShaker && state.hasComponent(entity, transformShaker)) {
+      resolvedComponentName = 'transform-shaker';
+    }
+  }
+
+  const component = state.getComponent(resolvedComponentName);
   if (!component || !state.hasComponent(entity, component)) return null;
 
   const camelField = toCamelCase(fieldName);
@@ -221,6 +236,19 @@ export interface SequenceItemSpec {
 
 export const sequenceRegistry = new Map<number, SequenceItemSpec[]>();
 export const sequenceActiveTweens = new Map<number, Set<number>>();
+
+// Shaker registries
+export const shakerFieldRegistry = new Map<number, Float32Array>();
+export const shakerBaseRegistry = new Map<number, number>();
+
+// Transform shaker registry (key format: `${shakerId}-${axisMask}`)
+export const transformShakerBaseRegistry = new Map<string, number>();
+
+// Transform shaker quaternion registry (stores base quaternion for rotation shakers)
+export const transformShakerQuatRegistry = new Map<
+  number,
+  { x: number; y: number; z: number; w: number }
+>();
 
 export function playSequence(state: State, entity: number): void {
   if (!state.hasComponent(entity, Sequence)) return;
@@ -491,4 +519,129 @@ export function createTween(
   }
 
   return tweenEntity;
+}
+
+export interface ShakerOptions {
+  value: number;
+  intensity?: number;
+  mode?: 'additive' | 'multiplicative';
+}
+
+interface TransformTarget {
+  type: TransformShakerType;
+  axes: number;
+}
+
+const TRANSFORM_TARGETS: Record<string, TransformTarget> = {
+  // Position single-axis
+  'transform.pos-x': {
+    type: TransformShakerType.Position,
+    axes: TransformShakerAxes.X,
+  },
+  'transform.pos-y': {
+    type: TransformShakerType.Position,
+    axes: TransformShakerAxes.Y,
+  },
+  'transform.pos-z': {
+    type: TransformShakerType.Position,
+    axes: TransformShakerAxes.Z,
+  },
+  // Scale single-axis
+  'transform.scale-x': {
+    type: TransformShakerType.Scale,
+    axes: TransformShakerAxes.X,
+  },
+  'transform.scale-y': {
+    type: TransformShakerType.Scale,
+    axes: TransformShakerAxes.Y,
+  },
+  'transform.scale-z': {
+    type: TransformShakerType.Scale,
+    axes: TransformShakerAxes.Z,
+  },
+  // Rotation single-axis
+  'transform.euler-x': {
+    type: TransformShakerType.Rotation,
+    axes: TransformShakerAxes.X,
+  },
+  'transform.euler-y': {
+    type: TransformShakerType.Rotation,
+    axes: TransformShakerAxes.Y,
+  },
+  'transform.euler-z': {
+    type: TransformShakerType.Rotation,
+    axes: TransformShakerAxes.Z,
+  },
+  // Shorthands (all axes)
+  at: { type: TransformShakerType.Position, axes: TransformShakerAxes.XYZ },
+  scale: { type: TransformShakerType.Scale, axes: TransformShakerAxes.XYZ },
+  rotation: {
+    type: TransformShakerType.Rotation,
+    axes: TransformShakerAxes.XYZ,
+  },
+};
+
+export function parseTransformTarget(target: string): TransformTarget | null {
+  return TRANSFORM_TARGETS[target] ?? null;
+}
+
+export function createTransformShaker(
+  state: State,
+  entity: number,
+  parsed: TransformTarget,
+  options: ShakerOptions
+): number | null {
+  if (!state.hasComponent(entity, Transform)) {
+    console.warn(`[TransformShaker] Entity must have Transform component`);
+    return null;
+  }
+
+  const shakerEntity = state.createEntity();
+  state.addComponent(shakerEntity, TransformShaker);
+
+  TransformShaker.target[shakerEntity] = entity;
+  TransformShaker.type[shakerEntity] = parsed.type;
+  TransformShaker.axes[shakerEntity] = parsed.axes;
+  TransformShaker.value[shakerEntity] = options.value;
+  TransformShaker.intensity[shakerEntity] = options.intensity ?? 1;
+  TransformShaker.mode[shakerEntity] =
+    options.mode === 'multiplicative'
+      ? ShakerMode.Multiplicative
+      : ShakerMode.Additive;
+
+  return shakerEntity;
+}
+
+export function createShaker(
+  state: State,
+  entity: number,
+  target: string,
+  options: ShakerOptions
+): number | null {
+  // Check if targeting a transform field
+  const transformTarget = parseTransformTarget(target);
+  if (transformTarget) {
+    return createTransformShaker(state, entity, transformTarget, options);
+  }
+
+  const resolved = resolveComponentField(target, entity, state);
+  if (!resolved) {
+    console.warn(`[Shaker] Could not resolve target property: ${target}`);
+    return null;
+  }
+
+  const shakerEntity = state.createEntity();
+  state.addComponent(shakerEntity, Shaker);
+
+  Shaker.target[shakerEntity] = entity;
+  Shaker.value[shakerEntity] = options.value;
+  Shaker.intensity[shakerEntity] = options.intensity ?? 1;
+  Shaker.mode[shakerEntity] =
+    options.mode === 'multiplicative'
+      ? ShakerMode.Multiplicative
+      : ShakerMode.Additive;
+
+  shakerFieldRegistry.set(shakerEntity, resolved.array);
+
+  return shakerEntity;
 }

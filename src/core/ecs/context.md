@@ -89,6 +89,7 @@ World container managing entities, components, systems, and plugins. See main co
 - `Config` - Configuration interface
 - `GameTime` - Time tracking interface
 - `Parser` - XML tag parser function type
+- `Adapter` - Property adapter function for custom handling (e.g., strings)
 - `ComponentDefaults` - Default values mapping
 - `ComponentEnums` - Enum value mappings
 - `ShorthandMapping` - Attribute shorthand

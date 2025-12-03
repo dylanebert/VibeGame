@@ -1,32 +1,29 @@
 import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import type { State } from '../../core';
 import { defineQuery, type System } from '../../core';
 import { WorldTransform } from '../transforms';
 import { getScene, getRenderingContext } from '../rendering';
 import { Line as LineComponent } from './components';
-import { getLineContext } from './utils';
+import {
+  getLineContext,
+  getMaterialKey,
+  getOrCreateBatch,
+  disposeBatch,
+} from './utils';
 
 const lineQuery = defineQuery([LineComponent, WorldTransform]);
 
 const ARROW_ANGLE = Math.PI / 6;
 
-function createLine(material: LineMaterial): Line2 {
-  const geometry = new LineGeometry();
-  geometry.setPositions([0, 0, 0, 0, 0, 0]);
-  return new Line2(geometry, material);
-}
-
-function updateLineGeometry(
-  line: Line2,
-  start: THREE.Vector3,
-  end: THREE.Vector3
-): void {
-  const geometry = line.geometry as LineGeometry;
-  geometry.setPositions([start.x, start.y, start.z, end.x, end.y, end.z]);
-  line.computeLineDistances();
+interface LineData {
+  entity: number;
+  startPos: THREE.Vector3;
+  endPos: THREE.Vector3;
+  color: THREE.Color;
+  arrowStart: boolean;
+  arrowEnd: boolean;
+  arrowSize: number;
+  visible: boolean;
 }
 
 function computeArrowWing(
@@ -61,48 +58,57 @@ function computeArrowWing(
   return { tip: arrowTip, wingEnd };
 }
 
-function createArrowLines(
+function pushSegment(
+  positions: number[],
+  colors: number[],
   start: THREE.Vector3,
   end: THREE.Vector3,
-  arrowSize: number,
-  material: LineMaterial,
-  atStart: boolean
-): Line2[] {
-  const arrows: Line2[] = [];
-
-  for (let i = 0; i < 2; i++) {
-    const { tip, wingEnd } = computeArrowWing(
-      start,
-      end,
-      arrowSize,
-      atStart,
-      i
-    );
-    const arrowLine = createLine(material);
-    updateLineGeometry(arrowLine, tip, wingEnd);
-    arrows.push(arrowLine);
-  }
-
-  return arrows;
+  color: THREE.Color
+): void {
+  positions.push(start.x, start.y, start.z, end.x, end.y, end.z);
+  colors.push(color.r, color.g, color.b, color.r, color.g, color.b);
 }
 
-function updateArrowLines(
-  arrows: Line2[],
-  start: THREE.Vector3,
-  end: THREE.Vector3,
-  arrowSize: number,
-  atStart: boolean
-): void {
-  for (let i = 0; i < arrows.length; i++) {
-    const { tip, wingEnd } = computeArrowWing(
-      start,
-      end,
-      arrowSize,
-      atStart,
-      i
-    );
-    updateLineGeometry(arrows[i], tip, wingEnd);
+function buildBatchArrays(lines: LineData[]): {
+  positions: number[];
+  colors: number[];
+} {
+  const positions: number[] = [];
+  const colors: number[] = [];
+
+  for (const line of lines) {
+    if (!line.visible) continue;
+
+    pushSegment(positions, colors, line.startPos, line.endPos, line.color);
+
+    if (line.arrowStart && line.arrowSize > 0) {
+      for (let i = 0; i < 2; i++) {
+        const { tip, wingEnd } = computeArrowWing(
+          line.startPos,
+          line.endPos,
+          line.arrowSize,
+          true,
+          i
+        );
+        pushSegment(positions, colors, tip, wingEnd, line.color);
+      }
+    }
+
+    if (line.arrowEnd && line.arrowSize > 0) {
+      for (let i = 0; i < 2; i++) {
+        const { tip, wingEnd } = computeArrowWing(
+          line.startPos,
+          line.endPos,
+          line.arrowSize,
+          false,
+          i
+        );
+        pushSegment(positions, colors, tip, wingEnd, line.color);
+      }
+    }
   }
+
+  return { positions, colors };
 }
 
 export const LineSystem: System = {
@@ -115,35 +121,22 @@ export const LineSystem: System = {
     const context = getLineContext(state);
     const entities = lineQuery(state.world);
 
-    if (!context.material) {
-      context.material = new LineMaterial({
-        vertexColors: true,
-        worldUnits: false,
-        linewidth: 2,
-        resolution: new THREE.Vector2(
-          renderContext?.renderer?.domElement.width || 1024,
-          renderContext?.renderer?.domElement.height || 768
-        ),
-      });
-    }
-
     if (renderContext?.renderer) {
-      context.material.resolution.set(
+      context.resolution.set(
         renderContext.renderer.domElement.width,
         renderContext.renderer.domElement.height
       );
+      for (const batch of context.batches.values()) {
+        batch.material.resolution.copy(context.resolution);
+      }
     }
 
-    for (const entity of entities) {
-      let entry = context.lines.get(entity);
+    const linesByMaterial = new Map<string, LineData[]>();
 
-      if (!entry) {
-        const line = createLine(context.material);
-        scene.add(line);
-        entry = { line, arrowStartLines: [], arrowEndLines: [] };
-        context.lines.set(entity, entry);
-        LineComponent.dirty[entity] = 1;
-      }
+    for (const entity of entities) {
+      const thickness = LineComponent.thickness[entity];
+      const opacity = LineComponent.opacity[entity];
+      const key = getMaterialKey(thickness, opacity);
 
       const startPos = new THREE.Vector3(
         WorldTransform.posX[entity],
@@ -151,143 +144,72 @@ export const LineSystem: System = {
         WorldTransform.posZ[entity]
       );
 
-      const endPos = new THREE.Vector3(
-        startPos.x + LineComponent.offsetX[entity],
-        startPos.y + LineComponent.offsetY[entity],
-        startPos.z + LineComponent.offsetZ[entity]
+      const scaledOffset = new THREE.Vector3(
+        LineComponent.offsetX[entity] * WorldTransform.scaleX[entity],
+        LineComponent.offsetY[entity] * WorldTransform.scaleY[entity],
+        LineComponent.offsetZ[entity] * WorldTransform.scaleZ[entity]
       );
 
-      updateLineGeometry(entry.line, startPos, endPos);
+      const endPos = new THREE.Vector3(
+        startPos.x + scaledOffset.x,
+        startPos.y + scaledOffset.y,
+        startPos.z + scaledOffset.z
+      );
 
-      const visible = LineComponent.visible[entity] === 1;
-      entry.line.visible = visible;
+      const unscaledLength = Math.sqrt(
+        LineComponent.offsetX[entity] ** 2 +
+          LineComponent.offsetY[entity] ** 2 +
+          LineComponent.offsetZ[entity] ** 2
+      );
+      const scaledLength = scaledOffset.length();
+      const arrowScale = unscaledLength > 0 ? scaledLength / unscaledLength : 1;
 
-      const arrowSize = LineComponent.arrowSize[entity];
+      const lineData: LineData = {
+        entity,
+        startPos,
+        endPos,
+        color: new THREE.Color(LineComponent.color[entity]),
+        arrowStart: LineComponent.arrowStart[entity] === 1,
+        arrowEnd: LineComponent.arrowEnd[entity] === 1,
+        arrowSize: LineComponent.arrowSize[entity] * arrowScale,
+        visible: LineComponent.visible[entity] === 1,
+      };
 
-      if (LineComponent.dirty[entity] === 1) {
-        const color = new THREE.Color(LineComponent.color[entity]);
-        const geometry = entry.line.geometry as LineGeometry;
-        geometry.setColors([
-          color.r,
-          color.g,
-          color.b,
-          color.r,
-          color.g,
-          color.b,
-        ]);
+      let group = linesByMaterial.get(key);
+      if (!group) {
+        group = [];
+        linesByMaterial.set(key, group);
+      }
+      group.push(lineData);
+    }
 
-        entry.line.material = context.material.clone();
-        (entry.line.material as LineMaterial).linewidth =
-          LineComponent.thickness[entity];
-        (entry.line.material as LineMaterial).opacity =
-          LineComponent.opacity[entity];
-        (entry.line.material as LineMaterial).transparent =
-          LineComponent.opacity[entity] < 1;
+    const usedBatches = new Set<string>();
 
-        for (const arrowLine of entry.arrowStartLines) {
-          scene.remove(arrowLine);
-          arrowLine.geometry.dispose();
-        }
-        entry.arrowStartLines = [];
+    for (const [key, lines] of linesByMaterial) {
+      usedBatches.add(key);
 
-        for (const arrowLine of entry.arrowEndLines) {
-          scene.remove(arrowLine);
-          arrowLine.geometry.dispose();
-        }
-        entry.arrowEndLines = [];
+      const thickness = LineComponent.thickness[lines[0].entity];
+      const opacity = LineComponent.opacity[lines[0].entity];
+      const batch = getOrCreateBatch(context, key, thickness, opacity, scene);
 
-        if (LineComponent.arrowStart[entity] === 1 && arrowSize > 0) {
-          const arrows = createArrowLines(
-            startPos,
-            endPos,
-            arrowSize,
-            entry.line.material as LineMaterial,
-            true
-          );
-          for (const arrow of arrows) {
-            const arrowGeometry = arrow.geometry as LineGeometry;
-            arrowGeometry.setColors([
-              color.r,
-              color.g,
-              color.b,
-              color.r,
-              color.g,
-              color.b,
-            ]);
-            scene.add(arrow);
-            entry.arrowStartLines.push(arrow);
-          }
-        }
+      const { positions, colors } = buildBatchArrays(lines);
 
-        if (LineComponent.arrowEnd[entity] === 1 && arrowSize > 0) {
-          const arrows = createArrowLines(
-            startPos,
-            endPos,
-            arrowSize,
-            entry.line.material as LineMaterial,
-            false
-          );
-          for (const arrow of arrows) {
-            const arrowGeometry = arrow.geometry as LineGeometry;
-            arrowGeometry.setColors([
-              color.r,
-              color.g,
-              color.b,
-              color.r,
-              color.g,
-              color.b,
-            ]);
-            scene.add(arrow);
-            entry.arrowEndLines.push(arrow);
-          }
-        }
-
-        LineComponent.dirty[entity] = 0;
+      if (positions.length > 0) {
+        delete (batch.geometry as { _maxInstanceCount?: number })
+          ._maxInstanceCount;
+        batch.geometry.setPositions(positions);
+        batch.geometry.setColors(colors);
+        batch.segments.computeLineDistances();
+        batch.segments.visible = true;
       } else {
-        if (entry.arrowStartLines.length > 0) {
-          updateArrowLines(
-            entry.arrowStartLines,
-            startPos,
-            endPos,
-            arrowSize,
-            true
-          );
-        }
-        if (entry.arrowEndLines.length > 0) {
-          updateArrowLines(
-            entry.arrowEndLines,
-            startPos,
-            endPos,
-            arrowSize,
-            false
-          );
-        }
-      }
-
-      for (const arrowLine of entry.arrowStartLines) {
-        arrowLine.visible = visible;
-      }
-      for (const arrowLine of entry.arrowEndLines) {
-        arrowLine.visible = visible;
+        batch.segments.visible = false;
       }
     }
 
-    for (const [entity, entry] of context.lines) {
-      if (!state.exists(entity) || !state.hasComponent(entity, LineComponent)) {
-        scene.remove(entry.line);
-        entry.line.geometry.dispose();
-        if (entry.line.material !== context.material) {
-          (entry.line.material as LineMaterial).dispose();
-        }
-        for (const arrowLine of entry.arrowStartLines) {
-          scene.remove(arrowLine);
-          arrowLine.geometry.dispose();
-        }
-        for (const arrowLine of entry.arrowEndLines) {
-          scene.remove(arrowLine);
-          arrowLine.geometry.dispose();
-        }
-        context.lines.delete(entity);
+    for (const [key, batch] of context.batches) {
+      if (!usedBatches.has(key)) {
+        disposeBatch(batch, scene);
+        context.batches.delete(key);
       }
     }
   },

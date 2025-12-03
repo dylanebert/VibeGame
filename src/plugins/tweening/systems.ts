@@ -11,17 +11,32 @@ import {
   KinematicTween,
   Sequence,
   SequenceState,
+  Shaker,
+  ShakerMode,
+  TransformShaker,
+  TransformShakerAxes,
+  TransformShakerType,
   Tween,
   TweenValue,
 } from './components';
+import * as THREE from 'three';
+import { WorldTransform } from '../transforms';
 import {
   applyEasing,
   createTween,
   EasingNames,
   sequenceActiveTweens,
   sequenceRegistry,
+  shakerBaseRegistry,
+  shakerFieldRegistry,
+  transformShakerBaseRegistry,
+  transformShakerQuatRegistry,
   tweenFieldRegistry,
 } from './utils';
+
+const tempQuat = new THREE.Quaternion();
+const tempEuler = new THREE.Euler();
+const DEG_TO_RAD = Math.PI / 180;
 
 const easingKeys = Object.values(EasingNames);
 
@@ -30,6 +45,8 @@ const tweenValueQuery = defineQuery([TweenValue]);
 const kinematicTweenQuery = defineQuery([KinematicTween]);
 const kinematicRotationTweenQuery = defineQuery([KinematicRotationTween]);
 const sequenceQuery = defineQuery([Sequence]);
+const shakerQuery = defineQuery([Shaker]);
+const transformShakerQuery = defineQuery([TransformShaker]);
 
 const RAD_TO_DEG = 180 / Math.PI;
 
@@ -357,6 +374,260 @@ export const SequenceSystem: System = {
       }
 
       activateSequenceItems(state, seqEntity);
+    }
+  },
+};
+
+function getWorldTransformField(
+  type: number,
+  axisFlag: number
+): Float32Array | null {
+  if (type === TransformShakerType.Position) {
+    if (axisFlag === TransformShakerAxes.X) return WorldTransform.posX;
+    if (axisFlag === TransformShakerAxes.Y) return WorldTransform.posY;
+    if (axisFlag === TransformShakerAxes.Z) return WorldTransform.posZ;
+  } else if (type === TransformShakerType.Scale) {
+    if (axisFlag === TransformShakerAxes.X) return WorldTransform.scaleX;
+    if (axisFlag === TransformShakerAxes.Y) return WorldTransform.scaleY;
+    if (axisFlag === TransformShakerAxes.Z) return WorldTransform.scaleZ;
+  } else if (type === TransformShakerType.Rotation) {
+    if (axisFlag === TransformShakerAxes.X) return WorldTransform.eulerX;
+    if (axisFlag === TransformShakerAxes.Y) return WorldTransform.eulerY;
+    if (axisFlag === TransformShakerAxes.Z) return WorldTransform.eulerZ;
+  }
+  return null;
+}
+
+export const TransformShakerApplySystem: System = {
+  group: 'draw',
+  first: true,
+  update(state: State): void {
+    const axisMasks = [
+      TransformShakerAxes.X,
+      TransformShakerAxes.Y,
+      TransformShakerAxes.Z,
+    ];
+
+    for (const shakerEid of transformShakerQuery(state.world)) {
+      const targetEid = TransformShaker.target[shakerEid];
+      if (!state.hasComponent(targetEid, WorldTransform)) continue;
+
+      const type = TransformShaker.type[shakerEid];
+      const axes = TransformShaker.axes[shakerEid];
+
+      if (type === TransformShakerType.Rotation) {
+        if (!transformShakerQuatRegistry.has(targetEid)) {
+          transformShakerQuatRegistry.set(targetEid, {
+            x: WorldTransform.rotX[targetEid],
+            y: WorldTransform.rotY[targetEid],
+            z: WorldTransform.rotZ[targetEid],
+            w: WorldTransform.rotW[targetEid],
+          });
+        }
+      } else {
+        for (const axisMask of axisMasks) {
+          if (!(axes & axisMask)) continue;
+          const array = getWorldTransformField(type, axisMask);
+          if (!array) continue;
+          transformShakerBaseRegistry.set(
+            `${shakerEid}-${axisMask}`,
+            array[targetEid]
+          );
+        }
+      }
+    }
+
+    for (const shakerEid of transformShakerQuery(state.world)) {
+      if (TransformShaker.mode[shakerEid] !== ShakerMode.Additive) continue;
+      const targetEid = TransformShaker.target[shakerEid];
+      if (!state.hasComponent(targetEid, WorldTransform)) continue;
+
+      const type = TransformShaker.type[shakerEid];
+      if (type === TransformShakerType.Rotation) continue;
+
+      const axes = TransformShaker.axes[shakerEid];
+      const value = TransformShaker.value[shakerEid];
+      const intensity = TransformShaker.intensity[shakerEid];
+
+      for (const axisMask of axisMasks) {
+        if (!(axes & axisMask)) continue;
+        const array = getWorldTransformField(type, axisMask);
+        if (!array) continue;
+        array[targetEid] += value * intensity;
+      }
+    }
+
+    for (const shakerEid of transformShakerQuery(state.world)) {
+      if (TransformShaker.mode[shakerEid] !== ShakerMode.Multiplicative)
+        continue;
+      const targetEid = TransformShaker.target[shakerEid];
+      if (!state.hasComponent(targetEid, WorldTransform)) continue;
+
+      const type = TransformShaker.type[shakerEid];
+      if (type === TransformShakerType.Rotation) continue;
+
+      const axes = TransformShaker.axes[shakerEid];
+      const value = TransformShaker.value[shakerEid];
+      const intensity = TransformShaker.intensity[shakerEid];
+
+      for (const axisMask of axisMasks) {
+        if (!(axes & axisMask)) continue;
+        const array = getWorldTransformField(type, axisMask);
+        if (!array) continue;
+        array[targetEid] *= 1 + (value - 1) * intensity;
+      }
+    }
+
+    for (const shakerEid of transformShakerQuery(state.world)) {
+      const type = TransformShaker.type[shakerEid];
+      if (type !== TransformShakerType.Rotation) continue;
+
+      const targetEid = TransformShaker.target[shakerEid];
+      if (!state.hasComponent(targetEid, WorldTransform)) continue;
+
+      const axes = TransformShaker.axes[shakerEid];
+      const value = TransformShaker.value[shakerEid];
+      const intensity = TransformShaker.intensity[shakerEid];
+      const effectValue = value * intensity * DEG_TO_RAD;
+
+      const ex = axes & TransformShakerAxes.X ? effectValue : 0;
+      const ey = axes & TransformShakerAxes.Y ? effectValue : 0;
+      const ez = axes & TransformShakerAxes.Z ? effectValue : 0;
+
+      tempEuler.set(ex, ey, ez, 'YXZ');
+      tempQuat.setFromEuler(tempEuler);
+
+      const currentQuat = new THREE.Quaternion(
+        WorldTransform.rotX[targetEid],
+        WorldTransform.rotY[targetEid],
+        WorldTransform.rotZ[targetEid],
+        WorldTransform.rotW[targetEid]
+      );
+
+      currentQuat.multiply(tempQuat);
+
+      WorldTransform.rotX[targetEid] = currentQuat.x;
+      WorldTransform.rotY[targetEid] = currentQuat.y;
+      WorldTransform.rotZ[targetEid] = currentQuat.z;
+      WorldTransform.rotW[targetEid] = currentQuat.w;
+    }
+  },
+};
+
+export const TransformShakerRestoreSystem: System = {
+  group: 'draw',
+  last: true,
+  update(state: State): void {
+    const axisMasks = [
+      TransformShakerAxes.X,
+      TransformShakerAxes.Y,
+      TransformShakerAxes.Z,
+    ];
+
+    for (const shakerEid of transformShakerQuery(state.world)) {
+      const targetEid = TransformShaker.target[shakerEid];
+      if (!state.hasComponent(targetEid, WorldTransform)) continue;
+
+      const type = TransformShaker.type[shakerEid];
+      if (type === TransformShakerType.Rotation) continue;
+
+      const axes = TransformShaker.axes[shakerEid];
+
+      for (const axisMask of axisMasks) {
+        if (!(axes & axisMask)) continue;
+        const array = getWorldTransformField(type, axisMask);
+        if (!array) continue;
+        const key = `${shakerEid}-${axisMask}`;
+        const baseValue = transformShakerBaseRegistry.get(key);
+        if (baseValue !== undefined) {
+          array[targetEid] = baseValue;
+        }
+      }
+    }
+
+    for (const [targetEid, baseQuat] of transformShakerQuatRegistry) {
+      if (!state.hasComponent(targetEid, WorldTransform)) continue;
+      WorldTransform.rotX[targetEid] = baseQuat.x;
+      WorldTransform.rotY[targetEid] = baseQuat.y;
+      WorldTransform.rotZ[targetEid] = baseQuat.z;
+      WorldTransform.rotW[targetEid] = baseQuat.w;
+    }
+    transformShakerQuatRegistry.clear();
+  },
+};
+
+export const TransformShakerCleanupSystem: System = {
+  group: 'simulation',
+  last: true,
+  update(state: State): void {
+    for (const key of transformShakerBaseRegistry.keys()) {
+      const shakerEid = parseInt(key.split('-')[0], 10);
+      if (!state.hasComponent(shakerEid, TransformShaker)) {
+        transformShakerBaseRegistry.delete(key);
+      }
+    }
+  },
+};
+
+export const ShakerApplySystem: System = {
+  group: 'draw',
+  first: true,
+  before: [TransformShakerApplySystem],
+  update(state: State): void {
+    for (const shakerEid of shakerQuery(state.world)) {
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      shakerBaseRegistry.set(shakerEid, array[targetEid]);
+    }
+
+    for (const shakerEid of shakerQuery(state.world)) {
+      if (Shaker.mode[shakerEid] !== ShakerMode.Additive) continue;
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      array[targetEid] += Shaker.value[shakerEid] * Shaker.intensity[shakerEid];
+    }
+
+    for (const shakerEid of shakerQuery(state.world)) {
+      if (Shaker.mode[shakerEid] !== ShakerMode.Multiplicative) continue;
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      const intensity = Shaker.intensity[shakerEid];
+      const value = Shaker.value[shakerEid];
+      array[targetEid] *= 1 + (value - 1) * intensity;
+    }
+  },
+};
+
+export const ShakerRestoreSystem: System = {
+  group: 'draw',
+  last: true,
+  before: [TransformShakerRestoreSystem],
+  update(state: State): void {
+    for (const shakerEid of shakerQuery(state.world)) {
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      const baseValue = shakerBaseRegistry.get(shakerEid);
+      if (baseValue !== undefined) {
+        array[targetEid] = baseValue;
+      }
+    }
+  },
+};
+
+export const ShakerCleanupSystem: System = {
+  group: 'simulation',
+  last: true,
+  before: [TransformShakerCleanupSystem],
+  update(state: State): void {
+    for (const shakerEid of shakerFieldRegistry.keys()) {
+      if (!state.hasComponent(shakerEid, Shaker)) {
+        shakerFieldRegistry.delete(shakerEid);
+        shakerBaseRegistry.delete(shakerEid);
+      }
     }
   },
 };

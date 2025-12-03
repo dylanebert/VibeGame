@@ -11,6 +11,7 @@
         "zod": "^4.1.5",
       },
       "devDependencies": {
+        "@fredli74/typr": "^0.3.9",
         "@types/bun": "^1.2.21",
         "@types/jsdom": "^21.1.7",
         "@types/node": "^24.3.0",
@@ -125,6 +126,8 @@
     "@eslint/object-schema": ["@eslint/object-schema@2.1.6", "", {}, "sha512-RBMg5FRL0I0gs51M/guSAj5/e14VQ4tpZnQNWwuDT66P14I43ItmPfIZRhO9fUVIPOAQXU47atlywZ/czoqFPA=="],
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.4.0", "", { "dependencies": { "@eslint/core": "^0.16.0", "levn": "^0.4.1" } }, "sha512-sB5uyeq+dwCWyPi31B2gQlVlo+j5brPlWx4yZBrEaRo/nhdDE8Xke1gsGgtiBdaBTxuTkceLVuVt/pclrasb0A=="],
+
+    "@fredli74/typr": ["@fredli74/typr@0.3.9", "", {}, "sha512-v2xtBqFEn67wr/RFlhdW8KQGa607K4C8cu1M5h6DoHMyJLBhFxUQodPstsQ4AK11qJDtAc5eUca6+9Zl+6iLgQ=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 

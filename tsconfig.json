@@ -40,6 +40,7 @@
       "vibegame/tweening": ["./src/plugins/tweening/index.ts"],
       "vibegame/line": ["./src/plugins/line/index.ts"],
       "vibegame/vite": ["./src/vite/index.ts"],
+      "vibegame/cli": ["./src/cli/index.ts"],
       "vibegame/core/validation": ["./src/core/validation/index.ts"]
     }
   },

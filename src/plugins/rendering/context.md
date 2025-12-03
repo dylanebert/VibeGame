@@ -12,6 +12,7 @@ rendering/
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
 ├── components.ts  # Rendering components
+├── recipes.ts  # Renderer recipe (transform + renderer)
 ├── systems.ts  # Rendering systems
 ├── operations.ts  # Mesh and shadow operations
 └── utils.ts  # Canvas, context utilities, and constants
@@ -113,19 +114,11 @@ Associates canvas with RenderContext
   <!-- Lighting (auto-created if omitted) -->
   <entity ambient-light directional-light></entity>
 
-  <!-- Rendered box -->
-  <entity
-    transform
-    renderer="shape: box; color: 0xff0000; size-x: 2"
-    pos="0 1 0"
-  />
+  <!-- Rendered box using <renderer> recipe -->
+  <renderer shape="box" color="#ff0000" size-x="2" pos="0 1 0"></renderer>
 
   <!-- Rendered sphere -->
-  <entity
-    transform
-    renderer="shape: sphere; color: 0x00ff00"
-    pos="3 1 0"
-  />
+  <renderer shape="sphere" color="#00ff00" pos="3 1 0"></renderer>
 </world>
 ```
 

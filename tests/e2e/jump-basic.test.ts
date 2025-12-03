@@ -1,12 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { JSDOM } from 'jsdom';
-import {
-  State,
-  TIME_CONSTANTS,
-  XMLParser,
-  defineQuery,
-  parseXMLToEntities,
-} from 'vibegame';
+import { State, TIME_CONSTANTS } from 'vibegame';
+import { createHeadlessState, parseWorldXml, queryEntities } from 'vibegame/cli';
 import { DefaultPlugins } from 'vibegame/defaults';
 import { InputState } from 'vibegame/input';
 import { Body, CharacterController, CharacterMovement } from 'vibegame/physics';
@@ -16,37 +10,21 @@ describe('E2E: Player Jump Mechanics', () => {
   let state: State;
 
   beforeEach(async () => {
-    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
-    global.DOMParser = dom.window.DOMParser;
-
-    state = new State();
-
-    for (const plugin of DefaultPlugins) {
-      state.registerPlugin(plugin);
-    }
-
+    state = createHeadlessState({ plugins: DefaultPlugins });
     await state.initializePlugins();
   });
 
   it('should not jump automatically on startup', () => {
-    const xml = `
-      <world>
-        <!-- Ground platform -->
-        <static-part 
-          body="pos: 0 0 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
-      </world>
-    `;
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 0 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
+    `);
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
-
-    // Step once to trigger startup systems (creates player automatically)
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    // Get auto-created player
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     expect(players.length).toBe(1);
     const playerEntity = players[0];
 
@@ -79,22 +57,16 @@ describe('E2E: Player Jump Mechanics', () => {
   });
 
   it('should jump once and land properly', () => {
-    const xml = `
-      <world>
-        <static-part 
-          body="pos: 0 0 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
-      </world>
-    `;
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 0 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
+    `);
 
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
-
-    // Step to create player and let it settle
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     const playerEntity = players[0];
 
     // Wait for player to be grounded
@@ -146,21 +118,16 @@ describe('E2E: Player Jump Mechanics', () => {
   });
 
   it('should allow multiple consecutive jumps with proper timing', () => {
-    const xml = `
-      <world>
-        <static-part 
-          body="pos: 0 0 0"
-          renderer="shape: box; size: 50 1 50; color: 0x90ee90"
-          collider="shape: box; size: 50 1 50" />
-      </world>
-    `;
-
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 0 0"
+        renderer="shape: box; size: 50 1 50; color: 0x90ee90"
+        collider="shape: box; size: 50 1 50" />
+    `);
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     const playerEntity = players[0];
 
     // Wait for grounded and stable
@@ -259,21 +226,16 @@ describe('E2E: Player Jump Mechanics', () => {
   });
 
   it('should respect jump cooldown timing', () => {
-    const xml = `
-      <world>
-        <static-part 
-          body="pos: 0 0 0"
-          renderer="shape: box; size: 20 1 20; color: 0x90ee90"
-          collider="shape: box; size: 20 1 20" />
-      </world>
-    `;
-
-    const parsed = XMLParser.parse(xml);
-    parseXMLToEntities(state, parsed.root);
+    parseWorldXml(state, `
+      <static-part
+        body="pos: 0 0 0"
+        renderer="shape: box; size: 20 1 20; color: 0x90ee90"
+        collider="shape: box; size: 20 1 20" />
+    `);
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const players = defineQuery([Player])(state.world);
+    const players = queryEntities(state, 'player');
     const playerEntity = players[0];
 
     // Wait for grounded

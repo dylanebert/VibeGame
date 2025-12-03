@@ -1,0 +1,7 @@
+<sequence name="step-1-2">
+  <tween target="breathe-driver" attr="breathe-driver.value" to="1" duration="0.5" easing="expo-out"></tween>
+</sequence>
+
+<sequence name="step-2-1">
+  <tween target="breathe-driver" attr="breathe-driver.value" to="0" duration="0.5" easing="expo-out"></tween>
+</sequence>

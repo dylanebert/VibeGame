@@ -112,7 +112,8 @@ export function parseComponentProperties(
   propertyString: string,
   component: ComponentWithFields,
   state: State,
-  context?: ParseContext
+  context?: ParseContext,
+  entity?: number
 ): PropertyParseResult {
   const result: PropertyParseResult = {};
 
@@ -135,6 +136,14 @@ export function parseComponentProperties(
 
     const propName = property.slice(0, colonIndex).trim();
     const valueStr = property.slice(colonIndex + 1).trim();
+
+    const adapter = state.config.getAdapter(componentName, propName);
+    if (adapter) {
+      if (entity !== undefined) {
+        adapter(entity, valueStr, state);
+      }
+      continue;
+    }
 
     if (state.config.shouldSkip(componentName, propName)) {
       continue;

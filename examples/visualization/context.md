@@ -1,40 +1,59 @@
 # Visualization Example
 
-<!-- LLM:OVERVIEW -->
-Demonstrates lazy-loaded, viewport-aware VibeGame instances for interactive blog posts with optimized performance.
-<!-- /LLM:OVERVIEW -->
-
-## Purpose
-
-- Lazy loading for multiple canvas elements
-- Viewport-aware rendering (pause off-screen)
-- CSS-based canvas sizing
-- Manual State instantiation
+Demonstrates blog-style visualization with multi-step animation sequencing and a driver pattern.
 
 ## Layout
 
 ```
 visualization/
 ├── context.md
-├── src/
-│   └── main.ts  # Lazy State creation with IntersectionObserver
-├── index.html  # Blog-style layout with multiple worlds
+├── index.html           # Blog harness (includes content.html)
+├── record.html          # Video recording page
+├── vite.config.ts       # Build config with html-include plugin
 ├── package.json
-└── vite.config.ts
+├── tsconfig.json
+└── src/
+    ├── content.html     # World definition with step navigator UI
+    ├── components.css   # Blog-style visualization and step styling
+    ├── components.ts    # BreatheDriver and Breathe components
+    ├── systems.ts       # BreatheSystem
+    ├── plugin.ts        # VisualizationPlugin
+    ├── main.ts          # Step navigation with STEP_CONTENT descriptions
+    ├── record.ts        # Video recording entry point
+    ├── vite-env.d.ts    # Vite module type declarations
+    └── sequences/
+        ├── index.ts     # Sequence loader + STEP_SEQUENCES map
+        ├── step-0-1.xml # Camera reveal sequences
+        ├── step-1-2.xml # Breathe effect sequences
+        ├── step-2-3.xml # Scale shaker sequences
+        └── step-3-4.xml # Layout transition sequences
 ```
 
-## Key Features
+## Purpose
 
-- **Lazy initialization**: State created when canvas enters viewport
-- **Viewport awareness**: Off-screen canvases skip rendering
-- **Multiple instances**: Separate State per canvas (1-to-1-to-1)
-- **CSS sizing**: Canvas dimensions controlled by CSS, respected by renderer
-- **3D Text**: Demonstrates TextPlugin for labeled objects moving in tandem
-- **Vector Lines**: Demonstrates LinePlugin for animated vector arrows
+- Blog-style multi-step visualization with professional step navigator UI
+- Five steps: initial state, camera reveal, breathe effect, scale shaker, layout transition
+- Driver pattern: BreatheDriver component holds tweened value; BreatheSystem applies breathing to all entities with Breathe tag
+- Shaker pattern: Multiplicative scale shaker demonstrates layered presentation modifiers
+- Two entry points: interactive blog and video recording
 
-## Running
+## Entry Points
+
+- **index.html + main.ts**: Interactive blog mode with lazy initialization
+- **record.html + record.ts**: Video recording mode with step controls
+
+## Patterns
+
+- **Step Navigator**: Three-level text hierarchy (counter, title, description) with circular navigation buttons
+- **STEP_CONTENT Array**: Descriptive content explaining technical details of each step
+- **Step Sequences**: Named `step-X-Y.xml`, paired forward/reverse in same file
+- **STEP_SEQUENCES Map**: Maps transitions like `'0-1': 'step-0-1'`
+- **Driver Pattern**: BreatheDriver holds single value field (0-1); BreatheSystem reads driver value and applies breathing to entities with Breathe tag; demonstrates decoupled control signal from effect behavior
+
+## Commands
 
 ```bash
-cd examples/visualization
-bun dev
+bun run dev      # Interactive mode
+bun run build    # Production build
+bun run preview  # Preview build
 ```

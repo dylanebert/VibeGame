@@ -11,5 +11,4 @@ export const Line = defineComponent({
   arrowStart: Types.ui8,
   arrowEnd: Types.ui8,
   arrowSize: Types.f32,
-  dirty: Types.ui8,
 });

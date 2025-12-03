@@ -1,5 +1,6 @@
 import { toKebabCase } from '../utils/naming';
 import type {
+  Adapter,
   ComponentDefaults,
   ComponentEnums,
   ComponentShorthands,
@@ -17,6 +18,7 @@ export class ConfigRegistry {
   private readonly componentEnums: ComponentEnums = {};
   private readonly validations: ValidationRule[] = [];
   private readonly skipProperties: Record<string, Set<string>> = {};
+  private readonly adapters: Record<string, Record<string, Adapter>> = {};
 
   register(config: Config): void {
     if (config.parsers) {
@@ -74,6 +76,18 @@ export class ConfigRegistry {
         }
       }
     }
+
+    if (config.adapters) {
+      for (const [componentName, componentAdapters] of Object.entries(
+        config.adapters
+      )) {
+        const kebabName = toKebabCase(componentName);
+        if (!this.adapters[kebabName]) {
+          this.adapters[kebabName] = {};
+        }
+        Object.assign(this.adapters[kebabName], componentAdapters);
+      }
+    }
   }
 
   getParser(name: string): Parser | undefined {
@@ -110,5 +124,14 @@ export class ConfigRegistry {
   shouldSkip(componentName: string, propertyName: string): boolean {
     const skip = this.skipProperties[componentName];
     return skip ? skip.has(propertyName) : false;
+  }
+
+  getAdapter(componentName: string, propertyName: string): Adapter | undefined {
+    return this.adapters[componentName]?.[propertyName];
+  }
+
+  getAdapterProperties(componentName: string): string[] {
+    const componentAdapters = this.adapters[componentName];
+    return componentAdapters ? Object.keys(componentAdapters) : [];
   }
 }

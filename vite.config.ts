@@ -35,6 +35,7 @@ export default defineConfig({
         'plugins/tweening/index': 'src/plugins/tweening/index.ts',
         'plugins/line/index': 'src/plugins/line/index.ts',
         'vite/index': 'src/vite/index.ts',
+        'cli/index': 'src/cli/index.ts',
       },
       name: 'VibeGame',
       fileName: (format, entryName) =>
@@ -47,7 +48,11 @@ export default defineConfig({
         'bitecs',
         'vite',
         '@dimforge/rapier3d-compat',
+        'troika-three-text',
         /^three\//,
+        'jsdom',
+        '@fredli74/typr',
+        'fs/promises',
       ],
       output: {
         globals: {
