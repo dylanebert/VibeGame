@@ -138,7 +138,7 @@ export function expandShorthand(
       const currentValue = resolved ? resolved.array[entity] : 0;
       const fromValue =
         options.from !== undefined
-          ? parseNumberOrArray(options.from, [0, 0, 0])[i] ?? currentValue
+          ? (parseNumberOrArray(options.from, [0, 0, 0])[i] ?? currentValue)
           : currentValue;
 
       results.push({
@@ -160,7 +160,7 @@ export function expandShorthand(
       const currentValue = resolved ? resolved.array[entity] : 0;
       const fromValue =
         options.from !== undefined
-          ? parseNumberOrArray(options.from, [0, 0, 0])[i] ?? currentValue
+          ? (parseNumberOrArray(options.from, [0, 0, 0])[i] ?? currentValue)
           : currentValue;
 
       results.push({
@@ -182,7 +182,7 @@ export function expandShorthand(
       const currentValue = resolved ? resolved.array[entity] : 1;
       const fromValue =
         options.from !== undefined
-          ? parseNumberOrArray(options.from, [1, 1, 1])[i] ?? currentValue
+          ? (parseNumberOrArray(options.from, [1, 1, 1])[i] ?? currentValue)
           : currentValue;
 
       results.push({

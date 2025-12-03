@@ -50,6 +50,7 @@ vibegame/
 │   │   ├── postprocessing/  # Post-processing effects
 │   │   ├── recipes/  # XML recipe system
 │   │   ├── rendering/  # Three.js rendering
+│   │   ├── text/  # 3D text rendering
 │   │   ├── respawn/  # Respawn system
 │   │   ├── startup/  # Initialization
 │   │   ├── transforms/  # Transform hierarchy
@@ -142,10 +143,11 @@ Optional files:
 5. **player** - Player character controller (PlayerPlugin)
 6. **postprocessing** - Post-processing effects (PostprocessingPlugin)
 7. **rendering** - Three.js rendering pipeline (RenderingPlugin)
-8. **respawn** - Entity respawn system (RespawnPlugin)
-9. **startup** - Initialization and setup systems (StartupPlugin)
-10. **transforms** - Transform component hierarchy (TransformsPlugin)
-11. **tweening** - Tween-based animations (TweenPlugin)
+8. **text** - 3D text rendering with troika-three-text (TextPlugin)
+9. **respawn** - Entity respawn system (RespawnPlugin)
+10. **startup** - Initialization and setup systems (StartupPlugin)
+11. **transforms** - Transform component hierarchy (TransformsPlugin)
+12. **tweening** - Tween-based animations (TweenPlugin)
 
 **Note**: Recipe system is core functionality, not a plugin. Individual plugins define their own recipes.
 

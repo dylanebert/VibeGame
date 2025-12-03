@@ -20,7 +20,11 @@ export const CameraProjection = {
 export const threeCameras = new Map<number, THREE.Camera>();
 const canvasElements = new Map<number, HTMLCanvasElement>();
 
-function getCanvasAspect(state: State): { width: number; height: number; aspect: number } {
+function getCanvasAspect(state: State): {
+  width: number;
+  height: number;
+  aspect: number;
+} {
   const context = stateToRenderingContext.get(state);
   const canvas = context?.canvas;
 
@@ -187,7 +191,10 @@ export interface RenderingContext {
   geometries: Map<number, THREE.BufferGeometry>;
   material: THREE.MeshStandardMaterial;
   unlitMaterial: THREE.MeshBasicMaterial;
-  entityInstances: Map<number, { poolId: number; instanceId: number; unlit: boolean }>;
+  entityInstances: Map<
+    number,
+    { poolId: number; instanceId: number; unlit: boolean }
+  >;
   lights: {
     ambient: THREE.HemisphereLight;
     directional: THREE.DirectionalLight;

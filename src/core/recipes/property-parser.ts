@@ -136,6 +136,10 @@ export function parseComponentProperties(
     const propName = property.slice(0, colonIndex).trim();
     const valueStr = property.slice(colonIndex + 1).trim();
 
+    if (state.config.shouldSkip(componentName, propName)) {
+      continue;
+    }
+
     if (!propName || !valueStr) {
       const error = formatSyntaxError(
         componentName,

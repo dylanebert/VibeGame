@@ -63,6 +63,7 @@ export interface Config {
   readonly shorthands?: Record<string, Record<string, ShorthandMapping>>;
   readonly enums?: Record<string, Record<string, EnumMapping>>;
   readonly validations?: ValidationRule[];
+  readonly skip?: Record<string, readonly string[]>;
 }
 
 export interface Plugin {

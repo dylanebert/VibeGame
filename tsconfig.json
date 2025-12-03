@@ -33,6 +33,7 @@
       "vibegame/player": ["./src/plugins/player/index.ts"],
       "vibegame/postprocessing": ["./src/plugins/postprocessing/index.ts"],
       "vibegame/rendering": ["./src/plugins/rendering/index.ts"],
+      "vibegame/text": ["./src/plugins/text/index.ts"],
       "vibegame/respawn": ["./src/plugins/respawn/index.ts"],
       "vibegame/startup": ["./src/plugins/startup/index.ts"],
       "vibegame/transforms": ["./src/plugins/transforms/index.ts"],

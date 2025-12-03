@@ -28,6 +28,7 @@ export default defineConfig({
         'plugins/player/index': 'src/plugins/player/index.ts',
         'plugins/postprocessing/index': 'src/plugins/postprocessing/index.ts',
         'plugins/rendering/index': 'src/plugins/rendering/index.ts',
+        'plugins/text/index': 'src/plugins/text/index.ts',
         'plugins/respawn/index': 'src/plugins/respawn/index.ts',
         'plugins/startup/index': 'src/plugins/startup/index.ts',
         'plugins/transforms/index': 'src/plugins/transforms/index.ts',

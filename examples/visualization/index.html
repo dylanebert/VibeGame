@@ -119,7 +119,7 @@
       </p>
 
       <div class="visualization-container">
-        <div class="visualization-title">Visualization 2: Wave Pattern</div>
+        <div class="visualization-title">Visualization 2: Labeled Objects</div>
         <world canvas="#canvas-2" sky="#f0f0f0">
           <entity transform pos="0 8 15" euler="-20 0 0" main-camera="projection: 1; ortho-size: 20"></entity>
           <entity ambient-light="intensity: 0.6"></entity>
@@ -129,11 +129,11 @@
           <entity transform renderer="shape: sphere" size="0.8" color="#45B7D1"></entity>
           <entity transform renderer="shape: sphere" size="0.8" color="#FFA07A"></entity>
           <entity transform renderer="shape: sphere" size="0.8" color="#98D8C8"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#F7DC6F"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#BB8FCE"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#85C1E2"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#F8B739"></entity>
-          <entity transform renderer="shape: sphere" size="0.8" color="#52B788"></entity>
+          <entity transform text="text: Red; color: 0xFF6B6B"></entity>
+          <entity transform text="text: Teal; color: 0x4ECDC4"></entity>
+          <entity transform text="text: Blue; color: 0x45B7D1"></entity>
+          <entity transform text="text: Orange; color: 0xFFA07A"></entity>
+          <entity transform text="text: Mint; color: 0x98D8C8"></entity>
         </world>
         <canvas id="canvas-2" class="game-canvas"></canvas>
       </div>

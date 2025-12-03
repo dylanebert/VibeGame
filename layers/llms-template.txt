@@ -189,6 +189,25 @@ GAME
   .run();
 ```
 
+## 3D Text
+
+Requires including the TextPlugin in the builder, as it is not included in the DefaultPlugins.
+```typescript
+import { TextPlugin } from 'vibegame/text';
+
+GAME
+  .withPlugin(TextPlugin)
+  .run();
+```
+
+```xml
+<!-- Simple centered text -->
+<entity transform="pos: 0 2 0" text="text: Hello World"></entity>
+
+<!-- Styled text -->
+<entity transform="pos: 0 2 0" text="text: Score; font-size: 2; color: 0xff0000"></entity>
+```
+
 ```xml
 <!-- Bloom effect for glow -->
 <orbit-camera bloom="intensity: 2; luminance-threshold: 0.8"></orbit-camera>
@@ -547,6 +566,7 @@ Recipes are registered component bundles with defaults:
 - **Gamepad support** - Xbox/PlayStation controllers
 - **Visual effects** - Tweening colors, positions, rotations
 - **Post-processing** - Bloom, dithering, and tonemapping effects for visual styling
+- **3D Text** - In-world text labels, scores, and UI elements
 - **Game UI/HUD** - HTML/CSS overlays with GSAP animations, ECS state integration
 
 ### Example Prompts That Work

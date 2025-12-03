@@ -11,16 +11,19 @@ import type {
 } from './types';
 
 export class ConfigRegistry {
-  private readonly parsers = new Map<string, Parser>();
+  private readonly parsers = new Map<string, Parser[]>();
   private readonly componentDefaults: ComponentDefaults = {};
   private readonly componentShorthands: ComponentShorthands = {};
   private readonly componentEnums: ComponentEnums = {};
   private readonly validations: ValidationRule[] = [];
+  private readonly skipProperties: Record<string, Set<string>> = {};
 
   register(config: Config): void {
     if (config.parsers) {
       for (const [name, parser] of Object.entries(config.parsers)) {
-        this.parsers.set(name, parser);
+        const existing = this.parsers.get(name) || [];
+        existing.push(parser);
+        this.parsers.set(name, existing);
       }
     }
 
@@ -59,10 +62,29 @@ export class ConfigRegistry {
     if (config.validations) {
       this.validations.push(...config.validations);
     }
+
+    if (config.skip) {
+      for (const [componentName, props] of Object.entries(config.skip)) {
+        const kebabName = toKebabCase(componentName);
+        if (!this.skipProperties[kebabName]) {
+          this.skipProperties[kebabName] = new Set();
+        }
+        for (const prop of props) {
+          this.skipProperties[kebabName].add(prop);
+        }
+      }
+    }
   }
 
   getParser(name: string): Parser | undefined {
-    return this.parsers.get(name);
+    const parsers = this.parsers.get(name);
+    if (!parsers || parsers.length === 0) return undefined;
+    if (parsers.length === 1) return parsers[0];
+    return (args) => {
+      for (const parser of parsers) {
+        parser(args);
+      }
+    };
   }
 
   getDefaults(componentName: string): Record<string, number> {
@@ -83,5 +105,10 @@ export class ConfigRegistry {
 
   getValidations(): ValidationRule[] {
     return this.validations;
+  }
+
+  shouldSkip(componentName: string, propertyName: string): boolean {
+    const skip = this.skipProperties[componentName];
+    return skip ? skip.has(propertyName) : false;
   }
 }

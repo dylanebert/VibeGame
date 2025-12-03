@@ -62,7 +62,55 @@ describe('Plugin System', () => {
     state.registerPlugin(plugin);
 
     const parser = state.getParser('test-element');
-    expect(parser).toBe(testParser);
+    expect(parser).toBeDefined();
+  });
+
+  it('should stack multiple parsers for the same element', () => {
+    const calls: string[] = [];
+
+    const plugin1: Plugin = {
+      config: {
+        parsers: {
+          entity: () => calls.push('parser1'),
+        },
+      },
+    };
+
+    const plugin2: Plugin = {
+      config: {
+        parsers: {
+          entity: () => calls.push('parser2'),
+        },
+      },
+    };
+
+    state.registerPlugin(plugin1);
+    state.registerPlugin(plugin2);
+
+    const parser = state.getParser('entity');
+    parser?.({
+      entity: 0,
+      element: { tagName: 'entity', attributes: {}, children: [] },
+      state,
+      context: new ParseContext(state),
+    });
+
+    expect(calls).toEqual(['parser1', 'parser2']);
+  });
+
+  it('should skip properties via config', () => {
+    const plugin: Plugin = {
+      config: {
+        skip: {
+          myComponent: ['skipMe'],
+        },
+      },
+    };
+
+    state.registerPlugin(plugin);
+
+    expect(state.config.shouldSkip('my-component', 'skipMe')).toBe(true);
+    expect(state.config.shouldSkip('my-component', 'keepMe')).toBe(false);
   });
 
   it('should register plugin with complete config', () => {

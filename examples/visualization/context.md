@@ -29,7 +29,7 @@ visualization/
 - **Viewport awareness**: Off-screen canvases skip rendering
 - **Multiple instances**: Separate State per canvas (1-to-1-to-1)
 - **CSS sizing**: Canvas dimensions controlled by CSS, respected by renderer
-- **Minimal plugins**: Only TransformsPlugin and RenderingPlugin
+- **3D Text**: Demonstrates TextPlugin for labeled objects moving in tandem
 
 ## Running
 

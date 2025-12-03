@@ -3,18 +3,22 @@ import { Transform } from 'vibegame/transforms';
 import { Renderer, RenderContext, setCanvasElement } from 'vibegame/rendering';
 import { TransformsPlugin } from 'vibegame/transforms';
 import { RenderingPlugin } from 'vibegame/rendering';
+import { TextPlugin, Text } from 'vibegame/text';
 
-const query = GAME.defineQuery([Transform, Renderer]);
+const rendererQuery = GAME.defineQuery([Transform, Renderer]);
+const textQuery = GAME.defineQuery([Transform, Text]);
 
 const createAnimationSystem = (speedMultiplier = 1): GAME.System => ({
   group: 'draw',
   update: (state) => {
-    const entities = query(state.world);
+    const rendererEntities = rendererQuery(state.world);
+    const textEntities = textQuery(state.world);
     const time = state.time.elapsed * speedMultiplier;
 
+    const rendererCount = rendererEntities.length;
     let index = 0;
-    for (const eid of entities) {
-      const offset = (index * Math.PI * 2) / 10;
+    for (const eid of rendererEntities) {
+      const offset = (index * Math.PI * 2) / rendererCount;
 
       const radius = 5;
       Transform.posX[eid] = Math.cos(time + offset) * radius;
@@ -23,6 +27,19 @@ const createAnimationSystem = (speedMultiplier = 1): GAME.System => ({
 
       Transform.eulerY[eid] = (time * 50 + index * 36) % 360;
       Transform.eulerX[eid] = Math.sin(time + offset) * 30;
+
+      index++;
+    }
+
+    const textCount = textEntities.length;
+    index = 0;
+    for (const eid of textEntities) {
+      const offset = (index * Math.PI * 2) / textCount;
+
+      const radius = 5;
+      Transform.posX[eid] = Math.cos(time + offset) * radius;
+      Transform.posZ[eid] = Math.sin(time + offset) * radius;
+      Transform.posY[eid] = Math.sin(time * 2 + offset) * 2 + 4.5;
 
       index++;
     }
@@ -44,6 +61,7 @@ async function initializeState(instance: CanvasInstance): Promise<void> {
 
   state.registerPlugin(TransformsPlugin);
   state.registerPlugin(RenderingPlugin);
+  state.registerPlugin(TextPlugin);
   state.registerSystem(createAnimationSystem(speedMultiplier));
 
   await state.initializePlugins();

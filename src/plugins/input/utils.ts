@@ -48,7 +48,9 @@ const bufferedActions = {
 let targetCanvas: HTMLCanvasElement | null = null;
 let focusedCanvas: HTMLCanvasElement | null = null;
 
-function isValidTarget(target: EventTarget | null): target is HTMLCanvasElement {
+function isValidTarget(
+  target: EventTarget | null
+): target is HTMLCanvasElement {
   if (!(target instanceof HTMLCanvasElement)) return false;
   return targetCanvas === null || target === targetCanvas;
 }
@@ -138,7 +140,8 @@ function handleBlur(event: FocusEvent): void {
 
 function handleMouseDownDelegated(event: MouseEvent): void {
   if (isValidTarget(event.target)) {
-    event.target.tabIndex = event.target.tabIndex === -1 ? 0 : event.target.tabIndex;
+    event.target.tabIndex =
+      event.target.tabIndex === -1 ? 0 : event.target.tabIndex;
     event.target.focus();
     handleMouseDown(event);
   }

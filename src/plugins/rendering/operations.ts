@@ -69,12 +69,7 @@ export function updateInstance(
       const pools = unlit ? context.unlitMeshPools : context.meshPools;
       const material = unlit ? context.unlitMaterial : context.material;
 
-      mesh = resizeInstancedMesh(
-        mesh,
-        geometry,
-        material,
-        context.scene
-      );
+      mesh = resizeInstancedMesh(mesh, geometry, material, context.scene);
       pools.set(shapeId, mesh);
 
       instanceId = findAvailableInstanceSlot(mesh, matrix);

@@ -42,7 +42,9 @@ export const MeshInstanceSystem: System = {
 
     for (const [entity, instanceInfo] of context.entityInstances) {
       if (!state.exists(entity)) {
-        const pools = instanceInfo.unlit ? context.unlitMeshPools : context.meshPools;
+        const pools = instanceInfo.unlit
+          ? context.unlitMeshPools
+          : context.meshPools;
         const mesh = pools.get(instanceInfo.poolId);
         if (mesh) {
           hideInstance(mesh, entity, context);
