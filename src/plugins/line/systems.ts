@@ -183,6 +183,9 @@ export const LineSystem: System = {
       const { positions, colors } = buildBatchArrays(lines);
 
       if (positions.length > 0) {
+        // Clear Three.js internal cache to allow instance count to grow
+        // Three.js only sets _maxInstanceCount when undefined, causing render limits
+        delete (batch.geometry as { _maxInstanceCount?: number })._maxInstanceCount;
         batch.geometry.setPositions(positions);
         batch.geometry.setColors(colors);
         batch.segments.computeLineDistances();

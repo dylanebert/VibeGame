@@ -923,5 +923,40 @@ describe('Line Batching', () => {
       runLineSystem(state);
       expect(batch.geometry.getAttribute('instanceStart').count).toBe(6);
     });
+
+    it('should clear _maxInstanceCount when growing visible line count', () => {
+      const entities = [];
+      for (let i = 0; i < 10; i++) {
+        const e = createLineEntity(state);
+        Line.thickness[e] = 1.5;
+        Line.visible[e] = 0;
+        Line.offsetX[e] = i + 1;
+        entities.push(e);
+      }
+
+      // Frame 1: Only 2 lines visible (this sets _maxInstanceCount = 2)
+      Line.visible[entities[0]] = 1;
+      Line.visible[entities[1]] = 1;
+      runLineSystem(state);
+
+      const context = getLineContext(state);
+      const key = getMaterialKey(1.5, 1);
+      const batch = context.batches.get(key)!;
+
+      expect(batch.geometry.getAttribute('instanceStart').count).toBe(2);
+
+      // Frame 2: All 10 lines visible (tests _maxInstanceCount clearing)
+      for (const e of entities) {
+        Line.visible[e] = 1;
+      }
+      runLineSystem(state);
+
+      expect(batch.geometry.getAttribute('instanceStart').count).toBe(10);
+
+      // Verify _maxInstanceCount was cleared (will be recalculated by renderer)
+      expect(
+        (batch.geometry as { _maxInstanceCount?: number })._maxInstanceCount
+      ).toBeUndefined();
+    });
   });
 });
