@@ -848,21 +848,61 @@ GAME
 
 ### Core
 
-Math utilities for interpolation and 3D transformations.
+Entity Component System scheduler and state management. Provides the State class for world management, system scheduling with execution phases, and plugin registration.
 
-### Functions
+## API Reference
 
-#### lerp(a, b, t): number
-Linear interpolation
+### Exported Classes
 
-#### slerp(fromX, fromY, fromZ, fromW, toX, toY, toZ, toW, t): Quaternion
-Quaternion spherical interpolation
+#### State
+World container managing entities, components, systems, and plugins. See main core/context.md for full API.
+
+### Exported Constants
+
+- `NULL_ENTITY: 4294967295` - Invalid entity ID
+- `TIME_CONSTANTS.FIXED_TIMESTEP: 1/60` - Fixed update rate
+- `TIME_CONSTANTS.DEFAULT_DELTA: 1/144` - Default frame delta
+
+### Exported Types
+
+- `System` - System definition interface
+- `Plugin` - Plugin bundle interface
+- `Recipe` - Entity recipe definition
+- `Config` - Configuration interface
+- `GameTime` - Time tracking interface
+- `Parser` - XML tag parser function type
+- `ComponentDefaults` - Default values mapping
+- `ComponentEnums` - Enum value mappings
+- `ShorthandMapping` - Attribute shorthand
+- `ValidationRule` - Validation rule interface
 
 #### Examples
 
-## Usage Note
+## Examples
 
-Math utilities are used internally by systems like tweening and transforms. For animating properties, use the Tween system instead of directly calling interpolation functions. For transformations, use the Transform component's euler angles which are automatically converted to quaternions by the system.
+### System Execution Order
+
+```typescript
+import * as GAME from 'vibegame';
+
+const EarlySystem: GAME.System = {
+  group: 'setup',
+  first: true,
+  update: (state) => { /* runs first in setup */ }
+};
+
+const LateSystem: GAME.System = {
+  group: 'draw',
+  last: true,
+  update: (state) => { /* runs last in draw */ }
+};
+
+const OrderedSystem: GAME.System = {
+  after: [OtherSystem],
+  before: [AnotherSystem],
+  update: (state) => { /* runs between systems */ }
+};
+```
 
 ### Animation
 
@@ -2272,6 +2312,12 @@ Sets the text content for a text entity (required since bitECS only supports num
 #### getTextContent(state, entity)
 Gets the text content for a text entity
 
+#### setDefaultFont(state, fontUrl)
+Sets the default font URL for all text entities (supports .ttf, .woff, .woff2)
+
+#### measureText(state, entity, callback)
+Measures text bounds asynchronously. Callback receives TextBounds with width, height, blockBounds, visibleBounds.
+
 #### Examples
 
 ## Examples
@@ -2306,12 +2352,14 @@ Gets the text content for a text entity
 
 ```typescript
 import { State } from 'vibegame';
-import { Text, TextPlugin, setTextContent } from 'vibegame/text';
+import { Text, TextPlugin, setTextContent, setDefaultFont } from 'vibegame/text';
 import { Transform, WorldTransform, TransformsPlugin } from 'vibegame/transforms';
 
 const state = new State();
 state.registerPlugin(TransformsPlugin);
 state.registerPlugin(TextPlugin);
+
+setDefaultFont(state, 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5Q.ttf');
 
 const textEntity = state.createEntity();
 state.addComponent(textEntity, Transform);

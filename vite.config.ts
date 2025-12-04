@@ -47,6 +47,7 @@ export default defineConfig({
         'bitecs',
         'vite',
         '@dimforge/rapier3d-compat',
+        'troika-three-text',
         /^three\//,
       ],
       output: {
