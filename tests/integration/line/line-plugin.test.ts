@@ -30,7 +30,6 @@ describe('Line Plugin Integration', () => {
     Line.offsetZ[entity] = 0.0;
     Line.color[entity] = 0xffffff;
     Line.thickness[entity] = 2.0;
-    Line.dirty[entity] = 1;
 
     expect(state.hasComponent(entity, Line)).toBe(true);
   });
@@ -177,34 +176,9 @@ describe('Line Plugin Integration', () => {
     Line.arrowStart[entity] = 1;
     Line.arrowEnd[entity] = 1;
     Line.arrowSize[entity] = 0.3;
-    Line.dirty[entity] = 1;
 
     expect(Line.arrowStart[entity]).toBe(1);
     expect(Line.arrowEnd[entity]).toBe(1);
     expect(Line.arrowSize[entity]).toBeCloseTo(0.3);
-  });
-
-  it('should allow updating line offset without resetting dirty', () => {
-    state.registerPlugin(TransformsPlugin);
-    state.registerPlugin(LinePlugin);
-
-    const entity = state.createEntity();
-    state.addComponent(entity, Transform);
-    state.addComponent(entity, WorldTransform);
-    state.addComponent(entity, Line);
-
-    Line.offsetX[entity] = 5;
-    Line.arrowEnd[entity] = 1;
-    Line.arrowSize[entity] = 0.3;
-    Line.dirty[entity] = 1;
-
-    Line.dirty[entity] = 0;
-
-    Line.offsetX[entity] = 10;
-    Line.offsetY[entity] = 5;
-
-    expect(Line.dirty[entity]).toBe(0);
-    expect(Line.offsetX[entity]).toBe(10);
-    expect(Line.offsetY[entity]).toBe(5);
   });
 });
