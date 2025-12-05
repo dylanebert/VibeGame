@@ -1,16 +1,14 @@
 import type { Plugin } from 'vibegame';
-import { BreatheDriver } from './components';
-import { BreatheDriverApplySystem, BreatheDriverRestoreSystem } from './systems';
+import { BreatheDriver, Breathe } from './components';
+import { BreatheSystem } from './systems';
 
 export const VisualizationPlugin: Plugin = {
-  components: { BreatheDriver },
-  systems: [BreatheDriverApplySystem, BreatheDriverRestoreSystem],
+  components: { BreatheDriver, Breathe },
+  systems: [BreatheSystem],
   config: {
     defaults: {
       'breathe-driver': {
-        intensity: 0,
-        speed: 2,
-        amplitude: 0.2,
+        value: 0,
       },
     },
   },

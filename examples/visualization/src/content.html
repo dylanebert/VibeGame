@@ -22,11 +22,24 @@
     <entity ambient-light="intensity: 0.6"></entity>
     <entity directional-light="intensity: 0.7; direction: -1 2 1"></entity>
     <entity
-      name="cube"
-      transform
+      name="cube-left"
+      transform="pos: -3 0 0"
       renderer="shape: box; size: 2 2 2; color: #ff4444"
+      breathe
     ></entity>
-    <entity name="breathe-driver" breathe-driver="target: cube"></entity>
+    <entity
+      name="cube-center"
+      transform="pos: 0 0 0"
+      renderer="shape: box; size: 2 2 2; color: #44ff44"
+      breathe
+    ></entity>
+    <entity
+      name="cube-right"
+      transform="pos: 3 0 0"
+      renderer="shape: box; size: 2 2 2; color: #4444ff"
+      breathe
+    ></entity>
+    <entity name="breathe-driver" breathe-driver="value: 0"></entity>
   </world>
   <canvas id="canvas-1" class="game-canvas"></canvas>
   <div class="step-navigator">

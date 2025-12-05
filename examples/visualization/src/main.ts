@@ -21,12 +21,12 @@ const STEP_CONTENT: StepContent[] = [
   {
     title: 'Camera Reveal',
     description:
-      'A tween animates the camera closer to the cube using expo-out easing. The yaw angle narrows from 2.0 to 0.6, distance reduces from 25 to 10 units, and pitch increases from 0.2 to 0.4 over 1.2 seconds.',
+      'A tween animates the camera closer to the cubes using expo-out easing. The yaw angle narrows from 2.0 to 0.6, distance reduces from 25 to 10 units, and pitch increases from 0.2 to 0.4 over 1.2 seconds.',
   },
   {
     title: 'Breathe Effect',
     description:
-      "The BreatheDriver component activates via a tweened intensity parameter (0 to 1). This applies a sine-wave oscillation to the cube's scale, creating a breathing animation without modifying the actual transform data.",
+      'The BreatheDriver value is tweened from 0 to 1. The BreatheSystem reads this driver value and applies sine-wave oscillation to the scale of all entities with the Breathe tag, demonstrating how a single tweened driver can systemically control multiple entities.',
   },
 ];
 

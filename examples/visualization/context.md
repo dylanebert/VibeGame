@@ -15,8 +15,8 @@ visualization/
 └── src/
     ├── content.html     # World definition with step navigator UI
     ├── components.css   # Blog-style visualization and step styling
-    ├── components.ts    # BreatheDriver component
-    ├── systems.ts       # BreatheDriver apply/restore systems
+    ├── components.ts    # BreatheDriver and Breathe components
+    ├── systems.ts       # BreatheSystem
     ├── plugin.ts        # VisualizationPlugin
     ├── main.ts          # Step navigation with STEP_CONTENT descriptions
     ├── record.ts        # Video recording entry point
@@ -30,8 +30,8 @@ visualization/
 ## Purpose
 
 - Blog-style multi-step visualization with professional step navigator UI
-- Three steps: initial state, camera reveal, breathe effect activation
-- BreatheDriver: continuous scale oscillation controlled by tweened intensity
+- Three steps: initial state, camera reveal, breathe effect activation on three cubes
+- Driver pattern: BreatheDriver component holds tweened value; BreatheSystem applies breathing to all entities with Breathe tag
 - Two entry points: interactive blog and video recording
 
 ## Entry Points
@@ -45,8 +45,7 @@ visualization/
 - **STEP_CONTENT Array**: Descriptive content explaining technical details of each step
 - **Step Sequences**: Named `step-X-Y.xml`, paired forward/reverse in same file
 - **STEP_SEQUENCES Map**: Maps transitions like `'0-1': 'step-0-1'`
-- **Driver Pattern**: BreatheDriver modulates scale via intensity (0-1), tweened by sequences
-- **Capture/Apply/Restore**: Systems follow Shaker pattern for presentation-only effects
+- **Driver Pattern**: BreatheDriver holds single value field (0-1); BreatheSystem reads driver value and applies breathing to entities with Breathe tag; demonstrates decoupled control signal from effect behavior
 
 ## Commands
 

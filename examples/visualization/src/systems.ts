@@ -1,54 +1,31 @@
 import type { State, System } from 'vibegame';
 import { defineQuery } from 'vibegame';
 import { Transform } from 'vibegame/transforms';
-import { BreatheDriver } from './components';
+import { BreatheDriver, Breathe } from './components';
 
-const breatheQuery = defineQuery([BreatheDriver]);
+const driverQuery = defineQuery([BreatheDriver]);
+const breatheQuery = defineQuery([Breathe, Transform]);
 
-const baseScaleRegistry = new Map<number, { x: number; y: number; z: number }>();
+const BREATHE_SPEED = 2;
+const BREATHE_AMPLITUDE = 0.2;
 
-export const BreatheDriverApplySystem: System = {
-  group: 'draw',
-  first: true,
+export const BreatheSystem: System = {
+  group: 'simulation',
   update(state: State): void {
     const time = state.time.elapsed;
 
-    for (const driverEid of breatheQuery(state.world)) {
-      const targetEid = BreatheDriver.target[driverEid];
-      if (!state.hasComponent(targetEid, Transform)) continue;
+    const drivers = driverQuery(state.world);
+    if (drivers.length === 0) return;
 
-      baseScaleRegistry.set(driverEid, {
-        x: Transform.scaleX[targetEid],
-        y: Transform.scaleY[targetEid],
-        z: Transform.scaleZ[targetEid],
-      });
+    const driverValue = BreatheDriver.value[drivers[0]];
 
-      const intensity = BreatheDriver.intensity[driverEid];
-      const speed = BreatheDriver.speed[driverEid];
-      const amplitude = BreatheDriver.amplitude[driverEid];
+    const oscillation = Math.sin(time * BREATHE_SPEED) * BREATHE_AMPLITUDE * driverValue;
+    const scale = 1 + oscillation;
 
-      const oscillation = Math.sin(time * speed) * amplitude * intensity;
-      const multiplier = 1 + oscillation;
-
-      Transform.scaleX[targetEid] *= multiplier;
-      Transform.scaleY[targetEid] *= multiplier;
-      Transform.scaleZ[targetEid] *= multiplier;
-    }
-  },
-};
-
-export const BreatheDriverRestoreSystem: System = {
-  group: 'draw',
-  last: true,
-  update(state: State): void {
-    for (const driverEid of breatheQuery(state.world)) {
-      const targetEid = BreatheDriver.target[driverEid];
-      const base = baseScaleRegistry.get(driverEid);
-      if (!base) continue;
-
-      Transform.scaleX[targetEid] = base.x;
-      Transform.scaleY[targetEid] = base.y;
-      Transform.scaleZ[targetEid] = base.z;
+    for (const eid of breatheQuery(state.world)) {
+      Transform.scaleX[eid] = scale;
+      Transform.scaleY[eid] = scale;
+      Transform.scaleZ[eid] = scale;
     }
   },
 };
