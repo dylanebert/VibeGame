@@ -24,14 +24,16 @@ visualization/
     └── sequences/
         ├── index.ts     # Sequence loader + STEP_SEQUENCES map
         ├── step-0-1.xml # Camera reveal sequences
-        └── step-1-2.xml # Breathe effect sequences
+        ├── step-1-2.xml # Breathe effect sequences
+        └── step-2-3.xml # Scale shaker sequences
 ```
 
 ## Purpose
 
 - Blog-style multi-step visualization with professional step navigator UI
-- Three steps: initial state, camera reveal, breathe effect activation on three cubes
+- Four steps: initial state, camera reveal, breathe effect activation, scale shaker demonstration
 - Driver pattern: BreatheDriver component holds tweened value; BreatheSystem applies breathing to all entities with Breathe tag
+- Shaker pattern: Multiplicative scale shaker demonstrates layered presentation modifiers
 - Two entry points: interactive blog and video recording
 
 ## Entry Points

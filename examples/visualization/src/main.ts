@@ -28,6 +28,11 @@ const STEP_CONTENT: StepContent[] = [
     description:
       'The BreatheDriver value is tweened from 0 to 1. The BreatheSystem reads this driver value and applies sine-wave oscillation to the scale of all entities with the Breathe tag, demonstrating how a single tweened driver can systemically control multiple entities.',
   },
+  {
+    title: 'Scale Shaker',
+    description:
+      'A multiplicative scale shaker targets the right cube with value 0.5. Tweening its intensity from 0 to 1 systematically halves the cube\'s scale without interfering with the breathing effect, demonstrating layered presentation modifiers.',
+  },
 ];
 
 function calculateMaxStep(): number {
