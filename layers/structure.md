@@ -149,7 +149,7 @@ Optional files:
 10. **respawn** - Entity respawn system (RespawnPlugin)
 11. **startup** - Initialization and setup systems (StartupPlugin)
 12. **transforms** - Transform component hierarchy (TransformsPlugin)
-13. **tweening** - Tween-based animations (TweenPlugin)
+13. **tweening** - Tween animations and presentation shakers (TweenPlugin)
 
 **Note**: Recipe system is core functionality, not a plugin. Individual plugins define their own recipes.
 

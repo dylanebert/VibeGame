@@ -8,6 +8,8 @@ import {
   KinematicTween,
   Sequence,
   SequenceState,
+  Shaker,
+  ShakerMode,
   Tween,
   TweenValue,
 } from './components';
@@ -221,6 +223,10 @@ export interface SequenceItemSpec {
 
 export const sequenceRegistry = new Map<number, SequenceItemSpec[]>();
 export const sequenceActiveTweens = new Map<number, Set<number>>();
+
+// Shaker registries
+export const shakerFieldRegistry = new Map<number, Float32Array>();
+export const shakerBaseRegistry = new Map<number, number>();
 
 export function playSequence(state: State, entity: number): void {
   if (!state.hasComponent(entity, Sequence)) return;
@@ -491,4 +497,38 @@ export function createTween(
   }
 
   return tweenEntity;
+}
+
+export interface ShakerOptions {
+  value: number;
+  intensity?: number;
+  mode?: 'additive' | 'multiplicative';
+}
+
+export function createShaker(
+  state: State,
+  entity: number,
+  target: string,
+  options: ShakerOptions
+): number | null {
+  const resolved = resolveComponentField(target, entity, state);
+  if (!resolved) {
+    console.warn(`[Shaker] Could not resolve target property: ${target}`);
+    return null;
+  }
+
+  const shakerEntity = state.createEntity();
+  state.addComponent(shakerEntity, Shaker);
+
+  Shaker.target[shakerEntity] = entity;
+  Shaker.value[shakerEntity] = options.value;
+  Shaker.intensity[shakerEntity] = options.intensity ?? 1;
+  Shaker.mode[shakerEntity] =
+    options.mode === 'multiplicative'
+      ? ShakerMode.Multiplicative
+      : ShakerMode.Additive;
+
+  shakerFieldRegistry.set(shakerEntity, resolved.array);
+
+  return shakerEntity;
 }

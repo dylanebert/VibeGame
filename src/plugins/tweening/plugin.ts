@@ -3,14 +3,18 @@ import {
   KinematicRotationTween,
   KinematicTween,
   Sequence,
+  Shaker,
   Tween,
   TweenValue,
 } from './components';
-import { sequenceParser, tweenParser } from './parser';
+import { sequenceParser, shakerParser, tweenParser } from './parser';
 import {
   KinematicRotationTweenSystem,
   KinematicTweenSystem,
   SequenceSystem,
+  ShakerApplySystem,
+  ShakerCleanupSystem,
+  ShakerRestoreSystem,
   TweenSystem,
 } from './systems';
 
@@ -20,6 +24,9 @@ export const TweenPlugin: Plugin = {
     KinematicRotationTweenSystem,
     TweenSystem,
     SequenceSystem,
+    ShakerApplySystem,
+    ShakerRestoreSystem,
+    ShakerCleanupSystem,
   ],
   components: {
     Tween,
@@ -27,15 +34,18 @@ export const TweenPlugin: Plugin = {
     KinematicTween,
     KinematicRotationTween,
     Sequence,
+    Shaker,
   },
   recipes: [
     { name: 'tween', components: [] },
     { name: 'sequence', components: [] },
+    { name: 'shaker', components: [] },
   ],
   config: {
     parsers: {
       tween: tweenParser,
       sequence: sequenceParser,
+      shaker: shakerParser,
     },
   },
 };

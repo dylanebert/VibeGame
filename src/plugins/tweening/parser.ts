@@ -2,10 +2,12 @@ import type { Parser, XMLValue } from '../../core';
 import { formatEnumError } from '../../core/recipes/diagnostics';
 import { Sequence, SequenceState } from './components';
 import {
+  createShaker,
   createTween,
   EasingNames,
   sequenceRegistry,
   type SequenceItemSpec,
+  type ShakerOptions,
   type TweenOptions,
 } from './utils';
 
@@ -167,4 +169,68 @@ export const sequenceParser: Parser = ({ element, state, context }) => {
   Sequence.currentIndex[seqEntity] = 0;
   Sequence.itemCount[seqEntity] = items.length;
   Sequence.pauseRemaining[seqEntity] = 0;
+};
+
+const VALID_MODES = ['additive', 'multiplicative'];
+
+function validateMode(mode: string | undefined, context: string): void {
+  if (!mode) return;
+  if (!VALID_MODES.includes(mode)) {
+    throw new Error(formatEnumError(context, 'mode', mode, VALID_MODES));
+  }
+}
+
+export const shakerParser: Parser = ({ element, state, context }) => {
+  if (element.tagName !== 'shaker') return;
+
+  const targetName = element.attributes.target as string;
+  if (!targetName) {
+    throw new Error(
+      '[Shaker] Missing required attribute "target".\n' +
+        '  Example: <shaker target="my-cube" attr="transform.pos-y" value="0.5"></shaker>'
+    );
+  }
+
+  const targetEntity = context.getEntityByName(targetName);
+  if (targetEntity === null) {
+    throw new Error(
+      `[Shaker] Could not find entity with name "${targetName}".\n` +
+        '  Make sure the target entity has a name attribute.'
+    );
+  }
+
+  const attr = element.attributes.attr as string;
+  if (!attr) {
+    throw new Error(
+      '[Shaker] Missing required attribute "attr".\n' +
+        '  Example: <shaker target="my-cube" attr="transform.pos-y" value="0.5"></shaker>'
+    );
+  }
+
+  const value = element.attributes.value;
+  if (value === undefined || value === null) {
+    throw new Error(
+      '[Shaker] Missing required attribute "value".\n' +
+        '  Example: <shaker target="my-cube" attr="transform.pos-y" value="0.5"></shaker>'
+    );
+  }
+
+  const mode = element.attributes.mode as string | undefined;
+  validateMode(mode, 'shaker');
+
+  const options: ShakerOptions = {
+    value: toNumber(value),
+    intensity: toNumber(element.attributes.intensity ?? 1),
+    mode: mode as 'additive' | 'multiplicative' | undefined,
+  };
+
+  const shakerEntity = createShaker(state, targetEntity, attr, options);
+  if (!shakerEntity) {
+    throw new Error(`[Shaker] Could not resolve target property: ${attr}`);
+  }
+
+  const name = element.attributes.name as string | undefined;
+  if (name) {
+    context.setName(name, shakerEntity);
+  }
 };

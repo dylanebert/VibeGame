@@ -8,7 +8,10 @@ import {
   WorldTransform,
 } from 'vibegame/transforms';
 import { LineSystem } from '../../../src/plugins/line/systems';
-import { getLineContext, getMaterialKey } from '../../../src/plugins/line/utils';
+import {
+  getLineContext,
+  getMaterialKey,
+} from '../../../src/plugins/line/utils';
 
 function createLineEntity(state: State): number {
   const entity = state.createEntity();
@@ -19,7 +22,7 @@ function createLineEntity(state: State): number {
 }
 
 function runLineSystem(state: State): void {
-  LineSystem.update(state);
+  LineSystem.update?.(state);
 }
 
 describe('Line Batching', () => {
@@ -336,7 +339,9 @@ describe('Line Batching', () => {
       runLineSystem(state);
 
       expect(context.batches.size).toBe(1);
-      expect(context.batches.get(getMaterialKey(2, 1))!.segments.visible).toBe(true);
+      expect(context.batches.get(getMaterialKey(2, 1))!.segments.visible).toBe(
+        true
+      );
     });
   });
 

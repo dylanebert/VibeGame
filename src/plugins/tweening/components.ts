@@ -1,5 +1,17 @@
 import { defineComponent, Types } from 'bitecs';
 
+export const enum ShakerMode {
+  Additive = 0,
+  Multiplicative = 1,
+}
+
+export const Shaker = defineComponent({
+  target: Types.eid,
+  value: Types.f32,
+  intensity: Types.f32,
+  mode: Types.ui8,
+});
+
 export const Tween = defineComponent({
   duration: Types.f32,
   elapsed: Types.f32,

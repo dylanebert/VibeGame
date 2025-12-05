@@ -11,6 +11,8 @@ import {
   KinematicTween,
   Sequence,
   SequenceState,
+  Shaker,
+  ShakerMode,
   Tween,
   TweenValue,
 } from './components';
@@ -20,6 +22,8 @@ import {
   EasingNames,
   sequenceActiveTweens,
   sequenceRegistry,
+  shakerBaseRegistry,
+  shakerFieldRegistry,
   tweenFieldRegistry,
 } from './utils';
 
@@ -30,6 +34,7 @@ const tweenValueQuery = defineQuery([TweenValue]);
 const kinematicTweenQuery = defineQuery([KinematicTween]);
 const kinematicRotationTweenQuery = defineQuery([KinematicRotationTween]);
 const sequenceQuery = defineQuery([Sequence]);
+const shakerQuery = defineQuery([Shaker]);
 
 const RAD_TO_DEG = 180 / Math.PI;
 
@@ -357,6 +362,69 @@ export const SequenceSystem: System = {
       }
 
       activateSequenceItems(state, seqEntity);
+    }
+  },
+};
+
+export const ShakerApplySystem: System = {
+  group: 'draw',
+  first: true,
+  update(state: State): void {
+    // Pass 1: Capture base values before any modifications
+    for (const shakerEid of shakerQuery(state.world)) {
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      shakerBaseRegistry.set(shakerEid, array[targetEid]);
+    }
+
+    // Pass 2: Apply additive shakers
+    for (const shakerEid of shakerQuery(state.world)) {
+      if (Shaker.mode[shakerEid] !== ShakerMode.Additive) continue;
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      array[targetEid] += Shaker.value[shakerEid] * Shaker.intensity[shakerEid];
+    }
+
+    // Pass 3: Apply multiplicative shakers
+    for (const shakerEid of shakerQuery(state.world)) {
+      if (Shaker.mode[shakerEid] !== ShakerMode.Multiplicative) continue;
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      const intensity = Shaker.intensity[shakerEid];
+      const value = Shaker.value[shakerEid];
+      array[targetEid] *= 1 + (value - 1) * intensity;
+    }
+  },
+};
+
+export const ShakerRestoreSystem: System = {
+  group: 'draw',
+  last: true,
+  update(state: State): void {
+    for (const shakerEid of shakerQuery(state.world)) {
+      const targetEid = Shaker.target[shakerEid];
+      const array = shakerFieldRegistry.get(shakerEid);
+      if (!array) continue;
+      const baseValue = shakerBaseRegistry.get(shakerEid);
+      if (baseValue !== undefined) {
+        array[targetEid] = baseValue;
+      }
+    }
+  },
+};
+
+export const ShakerCleanupSystem: System = {
+  group: 'simulation',
+  last: true,
+  update(state: State): void {
+    for (const shakerEid of shakerFieldRegistry.keys()) {
+      if (!state.hasComponent(shakerEid, Shaker)) {
+        shakerFieldRegistry.delete(shakerEid);
+        shakerBaseRegistry.delete(shakerEid);
+      }
     }
   },
 };

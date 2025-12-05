@@ -1,7 +1,7 @@
 # Tweening Plugin
 
 <!-- LLM:OVERVIEW -->
-Animates component properties with easing functions. Tweens are one-shot animations that destroy on completion. Sequences are reusable animation definitions that can be played, stopped, and reset. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
+Animates component properties with easing functions. Tweens are one-shot animations that destroy on completion. Sequences are reusable animation definitions that can be played, stopped, and reset. Shakers provide additive presentation modifiers without changing base values. Kinematic velocity bodies use velocity-based tweening for smooth physics-correct movement.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -11,22 +11,22 @@ tweening/
 ├── context.md  # This file
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
-├── components.ts  # Tween, TweenValue, KinematicTween, KinematicRotationTween, Sequence
-├── systems.ts  # KinematicTweenSystem, KinematicRotationTweenSystem, TweenSystem, SequenceSystem
-├── parser.ts  # Tween and sequence XML parsers
-└── utils.ts  # Easing functions, tween creation, sequence registry
+├── components.ts  # Tween, TweenValue, KinematicTween, KinematicRotationTween, Sequence, Shaker
+├── systems.ts  # Tween, Sequence, Kinematic, and Shaker systems
+├── parser.ts  # Tween, sequence, and shaker XML parsers
+└── utils.ts  # Easing functions, tween/shaker creation, registries
 ```
 
 ## Scope
 
-- **In-scope**: Property animations, easing functions, velocity-based kinematic tweening, sequences with pauses
+- **In-scope**: Property animations, easing functions, velocity-based kinematic tweening, sequences with pauses, presentation-only shakers
 - **Out-of-scope**: Skeletal animation, physics interpolation, looping, ping-pong
 
 ## Entry Points
 
 - **plugin.ts**: TweenPlugin definition for registration
-- **systems.ts**: KinematicTweenSystem, KinematicRotationTweenSystem (fixed group), TweenSystem, SequenceSystem (simulation group)
-- **parser.ts**: Parses `<tween>` and `<sequence>` elements from XML scenes
+- **systems.ts**: Kinematic systems (fixed), Tween/Sequence systems (simulation), Shaker systems (draw)
+- **parser.ts**: Parses `<tween>`, `<sequence>`, and `<shaker>` elements from XML
 
 ## Dependencies
 
@@ -75,6 +75,24 @@ Runtime lookup via `state.getEntityByName('door')` returns the entity ID.
 - itemCount: ui32
 - pauseRemaining: f32
 
+**Shaker** - Presentation modifier (applied at draw time, restored after)
+- target: eid - Entity being modified
+- value: f32 - Modification value
+- intensity: f32 - Effect multiplier (0-1)
+- mode: ui8 (Additive=0, Multiplicative=1)
+
+### Shaker System
+
+Shakers modify component values at draw time without affecting simulation. They're applied at the start of draw and restored at the end.
+
+**Formulas:**
+- Additive: `result = base + (value * intensity)`
+- Multiplicative: `result = base * (1 + (value - 1) * intensity)`
+
+**Composition order:** All additive shakers apply first, then multiplicative. This allows multiplying by 0 to scale down everything.
+
+**Use case:** Animate shaker intensity with a tween for layered effects (e.g., screen shake that fades out).
+
 ### Shorthand Targets
 
 Shorthands expand to multiple TweenValue entities (one per axis):
@@ -102,6 +120,9 @@ For `<kinematic-part>` entities, tweens on body.pos-* or body.euler-* fields aut
 // Create one-shot tween (returns tween entity ID)
 createTween(state, entity, target, options): number | null
 
+// Create shaker (returns shaker entity ID)
+createShaker(state, entity, target, options): number | null
+
 // Sequence control
 playSequence(state, entity): void      // Start from current position
 stopSequence(state, entity): void      // Stop and clear active tweens
@@ -128,14 +149,8 @@ completeSequence(state, entity): void  // Jump to end, apply final values
 
 ```xml
 <entity name="cube" transform renderer="shape: box"></entity>
-
-<!-- Position (3 tweens created) -->
 <tween target="cube" attr="at" from="0 0 0" to="10 5 0" duration="2"></tween>
-
-<!-- Scale (3 tweens created) -->
 <tween target="cube" attr="scale" from="1 1 1" to="2 2 2" duration="1"></tween>
-
-<!-- Rotation - uses body if present, else transform -->
 <tween target="cube" attr="rotation" from="0 0 0" to="0 180 0" duration="2"></tween>
 ```
 
@@ -161,18 +176,11 @@ Tweens before `<pause>` run simultaneously. Pause separates sequential groups.
 <entity name="cube" transform renderer="shape: box"></entity>
 
 <sequence autoplay="true">
-  <!-- Group 1: These run in parallel -->
   <tween target="cube" attr="at" from="-10 0 0" to="0 0 0" duration="1" easing="sine-out"></tween>
   <tween target="cube" attr="scale" from="0 0 0" to="1 1 1" duration="0.5" easing="back-out"></tween>
-
   <pause duration="0.3"></pause>
-
-  <!-- Group 2: Runs after pause -->
   <tween target="cube" attr="scale" to="1.2 1.2 1.2" duration="0.2" easing="quad-out"></tween>
-
   <pause duration="0.1"></pause>
-
-  <!-- Group 3: Runs after second pause -->
   <tween target="cube" attr="scale" to="1 1 1" duration="0.15" easing="sine-in-out"></tween>
 </sequence>
 ```
@@ -260,5 +268,27 @@ document.getElementById('btn')?.addEventListener('click', () => {
   const seq = state.getEntityByName('my-sequence');
   if (seq !== null) state.addComponent(seq, TriggerSequence);
 });
+```
+
+### Shaker (XML)
+
+```xml
+<entity name="cube" transform="pos-y: 0"></entity>
+<shaker name="bounce" target="cube" attr="transform.pos-y" value="0.5" intensity="1" mode="additive"></shaker>
+<tween target="bounce" attr="shaker.intensity" from="0" to="1" duration="0.5" easing="quad-out"></tween>
+```
+
+### Shaker (TypeScript)
+
+```typescript
+import { createShaker, createTween } from 'vibegame/tweening';
+
+const shakerId = createShaker(state, entity, 'transform.pos-y', {
+  value: 0.5,
+  intensity: 1,
+  mode: 'additive'
+});
+
+createTween(state, shakerId, 'shaker.intensity', { from: 1, to: 0, duration: 0.5 });
 ```
 <!-- /LLM:EXAMPLES -->

@@ -39,9 +39,13 @@ function computeArrowWing(
 
   const perpendicular = new THREE.Vector3();
   if (Math.abs(direction.y) < 0.9) {
-    perpendicular.crossVectors(direction, new THREE.Vector3(0, 1, 0)).normalize();
+    perpendicular
+      .crossVectors(direction, new THREE.Vector3(0, 1, 0))
+      .normalize();
   } else {
-    perpendicular.crossVectors(direction, new THREE.Vector3(1, 0, 0)).normalize();
+    perpendicular
+      .crossVectors(direction, new THREE.Vector3(1, 0, 0))
+      .normalize();
   }
 
   const angle = wingIndex === 0 ? ARROW_ANGLE : -ARROW_ANGLE;
@@ -65,9 +69,10 @@ function pushSegment(
   colors.push(color.r, color.g, color.b, color.r, color.g, color.b);
 }
 
-function buildBatchArrays(
-  lines: LineData[]
-): { positions: number[]; colors: number[] } {
+function buildBatchArrays(lines: LineData[]): {
+  positions: number[];
+  colors: number[];
+} {
   const positions: number[] = [];
   const colors: number[] = [];
 
@@ -185,7 +190,8 @@ export const LineSystem: System = {
       if (positions.length > 0) {
         // Clear Three.js internal cache to allow instance count to grow
         // Three.js only sets _maxInstanceCount when undefined, causing render limits
-        delete (batch.geometry as { _maxInstanceCount?: number })._maxInstanceCount;
+        delete (batch.geometry as { _maxInstanceCount?: number })
+          ._maxInstanceCount;
         batch.geometry.setPositions(positions);
         batch.geometry.setColors(colors);
         batch.segments.computeLineDistances();
