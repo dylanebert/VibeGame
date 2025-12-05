@@ -4,6 +4,7 @@ import { RenderingPlugin, RenderContext, setCanvasElement } from 'vibegame/rende
 import { OrbitCameraPlugin } from 'vibegame/orbit-camera';
 import { TweenPlugin, playSequence, resetSequence } from 'vibegame/tweening';
 import { injectSequences, STEP_SEQUENCES } from './sequences';
+import { VisualizationPlugin } from './plugin';
 
 declare global {
   interface HTMLCanvasElement {
@@ -16,12 +17,24 @@ let currentStep = 0;
 let state: State | null = null;
 let running = true;
 
+function calculateMaxStep(): number {
+  let max = 0;
+  for (const key of Object.keys(STEP_SEQUENCES)) {
+    const [from, to] = key.split('-').map(Number);
+    max = Math.max(max, from, to);
+  }
+  return max;
+}
+
+const maxStep = calculateMaxStep();
+
 function initializeState(canvas: HTMLCanvasElement, worldElement: Element): State {
   const newState = new State();
   newState.registerPlugin(TransformsPlugin);
   newState.registerPlugin(RenderingPlugin);
   newState.registerPlugin(OrbitCameraPlugin);
   newState.registerPlugin(TweenPlugin);
+  newState.registerPlugin(VisualizationPlugin);
 
   injectSequences(worldElement);
 
@@ -62,13 +75,13 @@ function triggerSequence(state: State, fromStep: number, toStep: number): void {
 function updateStepDisplay(): void {
   const display = document.getElementById('step-display');
   if (display) {
-    display.textContent = `Step: ${currentStep}`;
+    display.textContent = `Step: ${currentStep}/${maxStep}`;
   }
 }
 
 function goToStep(newStep: number): void {
   if (!state) return;
-  const clampedStep = Math.max(0, Math.min(1, newStep));
+  const clampedStep = Math.max(0, Math.min(maxStep, newStep));
   if (clampedStep === currentStep) return;
 
   triggerSequence(state, currentStep, clampedStep);

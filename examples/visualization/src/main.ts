@@ -4,13 +4,26 @@ import { TransformsPlugin } from 'vibegame/transforms';
 import { RenderingPlugin, RenderContext, setCanvasElement } from 'vibegame/rendering';
 import { OrbitCameraPlugin } from 'vibegame/orbit-camera';
 import { TweenPlugin, playSequence, resetSequence } from 'vibegame/tweening';
-import { injectSequences } from './sequences';
+import { injectSequences, STEP_SEQUENCES } from './sequences';
+import { VisualizationPlugin } from './plugin';
+
+function calculateMaxStep(): number {
+  let max = 0;
+  for (const key of Object.keys(STEP_SEQUENCES)) {
+    const [from, to] = key.split('-').map(Number);
+    max = Math.max(max, from, to);
+  }
+  return max;
+}
+
+const maxStep = calculateMaxStep();
 
 interface CanvasInstance {
   canvas: HTMLCanvasElement;
   worldElement: Element;
   state: State | null;
   isVisible: boolean;
+  currentStep: number;
 }
 
 function initializeCanvas(instance: CanvasInstance): void {
@@ -19,6 +32,7 @@ function initializeCanvas(instance: CanvasInstance): void {
   state.registerPlugin(RenderingPlugin);
   state.registerPlugin(OrbitCameraPlugin);
   state.registerPlugin(TweenPlugin);
+  state.registerPlugin(VisualizationPlugin);
 
   injectSequences(instance.worldElement);
 
@@ -43,28 +57,51 @@ function initializeCanvas(instance: CanvasInstance): void {
   state.step(0);
   instance.state = state;
 
-  setupUI(state);
+  setupUI(instance);
 }
 
-function setupUI(state: State): void {
-  const playBtn = document.getElementById('btn-play');
-  const resetBtn = document.getElementById('btn-reset');
+function triggerSequence(state: State, fromStep: number, toStep: number): void {
+  const key = `${fromStep}-${toStep}`;
+  const sequenceName = STEP_SEQUENCES[key];
+  if (!sequenceName) return;
 
-  playBtn?.addEventListener('click', () => {
-    const introSeq = state.getEntityByName('intro');
-    if (introSeq !== null) {
-      resetSequence(state, introSeq);
-      playSequence(state, introSeq);
-    }
+  const seqEntity = state.getEntityByName(sequenceName);
+  if (seqEntity !== null) {
+    resetSequence(state, seqEntity);
+    playSequence(state, seqEntity);
+  }
+}
+
+function updateStepDisplay(instance: CanvasInstance): void {
+  const display = document.getElementById('step-display');
+  if (display) {
+    display.textContent = `Step: ${instance.currentStep}/${maxStep}`;
+  }
+}
+
+function goToStep(instance: CanvasInstance, newStep: number): void {
+  if (!instance.state) return;
+  const clampedStep = Math.max(0, Math.min(maxStep, newStep));
+  if (clampedStep === instance.currentStep) return;
+
+  triggerSequence(instance.state, instance.currentStep, clampedStep);
+  instance.currentStep = clampedStep;
+  updateStepDisplay(instance);
+}
+
+function setupUI(instance: CanvasInstance): void {
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+
+  prevBtn?.addEventListener('click', () => goToStep(instance, instance.currentStep - 1));
+  nextBtn?.addEventListener('click', () => goToStep(instance, instance.currentStep + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') goToStep(instance, instance.currentStep - 1);
+    if (e.key === 'ArrowRight') goToStep(instance, instance.currentStep + 1);
   });
 
-  resetBtn?.addEventListener('click', () => {
-    const resetSeq = state.getEntityByName('reset');
-    if (resetSeq !== null) {
-      resetSequence(state, resetSeq);
-      playSequence(state, resetSeq);
-    }
-  });
+  updateStepDisplay(instance);
 }
 
 const instances: CanvasInstance[] = [];
@@ -81,6 +118,7 @@ function init(): void {
       worldElement,
       state: null,
       isVisible: false,
+      currentStep: 0,
     });
   }
 

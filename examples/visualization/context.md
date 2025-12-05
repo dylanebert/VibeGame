@@ -1,31 +1,35 @@
 # Visualization Example
 
-Demonstrates blog-style visualization with animation sequencing.
+Demonstrates blog-style visualization with multi-step animation sequencing and a driver pattern.
 
 ## Layout
 
 ```
 visualization/
-├── context.md           # This file
+├── context.md
 ├── index.html           # Blog harness (includes content.html)
 ├── record.html          # Video recording page
 ├── vite.config.ts       # Build config with html-include plugin
-├── package.json         # Dependencies
-├── tsconfig.json        # TypeScript config
+├── package.json
+├── tsconfig.json
 └── src/
-    ├── content.html     # Single source of content
+    ├── content.html     # World definition with breathe-driver entity
     ├── components.css   # Visualization styles
-    ├── main.ts          # Blog entry point
+    ├── components.ts    # BreatheDriver component
+    ├── systems.ts       # BreatheDriver apply/restore systems
+    ├── plugin.ts        # VisualizationPlugin
+    ├── main.ts          # Blog entry point with step navigation
     ├── record.ts        # Video recording entry point
     └── sequences/
         ├── index.ts     # Sequence loader + STEP_SEQUENCES map
-        └── intro.xml    # Camera tween sequences
+        ├── step-0-1.xml # Camera intro/reset sequences
+        └── step-1-2.xml # Breathe activate/deactivate sequences
 ```
 
 ## Purpose
 
-- Blog-style visualization with lazy canvas loading
-- Animation sequences for camera reveals
+- Multi-step visualization with arrow key navigation (0 → 1 → 2)
+- BreatheDriver: continuous scale oscillation controlled by tweened intensity
 - Two entry points: interactive blog and video recording
 
 ## Entry Points
@@ -35,9 +39,10 @@ visualization/
 
 ## Patterns
 
-- **HTML Include**: `<include src="...">` directive for content reuse
-- **Sequence Injection**: XML sequences loaded as raw strings and injected into world
-- **STEP_SEQUENCES Map**: Maps step transitions to sequence names
+- **Step Sequences**: Named `step-X-Y.xml`, paired forward/reverse in same file
+- **STEP_SEQUENCES Map**: Maps transitions like `'0-1': 'step-0-1'`
+- **Driver Pattern**: BreatheDriver modulates scale via intensity (0-1), tweened by sequences
+- **Capture/Apply/Restore**: Systems follow Shaker pattern for presentation-only effects
 
 ## Commands
 

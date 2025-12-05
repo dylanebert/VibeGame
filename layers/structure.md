@@ -90,13 +90,17 @@ vibegame/
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── src/
-│           ├── content.html     # Single source of content
+│           ├── content.html     # World definition with entities
 │           ├── components.css   # Visualization styles
+│           ├── components.ts    # BreatheDriver component
+│           ├── systems.ts       # BreatheDriver systems
+│           ├── plugin.ts        # VisualizationPlugin
 │           ├── main.ts          # Blog entry point
 │           ├── record.ts        # Video recording entry point
 │           └── sequences/
-│               ├── index.ts     # Sequence loader
-│               └── intro.xml    # Camera tween sequences
+│               ├── index.ts     # Sequence loader + STEP_SEQUENCES map
+│               ├── step-0-1.xml # Camera sequences
+│               └── step-1-2.xml # Breathe sequences
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   ├── context-template.md  # Template for context files
