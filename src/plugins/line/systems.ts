@@ -79,10 +79,8 @@ function buildBatchArrays(lines: LineData[]): {
   for (const line of lines) {
     if (!line.visible) continue;
 
-    // Main line segment
     pushSegment(positions, colors, line.startPos, line.endPos, line.color);
 
-    // Arrow at start
     if (line.arrowStart && line.arrowSize > 0) {
       for (let i = 0; i < 2; i++) {
         const { tip, wingEnd } = computeArrowWing(
@@ -96,7 +94,6 @@ function buildBatchArrays(lines: LineData[]): {
       }
     }
 
-    // Arrow at end
     if (line.arrowEnd && line.arrowSize > 0) {
       for (let i = 0; i < 2; i++) {
         const { tip, wingEnd } = computeArrowWing(
@@ -124,7 +121,6 @@ export const LineSystem: System = {
     const context = getLineContext(state);
     const entities = lineQuery(state.world);
 
-    // Update resolution
     if (renderContext?.renderer) {
       context.resolution.set(
         renderContext.renderer.domElement.width,
@@ -135,7 +131,6 @@ export const LineSystem: System = {
       }
     }
 
-    // Group lines by material key
     const linesByMaterial = new Map<string, LineData[]>();
 
     for (const entity of entities) {
@@ -149,11 +144,25 @@ export const LineSystem: System = {
         WorldTransform.posZ[entity]
       );
 
-      const endPos = new THREE.Vector3(
-        startPos.x + LineComponent.offsetX[entity],
-        startPos.y + LineComponent.offsetY[entity],
-        startPos.z + LineComponent.offsetZ[entity]
+      const scaledOffset = new THREE.Vector3(
+        LineComponent.offsetX[entity] * WorldTransform.scaleX[entity],
+        LineComponent.offsetY[entity] * WorldTransform.scaleY[entity],
+        LineComponent.offsetZ[entity] * WorldTransform.scaleZ[entity]
       );
+
+      const endPos = new THREE.Vector3(
+        startPos.x + scaledOffset.x,
+        startPos.y + scaledOffset.y,
+        startPos.z + scaledOffset.z
+      );
+
+      const unscaledLength = Math.sqrt(
+        LineComponent.offsetX[entity] ** 2 +
+          LineComponent.offsetY[entity] ** 2 +
+          LineComponent.offsetZ[entity] ** 2
+      );
+      const scaledLength = scaledOffset.length();
+      const arrowScale = unscaledLength > 0 ? scaledLength / unscaledLength : 1;
 
       const lineData: LineData = {
         entity,
@@ -162,7 +171,7 @@ export const LineSystem: System = {
         color: new THREE.Color(LineComponent.color[entity]),
         arrowStart: LineComponent.arrowStart[entity] === 1,
         arrowEnd: LineComponent.arrowEnd[entity] === 1,
-        arrowSize: LineComponent.arrowSize[entity],
+        arrowSize: LineComponent.arrowSize[entity] * arrowScale,
         visible: LineComponent.visible[entity] === 1,
       };
 
@@ -174,10 +183,8 @@ export const LineSystem: System = {
       group.push(lineData);
     }
 
-    // Track which batches are used this frame
     const usedBatches = new Set<string>();
 
-    // Update each batch
     for (const [key, lines] of linesByMaterial) {
       usedBatches.add(key);
 
@@ -188,8 +195,6 @@ export const LineSystem: System = {
       const { positions, colors } = buildBatchArrays(lines);
 
       if (positions.length > 0) {
-        // Clear Three.js internal cache to allow instance count to grow
-        // Three.js only sets _maxInstanceCount when undefined, causing render limits
         delete (batch.geometry as { _maxInstanceCount?: number })
           ._maxInstanceCount;
         batch.geometry.setPositions(positions);
@@ -201,7 +206,6 @@ export const LineSystem: System = {
       }
     }
 
-    // Remove unused batches
     for (const [key, batch] of context.batches) {
       if (!usedBatches.has(key)) {
         disposeBatch(batch, scene);
