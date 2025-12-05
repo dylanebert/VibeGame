@@ -1,24 +1,25 @@
 import type { Plugin } from '../../core';
-import { Group, Member } from './components';
-import { ArrangeSystem } from './systems';
-import { StrategyNames } from './utils';
+import { Align, HorizontalGroup, HorizontalMember } from './components';
+import { HorizontalArrangeSystem } from './systems';
+import { AlignNames } from './utils';
 
 export const ArrangePlugin: Plugin = {
   components: {
-    group: Group,
-    member: Member,
+    'horizontal-group': HorizontalGroup,
+    'horizontal-member': HorizontalMember,
   },
-  systems: [ArrangeSystem],
+  systems: [HorizontalArrangeSystem],
   config: {
     defaults: {
-      group: {
-        weight: 1,
+      'horizontal-group': {
         gap: 1,
+        align: Align.Center,
+        blend: 1,
       },
     },
     enums: {
-      group: {
-        strategy: StrategyNames,
+      'horizontal-group': {
+        align: AlignNames,
       },
     },
   },

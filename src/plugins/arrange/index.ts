@@ -1,10 +1,4 @@
-export { Group, Member, Strategy } from './components';
+export { Align, HorizontalGroup, HorizontalMember } from './components';
 export { ArrangePlugin } from './plugin';
-export { ArrangeSystem } from './systems';
-export {
-  horizontalStrategy,
-  strategyRegistry,
-  StrategyNames,
-  type Position,
-  type StrategyFn,
-} from './utils';
+export { HorizontalArrangeSystem } from './systems';
+export { AlignNames, horizontalPosition, type Position } from './utils';

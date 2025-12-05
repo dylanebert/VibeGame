@@ -1,16 +1,18 @@
 import { defineComponent, Types } from 'bitecs';
 
-export const enum Strategy {
-  Horizontal = 0,
+export const enum Align {
+  Left = 0,
+  Center = 1,
+  Right = 2,
 }
 
-export const Group = defineComponent({
-  strategy: Types.ui8,
+export const HorizontalGroup = defineComponent({
   gap: Types.f32,
-  weight: Types.f32,
+  align: Types.ui8,
+  blend: Types.f32,
 });
 
-export const Member = defineComponent({
+export const HorizontalMember = defineComponent({
   group: Types.eid,
   index: Types.ui32,
 });

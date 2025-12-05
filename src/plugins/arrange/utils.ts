@@ -1,4 +1,4 @@
-import type { Strategy } from './components';
+import { Align } from './components';
 
 export interface Position {
   x: number;
@@ -6,21 +6,28 @@ export interface Position {
   z: number;
 }
 
-export type StrategyFn = (
+export function horizontalPosition(
   memberCount: number,
   gap: number,
-  index: number
-) => Position;
-
-export const strategyRegistry = new Map<Strategy, StrategyFn>();
-
-export function horizontalStrategy(
-  memberCount: number,
-  gap: number,
+  align: Align,
   index: number
 ): Position {
   const totalWidth = (memberCount - 1) * gap;
-  const startX = -totalWidth / 2;
+
+  let startX: number;
+  switch (align) {
+    case Align.Left:
+      startX = 0;
+      break;
+    case Align.Right:
+      startX = -totalWidth;
+      break;
+    case Align.Center:
+    default:
+      startX = -totalWidth / 2;
+      break;
+  }
+
   return {
     x: startX + index * gap,
     y: 0,
@@ -28,8 +35,8 @@ export function horizontalStrategy(
   };
 }
 
-export const StrategyNames: Record<string, Strategy> = {
-  horizontal: 0,
+export const AlignNames: Record<string, Align> = {
+  left: Align.Left,
+  center: Align.Center,
+  right: Align.Right,
 };
-
-strategyRegistry.set(0, horizontalStrategy);

@@ -1,41 +1,45 @@
 import type { State, System } from '../../core';
 import { defineQuery } from '../../core';
 import { Transform } from '../transforms';
-import { Group, Member } from './components';
-import { strategyRegistry } from './utils';
+import { HorizontalGroup, HorizontalMember } from './components';
+import { horizontalPosition } from './utils';
 
-const memberQuery = defineQuery([Member]);
+const memberQuery = defineQuery([HorizontalMember]);
 
-export const ArrangeSystem: System = {
+export const HorizontalArrangeSystem: System = {
   group: 'simulation',
   update(state: State): void {
     const members = memberQuery(state.world);
 
     const groupCounts = new Map<number, number>();
     for (const eid of members) {
-      const groupEid = Member.group[eid];
+      const groupEid = HorizontalMember.group[eid];
       const currentMax = groupCounts.get(groupEid) ?? 0;
-      groupCounts.set(groupEid, Math.max(currentMax, Member.index[eid] + 1));
+      groupCounts.set(
+        groupEid,
+        Math.max(currentMax, HorizontalMember.index[eid] + 1)
+      );
     }
 
     for (const eid of members) {
       if (!state.hasComponent(eid, Transform)) continue;
 
-      const groupEid = Member.group[eid];
-      if (!state.hasComponent(groupEid, Group)) continue;
+      const groupEid = HorizontalMember.group[eid];
+      if (!state.hasComponent(groupEid, HorizontalGroup)) continue;
 
-      const weight = Group.weight[groupEid];
-      if (weight <= 0) continue;
-
-      const strategy = strategyRegistry.get(Group.strategy[groupEid]);
-      if (!strategy) continue;
+      const blend = HorizontalGroup.blend[groupEid];
+      if (blend <= 0) continue;
 
       const count = groupCounts.get(groupEid) ?? 1;
-      const arranged = strategy(count, Group.gap[groupEid], Member.index[eid]);
+      const gap = HorizontalGroup.gap[groupEid];
+      const align = HorizontalGroup.align[groupEid];
+      const index = HorizontalMember.index[eid];
 
-      Transform.posX[eid] = arranged.x;
-      Transform.posY[eid] = arranged.y;
-      Transform.posZ[eid] = arranged.z;
+      const pos = horizontalPosition(count, gap, align, index);
+
+      Transform.posX[eid] = pos.x;
+      Transform.posY[eid] = pos.y;
+      Transform.posZ[eid] = pos.z;
     }
   },
 };
