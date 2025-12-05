@@ -1,7 +1,7 @@
 # Arrange Plugin
 
 <!-- LLM:OVERVIEW -->
-Groups entities into layout arrangements with automatic positioning. Members of a group are positioned according to the group's strategy (horizontal). Weight controls whether arrangement is active (0 = frozen, >0 = active).
+Groups entities into layout arrangements with automatic positioning. Members reference a group entity and are positioned according to the group's strategy (horizontal). Weight controls whether arrangement is active (0 = frozen, >0 = active). Count is computed dynamically from member indices.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -13,7 +13,6 @@ arrange/
 ├── plugin.ts  # Plugin definition
 ├── components.ts  # Group, Member
 ├── systems.ts  # ArrangeSystem
-├── parser.ts  # <arrange> XML parser
 └── utils.ts  # Strategy functions, registry
 ```
 
@@ -26,7 +25,6 @@ arrange/
 
 - **plugin.ts**: ArrangePlugin definition for registration
 - **systems.ts**: ArrangeSystem (simulation)
-- **parser.ts**: Parses `<arrange>` wrapper elements
 
 ## Dependencies
 
@@ -40,7 +38,6 @@ arrange/
 - strategy: ui8 (0) - Layout algorithm (0=horizontal)
 - gap: f32 (1) - Spacing between members
 - weight: f32 (1) - Activation weight (0=frozen)
-- count: ui32 - Number of members
 
 **Member** - Links entity to a group
 - group: eid - Reference to Group entity
@@ -62,11 +59,12 @@ position[index] = { x: startX + index * gap, y: 0, z: 0 }
 ### System Behavior
 
 ArrangeSystem runs in the simulation batch:
-1. Queries all entities with Member component
-2. Skips members without Transform
-3. Skips members whose group has weight <= 0
-4. Applies strategy to calculate position
-5. Sets Transform.posX/posY/posZ directly
+1. Computes member count per group from highest index + 1
+2. Queries all entities with Member component
+3. Skips members without Transform
+4. Skips members whose group has weight <= 0
+5. Applies strategy to calculate position
+6. Sets Transform.posX/posY/posZ directly
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -75,25 +73,20 @@ ArrangeSystem runs in the simulation batch:
 ### Basic Horizontal Arrangement
 
 ```xml
-<arrange name="cube-row" strategy="horizontal" gap="3" weight="1">
-  <entity name="cube-left" renderer="shape: box"></entity>
-  <entity name="cube-center" renderer="shape: box"></entity>
-  <entity name="cube-right" renderer="shape: box"></entity>
-</arrange>
+<entity name="cube-row" group="gap: 3; weight: 1"></entity>
+<entity name="cube-left" transform renderer="shape: box" member="group: cube-row; index: 0"></entity>
+<entity name="cube-center" transform renderer="shape: box" member="group: cube-row; index: 1"></entity>
+<entity name="cube-right" transform renderer="shape: box" member="group: cube-row; index: 2"></entity>
 ```
 
-Creates:
-- Group entity (named "cube-row") with gap=3, weight=1, count=3
-- 3 child entities each with Member pointing to group
-- After step: positions at x=-3, x=0, x=3
+After step: positions at x=-3, x=0, x=3
 
 ### Frozen Arrangement (weight=0)
 
 ```xml
-<arrange name="frozen-row" gap="5" weight="0">
-  <entity transform="pos: 10 0 0" renderer="shape: sphere"></entity>
-  <entity transform="pos: 20 0 0" renderer="shape: sphere"></entity>
-</arrange>
+<entity name="frozen-row" group="gap: 5; weight: 0"></entity>
+<entity transform="pos: 10 0 0" renderer="shape: sphere" member="group: frozen-row; index: 0"></entity>
+<entity transform="pos: 20 0 0" renderer="shape: sphere" member="group: frozen-row; index: 1"></entity>
 ```
 
 Members keep their initial positions until weight becomes > 0.
@@ -101,25 +94,11 @@ Members keep their initial positions until weight becomes > 0.
 ### Dynamic Gap with Tweening
 
 ```xml
-<arrange name="expandable" gap="2" weight="1">
-  <entity renderer="shape: box"></entity>
-  <entity renderer="shape: box"></entity>
-</arrange>
+<entity name="expandable" group="gap: 2; weight: 1"></entity>
+<entity transform renderer="shape: box" member="group: expandable; index: 0"></entity>
+<entity transform renderer="shape: box" member="group: expandable; index: 1"></entity>
 
 <tween target="expandable" attr="group.gap" to="10" duration="1"></tween>
-```
-
-### Activation Animation
-
-```xml
-<arrange name="reveal-row" gap="5" weight="0">
-  <entity renderer="shape: box"></entity>
-  <entity renderer="shape: box"></entity>
-  <entity renderer="shape: box"></entity>
-</arrange>
-
-<!-- Tween weight to activate arrangement -->
-<tween target="reveal-row" attr="group.weight" to="1" duration="0.5"></tween>
 ```
 
 ## TypeScript (Imperative) Patterns
@@ -134,7 +113,6 @@ const groupEntity = state.createEntity();
 state.addComponent(groupEntity, Group);
 Group.gap[groupEntity] = 4;
 Group.weight[groupEntity] = 1;
-Group.count[groupEntity] = 2;
 
 const member0 = state.createEntity();
 state.addComponent(member0, Transform);
@@ -155,10 +133,7 @@ state.step(1/60);
 ### Freeze/Unfreeze Pattern
 
 ```typescript
-// Freeze arrangement
-Group.weight[groupEntity] = 0;
-
-// Unfreeze arrangement
-Group.weight[groupEntity] = 1;
+Group.weight[groupEntity] = 0;  // Freeze
+Group.weight[groupEntity] = 1;  // Unfreeze
 ```
 <!-- /LLM:EXAMPLES -->

@@ -43,6 +43,7 @@ visualization/
 
 ## Patterns
 
+- **Arrangement Pattern**: Cubes reference a group entity via `member` component; group uses horizontal strategy with gap=3 for automatic centering
 - **Step Navigator**: Three-level text hierarchy (counter, title, description) with circular navigation buttons
 - **STEP_CONTENT Array**: Descriptive content explaining technical details of each step
 - **Step Sequences**: Named `step-X-Y.xml`, paired forward/reverse in same file

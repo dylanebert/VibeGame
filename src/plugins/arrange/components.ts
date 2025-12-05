@@ -8,7 +8,6 @@ export const Group = defineComponent({
   strategy: Types.ui8,
   gap: Types.f32,
   weight: Types.f32,
-  count: Types.ui32,
 });
 
 export const Member = defineComponent({

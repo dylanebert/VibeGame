@@ -24,7 +24,6 @@ describe('Arrange Components', () => {
       state.addComponent(entity, Group);
 
       expect(Group.strategy[entity]).toBe(0);
-      expect(Group.count[entity]).toBe(0);
     });
 
     it('should store strategy index', () => {
@@ -46,13 +45,6 @@ describe('Arrange Components', () => {
       state.addComponent(entity, Group);
       Group.weight[entity] = 0.75;
       expect(Group.weight[entity]).toBeCloseTo(0.75);
-    });
-
-    it('should store member count', () => {
-      const entity = state.createEntity();
-      state.addComponent(entity, Group);
-      Group.count[entity] = 5;
-      expect(Group.count[entity]).toBe(5);
     });
   });
 
@@ -96,7 +88,6 @@ describe('Arrange Components', () => {
       state.addComponent(groupEntity, Group);
       Group.gap[groupEntity] = 2;
       Group.weight[groupEntity] = 1;
-      Group.count[groupEntity] = 3;
 
       const member1 = state.createEntity();
       state.addComponent(member1, Member);
@@ -116,7 +107,6 @@ describe('Arrange Components', () => {
       expect(Member.group[member1]).toBe(groupEntity);
       expect(Member.group[member2]).toBe(groupEntity);
       expect(Member.group[member3]).toBe(groupEntity);
-      expect(Group.count[groupEntity]).toBe(3);
     });
   });
 });

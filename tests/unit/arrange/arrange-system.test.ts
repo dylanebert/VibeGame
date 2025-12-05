@@ -18,7 +18,6 @@ describe('Arrange System', () => {
       state.addComponent(group, Group);
       Group.gap[group] = 5;
       Group.weight[group] = 0;
-      Group.count[group] = 2;
 
       const member = state.createEntity();
       state.addComponent(member, Transform);
@@ -36,7 +35,6 @@ describe('Arrange System', () => {
       state.addComponent(group, Group);
       Group.gap[group] = 4;
       Group.weight[group] = 1;
-      Group.count[group] = 2;
 
       const member0 = state.createEntity();
       state.addComponent(member0, Transform);
@@ -64,25 +62,30 @@ describe('Arrange System', () => {
       state.addComponent(group, Group);
       Group.gap[group] = 4;
       Group.weight[group] = 1;
-      Group.count[group] = 2;
 
-      const member = state.createEntity();
-      state.addComponent(member, Transform);
-      state.addComponent(member, Member);
-      Transform.posX[member] = 100;
-      Member.group[member] = group;
-      Member.index[member] = 0;
+      const member0 = state.createEntity();
+      state.addComponent(member0, Transform);
+      state.addComponent(member0, Member);
+      Transform.posX[member0] = 100;
+      Member.group[member0] = group;
+      Member.index[member0] = 0;
+
+      const member1 = state.createEntity();
+      state.addComponent(member1, Transform);
+      state.addComponent(member1, Member);
+      Member.group[member1] = group;
+      Member.index[member1] = 1;
 
       // First step: arrange
       state.step(1 / 60);
-      expect(Transform.posX[member]).toBe(-2);
+      expect(Transform.posX[member0]).toBe(-2);
 
       // Set weight to 0
       Group.weight[group] = 0;
 
       // Second step: should freeze
       state.step(1 / 60);
-      expect(Transform.posX[member]).toBe(-2);
+      expect(Transform.posX[member0]).toBe(-2);
     });
   });
 
@@ -92,7 +95,6 @@ describe('Arrange System', () => {
       state.addComponent(group, Group);
       Group.gap[group] = 5;
       Group.weight[group] = 1;
-      Group.count[group] = 1;
 
       const member = state.createEntity();
       state.addComponent(member, Transform);
@@ -113,7 +115,6 @@ describe('Arrange System', () => {
       state.addComponent(group, Group);
       Group.gap[group] = 3;
       Group.weight[group] = 1;
-      Group.count[group] = 3;
 
       const members = [0, 1, 2].map((i) => {
         const m = state.createEntity();
@@ -138,7 +139,6 @@ describe('Arrange System', () => {
       state.addComponent(group, Group);
       Group.gap[group] = 2;
       Group.weight[group] = 1;
-      Group.count[group] = 2;
 
       const member0 = state.createEntity();
       state.addComponent(member0, Transform);
@@ -171,7 +171,6 @@ describe('Arrange System', () => {
       state.addComponent(group, Group);
       Group.gap[group] = 4;
       Group.weight[group] = 1;
-      Group.count[group] = 1;
 
       const member = state.createEntity();
       state.addComponent(member, Member);

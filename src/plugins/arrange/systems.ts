@@ -9,7 +9,16 @@ const memberQuery = defineQuery([Member]);
 export const ArrangeSystem: System = {
   group: 'simulation',
   update(state: State): void {
-    for (const eid of memberQuery(state.world)) {
+    const members = memberQuery(state.world);
+
+    const groupCounts = new Map<number, number>();
+    for (const eid of members) {
+      const groupEid = Member.group[eid];
+      const currentMax = groupCounts.get(groupEid) ?? 0;
+      groupCounts.set(groupEid, Math.max(currentMax, Member.index[eid] + 1));
+    }
+
+    for (const eid of members) {
       if (!state.hasComponent(eid, Transform)) continue;
 
       const groupEid = Member.group[eid];
@@ -21,11 +30,8 @@ export const ArrangeSystem: System = {
       const strategy = strategyRegistry.get(Group.strategy[groupEid]);
       if (!strategy) continue;
 
-      const arranged = strategy(
-        Group.count[groupEid],
-        Group.gap[groupEid],
-        Member.index[eid]
-      );
+      const count = groupCounts.get(groupEid) ?? 1;
+      const arranged = strategy(count, Group.gap[groupEid], Member.index[eid]);
 
       Transform.posX[eid] = arranged.x;
       Transform.posY[eid] = arranged.y;

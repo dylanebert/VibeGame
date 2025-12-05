@@ -21,24 +21,10 @@
     ></orbit-camera>
     <entity ambient-light="intensity: 0.6"></entity>
     <entity directional-light="intensity: 0.7; direction: -1 2 1"></entity>
-    <entity
-      name="cube-left"
-      transform="pos: -3 0 0"
-      renderer="shape: box; size: 2 2 2; color: #ff4444"
-      breathe
-    ></entity>
-    <entity
-      name="cube-center"
-      transform="pos: 0 0 0"
-      renderer="shape: box; size: 2 2 2; color: #44ff44"
-      breathe
-    ></entity>
-    <entity
-      name="cube-right"
-      transform="pos: 3 0 0"
-      renderer="shape: box; size: 2 2 2; color: #4444ff"
-      breathe
-    ></entity>
+    <entity name="cube-row" group="gap: 3; weight: 1"></entity>
+    <entity name="cube-left" transform renderer="shape: box; size: 2 2 2; color: #ff4444" member="group: cube-row; index: 0" breathe></entity>
+    <entity name="cube-center" transform renderer="shape: box; size: 2 2 2; color: #44ff44" member="group: cube-row; index: 1" breathe></entity>
+    <entity name="cube-right" transform renderer="shape: box; size: 2 2 2; color: #4444ff" member="group: cube-row; index: 2" breathe></entity>
     <entity name="breathe-driver" breathe-driver="value: 0"></entity>
     <shaker name="scale-shaker" target="cube-right" attr="scale" value="0.5" intensity="0" mode="multiplicative"></shaker>
   </world>

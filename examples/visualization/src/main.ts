@@ -4,6 +4,7 @@ import { TransformsPlugin } from 'vibegame/transforms';
 import { RenderingPlugin, RenderContext, setCanvasElement } from 'vibegame/rendering';
 import { OrbitCameraPlugin } from 'vibegame/orbit-camera';
 import { TweenPlugin, playSequence, resetSequence } from 'vibegame/tweening';
+import { ArrangePlugin } from 'vibegame/arrange';
 import { injectSequences, STEP_SEQUENCES } from './sequences';
 import { VisualizationPlugin } from './plugin';
 
@@ -60,6 +61,7 @@ function initializeCanvas(instance: CanvasInstance): void {
   state.registerPlugin(RenderingPlugin);
   state.registerPlugin(OrbitCameraPlugin);
   state.registerPlugin(TweenPlugin);
+  state.registerPlugin(ArrangePlugin);
   state.registerPlugin(VisualizationPlugin);
 
   injectSequences(instance.worldElement);

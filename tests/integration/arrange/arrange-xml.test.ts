@@ -16,14 +16,13 @@ describe('Arrange XML Integration', () => {
     state.registerPlugin(ArrangePlugin);
   });
 
-  describe('XML parsing', () => {
-    it('should create group from arrange tag', () => {
+  describe('reference pattern', () => {
+    it('should create group and members from entity references', () => {
       const xml = `
         <world>
-          <arrange name="row" strategy="horizontal" gap="3" weight="1">
-            <entity name="a" transform=""></entity>
-            <entity name="b" transform=""></entity>
-          </arrange>
+          <entity name="row" group="gap: 3; weight: 1"></entity>
+          <entity name="a" transform="" member="group: row; index: 0"></entity>
+          <entity name="b" transform="" member="group: row; index: 1"></entity>
         </world>
       `;
 
@@ -32,48 +31,23 @@ describe('Arrange XML Integration', () => {
 
       const groups = defineQuery([Group])(state.world);
       expect(groups.length).toBe(1);
-
-      const groupEntity = groups[0];
-      expect(Group.gap[groupEntity]).toBe(3);
-      expect(Group.weight[groupEntity]).toBe(1);
-      expect(Group.count[groupEntity]).toBe(2);
-    });
-
-    it('should create members for child entities', () => {
-      const xml = `
-        <world>
-          <arrange name="row" gap="5" weight="1">
-            <entity name="first" transform=""></entity>
-            <entity name="second" transform=""></entity>
-            <entity name="third" transform=""></entity>
-          </arrange>
-        </world>
-      `;
-
-      const parsed = XMLParser.parse(xml);
-      parseXMLToEntities(state, parsed.root);
+      expect(Group.gap[groups[0]]).toBe(3);
+      expect(Group.weight[groups[0]]).toBe(1);
 
       const members = defineQuery([Member])(state.world);
-      expect(members.length).toBe(3);
-
-      const groups = defineQuery([Group])(state.world);
-      const groupEntity = groups[0];
+      expect(members.length).toBe(2);
 
       for (const member of members) {
-        expect(Member.group[member]).toBe(groupEntity);
+        expect(Member.group[member]).toBe(groups[0]);
         expect(state.hasComponent(member, Transform)).toBe(true);
       }
-
-      const indices = members.map((m) => Member.index[m]).sort();
-      expect(indices).toEqual([0, 1, 2]);
     });
 
-    it('should apply defaults when attributes not specified', () => {
+    it('should apply defaults for group', () => {
       const xml = `
         <world>
-          <arrange>
-            <entity transform=""></entity>
-          </arrange>
+          <entity name="row" group=""></entity>
+          <entity transform="" member="group: row; index: 0"></entity>
         </world>
       `;
 
@@ -82,10 +56,8 @@ describe('Arrange XML Integration', () => {
 
       const groups = defineQuery([Group])(state.world);
       expect(groups.length).toBe(1);
-
-      const groupEntity = groups[0];
-      expect(Group.weight[groupEntity]).toBe(1);
-      expect(Group.gap[groupEntity]).toBe(1);
+      expect(Group.weight[groups[0]]).toBe(1);
+      expect(Group.gap[groups[0]]).toBe(1);
     });
   });
 
@@ -93,10 +65,9 @@ describe('Arrange XML Integration', () => {
     it('should arrange members horizontally on step', () => {
       const xml = `
         <world>
-          <arrange name="row" strategy="horizontal" gap="4" weight="1">
-            <entity name="a" transform=""></entity>
-            <entity name="b" transform=""></entity>
-          </arrange>
+          <entity name="row" group="gap: 4; weight: 1"></entity>
+          <entity name="a" transform="" member="group: row; index: 0"></entity>
+          <entity name="b" transform="" member="group: row; index: 1"></entity>
         </world>
       `;
 
@@ -115,11 +86,10 @@ describe('Arrange XML Integration', () => {
     it('should center three members correctly', () => {
       const xml = `
         <world>
-          <arrange gap="3" weight="1">
-            <entity transform=""></entity>
-            <entity transform=""></entity>
-            <entity transform=""></entity>
-          </arrange>
+          <entity name="row" group="gap: 3; weight: 1"></entity>
+          <entity transform="" member="group: row; index: 0"></entity>
+          <entity transform="" member="group: row; index: 1"></entity>
+          <entity transform="" member="group: row; index: 2"></entity>
         </world>
       `;
 
@@ -139,9 +109,8 @@ describe('Arrange XML Integration', () => {
     it('should not arrange when weight is 0', () => {
       const xml = `
         <world>
-          <arrange gap="10" weight="0">
-            <entity transform="pos: 100 0 0"></entity>
-          </arrange>
+          <entity name="row" group="gap: 10; weight: 0"></entity>
+          <entity transform="pos: 100 0 0" member="group: row; index: 0"></entity>
         </world>
       `;
 
@@ -157,10 +126,9 @@ describe('Arrange XML Integration', () => {
     it('should respond to dynamic gap changes', () => {
       const xml = `
         <world>
-          <arrange name="row" gap="2" weight="1">
-            <entity transform=""></entity>
-            <entity transform=""></entity>
-          </arrange>
+          <entity name="row" group="gap: 2; weight: 1"></entity>
+          <entity transform="" member="group: row; index: 0"></entity>
+          <entity transform="" member="group: row; index: 1"></entity>
         </world>
       `;
 

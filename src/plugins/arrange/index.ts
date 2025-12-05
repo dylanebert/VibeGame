@@ -1,5 +1,4 @@
 export { Group, Member, Strategy } from './components';
-export { arrangeParser } from './parser';
 export { ArrangePlugin } from './plugin';
 export { ArrangeSystem } from './systems';
 export {
