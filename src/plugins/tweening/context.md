@@ -279,20 +279,74 @@ document.getElementById('btn')?.addEventListener('click', () => {
 });
 ```
 
-### Transform Shaker (XML)
+### Driver Pattern: One Value Drives Many Entities
+
+A driver is a single tweened value that controls multiple entities via a system. This is useful for coordinated animations like breathing, pulsing, or wave effects.
 
 ```xml
-<!-- Position shake (single axis) -->
-<entity name="cube" transform renderer="shape: box"></entity>
-<shaker name="bounce" target="cube" attr="transform.pos-y" value="0.5" intensity="0"></shaker>
-<tween target="bounce" attr="transform-shaker.intensity" from="0" to="1" duration="0.5"></tween>
+<!-- Driver component holds the tweened value -->
+<entity name="breathe-driver" breathe-driver="value: 0"></entity>
 
-<!-- Scale shake (all axes via shorthand) -->
+<!-- All entities with "breathe" marker are affected -->
+<entity name="cube1" transform renderer="shape: box" breathe></entity>
+<entity name="cube2" transform="pos: 3 0 0" renderer="shape: box" breathe></entity>
+<entity name="cube3" transform="pos: -3 0 0" renderer="shape: box" breathe></entity>
+
+<!-- Tween the driver to control all breathing entities -->
+<tween target="breathe-driver" attr="breathe-driver.value" from="0" to="1" duration="0.5"></tween>
+```
+
+```typescript
+// System reads driver value, applies to all marked entities
+const BreatheSystem: System = {
+  group: 'simulation',
+  update(state) {
+    const drivers = driverQuery(state.world);
+    if (drivers.length === 0) return;
+    const driverValue = BreatheDriver.value[drivers[0]];
+
+    const oscillation = Math.sin(state.time.elapsed * 2) * 0.2 * driverValue;
+    for (const eid of breatheQuery(state.world)) {
+      Transform.scaleX[eid] = 1 + oscillation;
+      Transform.scaleY[eid] = 1 + oscillation;
+      Transform.scaleZ[eid] = 1 + oscillation;
+    }
+  }
+};
+```
+
+### Shakers: Layered Modifications via Tweening
+
+Shakers enable multiple independent effects on the same property. Each shaker has an `intensity` that can be tweened, allowing effects to be faded in/out independently.
+
+```xml
+<!-- Entity with two shakers targeting scale -->
+<entity name="cube" transform renderer="shape: box"></entity>
+
+<!-- Shaker 1: Pulse effect (multiplicative) -->
 <shaker name="pulse" target="cube" attr="scale" value="0.8" intensity="0" mode="multiplicative"></shaker>
 
-<!-- Rotation shake (quaternion-based, gimbal-lock free) -->
-<shaker name="wobble" target="cube" attr="transform.euler-z" value="15" intensity="1"></shaker>
+<!-- Shaker 2: Bounce effect (additive, single axis) -->
+<shaker name="bounce" target="cube" attr="transform.scale-y" value="0.3" intensity="0" mode="additive"></shaker>
+
+<!-- Tween shaker intensities independently - use "shaker.intensity" (alias resolves automatically) -->
+<sequence name="activate-effects">
+  <tween target="pulse" attr="shaker.intensity" to="1" duration="0.3" easing="expo-out"></tween>
+  <pause duration="0.1"></pause>
+  <tween target="bounce" attr="shaker.intensity" to="1" duration="0.2" easing="back-out"></tween>
+</sequence>
+
+<sequence name="deactivate-effects">
+  <tween target="bounce" attr="shaker.intensity" to="0" duration="0.2"></tween>
+  <tween target="pulse" attr="shaker.intensity" to="0" duration="0.3"></tween>
+</sequence>
 ```
+
+Key benefits:
+- **Safe composition**: Shakers apply at draw time without modifying base values
+- **Independent control**: Each shaker's intensity is separately tweened
+- **Order guarantees**: Additive shakers apply first, then multiplicative
+- **Alias resolution**: `shaker.intensity` resolves to `transform-shaker.intensity` when targeting transform properties
 
 ### Transform Shaker (TypeScript)
 
@@ -306,7 +360,7 @@ const shakerId = createShaker(state, entity, 'transform.pos-y', {
   mode: 'additive'
 });
 
-// Tween intensity to fade effect
-createTween(state, shakerId, 'transform-shaker.intensity', { from: 1, to: 0, duration: 0.5 });
+// Tween intensity to fade effect (use 'shaker.intensity' - resolves automatically)
+createTween(state, shakerId, 'shaker.intensity', { from: 1, to: 0, duration: 0.5 });
 ```
 <!-- /LLM:EXAMPLES -->

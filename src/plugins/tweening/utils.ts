@@ -101,7 +101,16 @@ export function resolveComponentField(
   const [componentName, fieldName] = targetStr.split('.');
   if (!componentName || !fieldName) return null;
 
-  const component = state.getComponent(componentName);
+  // Shaker alias: resolve 'shaker' to 'transform-shaker' when appropriate
+  let resolvedComponentName = componentName;
+  if (componentName === 'shaker') {
+    const transformShaker = state.getComponent('transform-shaker');
+    if (transformShaker && state.hasComponent(entity, transformShaker)) {
+      resolvedComponentName = 'transform-shaker';
+    }
+  }
+
+  const component = state.getComponent(resolvedComponentName);
   if (!component || !state.hasComponent(entity, component)) return null;
 
   const camelField = toCamelCase(fieldName);

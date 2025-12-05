@@ -478,6 +478,66 @@ document.getElementById('btn')?.addEventListener('click', () => {
 });
 ```
 
+## Advanced Animation Patterns
+
+### Driver Pattern: One Value Controls Many Entities
+
+A driver is a single tweened component value that a system uses to control multiple entities. Useful for coordinated effects like breathing, pulsing, or wave animations.
+
+```xml
+<!-- Driver holds the tweened value -->
+<entity name="breathe-driver" breathe-driver="value: 0"></entity>
+
+<!-- Multiple entities with marker component -->
+<entity name="cube1" transform renderer="shape: box" breathe></entity>
+<entity name="cube2" transform="pos: 3 0 0" renderer="shape: box" breathe></entity>
+<entity name="cube3" transform="pos: -3 0 0" renderer="shape: box" breathe></entity>
+
+<!-- Tween the driver to activate the effect -->
+<tween target="breathe-driver" attr="breathe-driver.value" from="0" to="1" duration="0.5"></tween>
+```
+
+```typescript
+// System reads driver, applies to all marked entities
+const BreatheSystem: System = {
+  group: 'simulation',
+  update(state) {
+    const driverValue = BreatheDriver.value[drivers[0]];
+    const oscillation = Math.sin(state.time.elapsed * 2) * 0.2 * driverValue;
+    for (const eid of breatheQuery(state.world)) {
+      Transform.scaleX[eid] = 1 + oscillation;
+      Transform.scaleY[eid] = 1 + oscillation;
+      Transform.scaleZ[eid] = 1 + oscillation;
+    }
+  }
+};
+```
+
+### Shakers: Layered Effects via Tweening
+
+Shakers allow multiple independent effects on the same property. Each shaker has an `intensity` (0-1) that can be tweened, enabling effects to fade in/out independently.
+
+```xml
+<entity name="cube" transform renderer="shape: box"></entity>
+
+<!-- Multiple shakers on same target -->
+<shaker name="pulse" target="cube" attr="scale" value="0.8" intensity="0" mode="multiplicative"></shaker>
+<shaker name="bounce" target="cube" attr="transform.scale-y" value="0.3" intensity="0" mode="additive"></shaker>
+
+<!-- Tween shaker intensities independently (use "shaker.intensity" - resolves automatically) -->
+<sequence name="activate">
+  <tween target="pulse" attr="shaker.intensity" to="1" duration="0.3" easing="expo-out"></tween>
+  <pause duration="0.1"></pause>
+  <tween target="bounce" attr="shaker.intensity" to="1" duration="0.2" easing="back-out"></tween>
+</sequence>
+```
+
+Key benefits:
+- **Safe composition**: Shakers modify at draw time, base values unchanged
+- **Independent control**: Each shaker's intensity tweens separately
+- **Order guarantees**: Additive first, then multiplicative
+- **Alias resolution**: `shaker.intensity` auto-resolves for transform shakers
+
 ## How Recipes and Shorthands Work
 
 ### Everything is an Entity
