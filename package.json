@@ -67,6 +67,10 @@
       "types": "./dist/plugins/line/index.d.ts",
       "import": "./dist/plugins/line/index.js"
     },
+    "./arrange": {
+      "types": "./dist/plugins/arrange/index.d.ts",
+      "import": "./dist/plugins/arrange/index.js"
+    },
     "./vite": {
       "types": "./dist/vite/index.d.ts",
       "import": "./dist/vite/index.js"

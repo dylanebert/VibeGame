@@ -39,6 +39,7 @@
       "vibegame/transforms": ["./src/plugins/transforms/index.ts"],
       "vibegame/tweening": ["./src/plugins/tweening/index.ts"],
       "vibegame/line": ["./src/plugins/line/index.ts"],
+      "vibegame/arrange": ["./src/plugins/arrange/index.ts"],
       "vibegame/vite": ["./src/vite/index.ts"],
       "vibegame/core/validation": ["./src/core/validation/index.ts"]
     }

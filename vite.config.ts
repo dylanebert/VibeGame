@@ -34,6 +34,7 @@ export default defineConfig({
         'plugins/transforms/index': 'src/plugins/transforms/index.ts',
         'plugins/tweening/index': 'src/plugins/tweening/index.ts',
         'plugins/line/index': 'src/plugins/line/index.ts',
+        'plugins/arrange/index': 'src/plugins/arrange/index.ts',
         'vite/index': 'src/vite/index.ts',
       },
       name: 'VibeGame',
