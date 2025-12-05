@@ -11,7 +11,7 @@ tweening/
 ├── context.md  # This file
 ├── index.ts  # Public exports
 ├── plugin.ts  # Plugin definition
-├── components.ts  # Tween, TweenValue, KinematicTween, KinematicRotationTween, Sequence, Shaker
+├── components.ts  # Tween, TweenValue, KinematicTween, KinematicRotationTween, Sequence, Shaker, TransformShaker
 ├── systems.ts  # Tween, Sequence, Kinematic, and Shaker systems
 ├── parser.ts  # Tween, sequence, and shaker XML parsers
 └── utils.ts  # Easing functions, tween/shaker creation, registries
@@ -75,33 +75,42 @@ Runtime lookup via `state.getEntityByName('door')` returns the entity ID.
 - itemCount: ui32
 - pauseRemaining: f32
 
-**Shaker** - Presentation modifier (applied at draw time, restored after)
+**Shaker** - Presentation modifier for non-transform fields (applied at draw time, restored after)
 - target: eid - Entity being modified
+- value: f32 - Modification value
+- intensity: f32 - Effect multiplier (0-1)
+- mode: ui8 (Additive=0, Multiplicative=1)
+
+**TransformShaker** - Presentation modifier for WorldTransform (position/scale/rotation)
+- target: eid - Entity being modified
+- type: ui8 (Position=0, Scale=1, Rotation=2)
+- axes: ui8 - Bitmask (X=1, Y=2, Z=4, XYZ=7)
 - value: f32 - Modification value
 - intensity: f32 - Effect multiplier (0-1)
 - mode: ui8 (Additive=0, Multiplicative=1)
 
 ### Shaker System
 
-Shakers modify component values at draw time without affecting simulation. They're applied at the start of draw and restored at the end.
+Shakers modify component values at draw time without affecting simulation. Regular shakers target arbitrary component fields. Transform shakers target WorldTransform (which rendering uses) via quaternion multiplication for rotation (avoiding gimbal lock).
+
+**Auto-detection**: `createShaker()` automatically creates TransformShaker when targeting transform fields (transform.pos-*, transform.scale-*, transform.euler-*, or shorthands).
 
 **Formulas:**
 - Additive: `result = base + (value * intensity)`
 - Multiplicative: `result = base * (1 + (value - 1) * intensity)`
+- Rotation: quaternion multiplication (degrees input)
 
-**Composition order:** All additive shakers apply first, then multiplicative. This allows multiplying by 0 to scale down everything.
-
-**Use case:** Animate shaker intensity with a tween for layered effects (e.g., screen shake that fades out).
+**Composition order:** All additive shakers apply first, then multiplicative.
 
 ### Shorthand Targets
 
-Shorthands expand to multiple TweenValue entities (one per axis):
+Shorthands expand to multiple TweenValue entities for tweens, or set axes bitmask for shakers:
 
 | Shorthand | Expands To | Notes |
 |-----------|------------|-------|
 | `at` | transform.posX/Y/Z | Position animation |
-| `scale` | transform.scaleX/Y/Z | Scale animation |
-| `rotation` | body.eulerX/Y/Z or transform.eulerX/Y/Z | Uses body if present |
+| `scale` | transform.scaleX/Y/Z | Scale animation (all axes uniform for shakers) |
+| `rotation` | body.eulerX/Y/Z or transform.eulerX/Y/Z | Uses body if present for tweens |
 
 ### Kinematic Body Detection
 
@@ -270,25 +279,34 @@ document.getElementById('btn')?.addEventListener('click', () => {
 });
 ```
 
-### Shaker (XML)
+### Transform Shaker (XML)
 
 ```xml
-<entity name="cube" transform="pos-y: 0"></entity>
-<shaker name="bounce" target="cube" attr="transform.pos-y" value="0.5" intensity="1" mode="additive"></shaker>
-<tween target="bounce" attr="shaker.intensity" from="0" to="1" duration="0.5" easing="quad-out"></tween>
+<!-- Position shake (single axis) -->
+<entity name="cube" transform renderer="shape: box"></entity>
+<shaker name="bounce" target="cube" attr="transform.pos-y" value="0.5" intensity="0"></shaker>
+<tween target="bounce" attr="transform-shaker.intensity" from="0" to="1" duration="0.5"></tween>
+
+<!-- Scale shake (all axes via shorthand) -->
+<shaker name="pulse" target="cube" attr="scale" value="0.8" intensity="0" mode="multiplicative"></shaker>
+
+<!-- Rotation shake (quaternion-based, gimbal-lock free) -->
+<shaker name="wobble" target="cube" attr="transform.euler-z" value="15" intensity="1"></shaker>
 ```
 
-### Shaker (TypeScript)
+### Transform Shaker (TypeScript)
 
 ```typescript
 import { createShaker, createTween } from 'vibegame/tweening';
 
+// Auto-detects transform target, creates TransformShaker
 const shakerId = createShaker(state, entity, 'transform.pos-y', {
   value: 0.5,
   intensity: 1,
   mode: 'additive'
 });
 
-createTween(state, shakerId, 'shaker.intensity', { from: 1, to: 0, duration: 0.5 });
+// Tween intensity to fade effect
+createTween(state, shakerId, 'transform-shaker.intensity', { from: 1, to: 0, duration: 0.5 });
 ```
 <!-- /LLM:EXAMPLES -->

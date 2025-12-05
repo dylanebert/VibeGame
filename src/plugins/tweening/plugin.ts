@@ -4,6 +4,7 @@ import {
   KinematicTween,
   Sequence,
   Shaker,
+  TransformShaker,
   Tween,
   TweenValue,
 } from './components';
@@ -15,6 +16,9 @@ import {
   ShakerApplySystem,
   ShakerCleanupSystem,
   ShakerRestoreSystem,
+  TransformShakerApplySystem,
+  TransformShakerCleanupSystem,
+  TransformShakerRestoreSystem,
   TweenSystem,
 } from './systems';
 
@@ -27,6 +31,9 @@ export const TweenPlugin: Plugin = {
     ShakerApplySystem,
     ShakerRestoreSystem,
     ShakerCleanupSystem,
+    TransformShakerApplySystem,
+    TransformShakerRestoreSystem,
+    TransformShakerCleanupSystem,
   ],
   components: {
     Tween,
@@ -35,6 +42,7 @@ export const TweenPlugin: Plugin = {
     KinematicRotationTween,
     Sequence,
     Shaker,
+    TransformShaker,
   },
   recipes: [
     { name: 'tween', components: [] },

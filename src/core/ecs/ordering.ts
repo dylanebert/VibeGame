@@ -14,20 +14,10 @@ function createOrderingError(
 }
 
 export function validateSystemConstraints(system: System): void {
-  const constraints = [
-    system.first && 'first',
-    system.last && 'last',
-    system.before?.length && 'before',
-    system.after?.length && 'after',
-  ].filter(Boolean);
-
-  if (
-    constraints.length > 1 &&
-    (constraints.includes('first') || constraints.includes('last'))
-  ) {
+  if (system.first && system.last) {
     throw createOrderingError(
       'validation',
-      `System cannot combine ${constraints.join(' and ')} constraints`
+      'System cannot have both first and last constraints'
     );
   }
 }
