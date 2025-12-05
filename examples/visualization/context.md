@@ -1,40 +1,48 @@
 # Visualization Example
 
-<!-- LLM:OVERVIEW -->
-Demonstrates lazy-loaded, viewport-aware VibeGame instances for interactive blog posts with optimized performance.
-<!-- /LLM:OVERVIEW -->
-
-## Purpose
-
-- Lazy loading for multiple canvas elements
-- Viewport-aware rendering (pause off-screen)
-- CSS-based canvas sizing
-- Manual State instantiation
+Demonstrates blog-style visualization with animation sequencing.
 
 ## Layout
 
 ```
 visualization/
-├── context.md
-├── src/
-│   └── main.ts  # Lazy State creation with IntersectionObserver
-├── index.html  # Blog-style layout with multiple worlds
-├── package.json
-└── vite.config.ts
+├── context.md           # This file
+├── index.html           # Blog harness (includes content.html)
+├── record.html          # Video recording page
+├── vite.config.ts       # Build config with html-include plugin
+├── package.json         # Dependencies
+├── tsconfig.json        # TypeScript config
+└── src/
+    ├── content.html     # Single source of content
+    ├── components.css   # Visualization styles
+    ├── main.ts          # Blog entry point
+    ├── record.ts        # Video recording entry point
+    └── sequences/
+        ├── index.ts     # Sequence loader + STEP_SEQUENCES map
+        └── intro.xml    # Camera tween sequences
 ```
 
-## Key Features
+## Purpose
 
-- **Lazy initialization**: State created when canvas enters viewport
-- **Viewport awareness**: Off-screen canvases skip rendering
-- **Multiple instances**: Separate State per canvas (1-to-1-to-1)
-- **CSS sizing**: Canvas dimensions controlled by CSS, respected by renderer
-- **3D Text**: Demonstrates TextPlugin for labeled objects moving in tandem
-- **Vector Lines**: Demonstrates LinePlugin for animated vector arrows
+- Blog-style visualization with lazy canvas loading
+- Animation sequences for camera reveals
+- Two entry points: interactive blog and video recording
 
-## Running
+## Entry Points
+
+- **index.html + main.ts**: Interactive blog mode with lazy initialization
+- **record.html + record.ts**: Video recording mode with step controls
+
+## Patterns
+
+- **HTML Include**: `<include src="...">` directive for content reuse
+- **Sequence Injection**: XML sequences loaded as raw strings and injected into world
+- **STEP_SEQUENCES Map**: Maps step transitions to sequence names
+
+## Commands
 
 ```bash
-cd examples/visualization
-bun dev
+bun run dev      # Interactive mode
+bun run build    # Production build
+bun run preview  # Preview build
 ```

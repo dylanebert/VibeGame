@@ -1,0 +1,36 @@
+<h1>Visualization Demo</h1>
+<p>
+  A demonstration of VibeGame's visualization and sequencing capabilities.
+  The camera smoothly tweens to reveal the cube.
+</p>
+
+<div class="visualization-container">
+  <div class="visualization-title">Camera Reveal Animation</div>
+  <world canvas="#canvas-1" sky="#ffffff">
+    <orbit-camera
+      name="camera"
+      current-distance="25"
+      target-distance="25"
+      current-yaw="2.0"
+      target-yaw="2.0"
+      current-pitch="0.2"
+      target-pitch="0.2"
+      min-pitch="-1.57"
+      offset-y="0"
+      zoom-sensitivity="0"
+      main-camera="projection: perspective"
+    ></orbit-camera>
+    <entity ambient-light="intensity: 0.6"></entity>
+    <entity directional-light="intensity: 0.7; direction: -1 2 1"></entity>
+    <entity
+      name="cube"
+      transform
+      renderer="shape: box; size: 2 2 2; color: #ff4444"
+    ></entity>
+  </world>
+  <canvas id="canvas-1" class="game-canvas"></canvas>
+  <div class="controls">
+    <button id="btn-play">Play Intro</button>
+    <button id="btn-reset">Reset</button>
+  </div>
+</div>

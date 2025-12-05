@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visualization - Video Recording</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 0;
+        background: #111;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      .canvas-container {
+        position: relative;
+        background: #fff;
+      }
+
+      canvas.game-canvas {
+        display: block;
+        width: 960px;
+        height: 540px;
+        outline: none;
+      }
+
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .controls button {
+        background: #333;
+        color: #fff;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+      }
+
+      .controls button:hover {
+        background: #444;
+      }
+
+      .info {
+        margin-top: 1rem;
+        font-size: 0.875rem;
+        color: #888;
+        text-align: center;
+      }
+
+      .info kbd {
+        background: #333;
+        padding: 0.2em 0.5em;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+
+      #step-display {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="step-display">Step: 0</div>
+
+    <div class="canvas-container">
+      <world canvas="#canvas-1" sky="#ffffff">
+        <orbit-camera
+          name="camera"
+          current-distance="25"
+          target-distance="25"
+          current-yaw="2.0"
+          target-yaw="2.0"
+          current-pitch="0.2"
+          target-pitch="0.2"
+          min-pitch="-1.57"
+          offset-y="0"
+          zoom-sensitivity="0"
+          main-camera="projection: perspective"
+        ></orbit-camera>
+        <entity ambient-light="intensity: 0.6"></entity>
+        <entity directional-light="intensity: 0.7; direction: -1 2 1"></entity>
+        <entity
+          name="cube"
+          transform
+          renderer="shape: box; size: 2 2 2; color: #ff4444"
+        ></entity>
+      </world>
+      <canvas id="canvas-1" class="game-canvas"></canvas>
+    </div>
+
+    <div class="controls">
+      <button id="btn-prev">Previous</button>
+      <button id="btn-next">Next</button>
+    </div>
+
+    <div class="info">
+      Use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> arrow keys or buttons to navigate steps.
+    </div>
+
+    <script type="module" src="/src/record.ts"></script>
+  </body>
+</html>

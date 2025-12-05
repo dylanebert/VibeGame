@@ -1,6 +1,7 @@
 {
-  "name": "vibegame-example",
-  "version": "1.0.0",
+  "name": "visualization",
+  "version": "0.0.1",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",

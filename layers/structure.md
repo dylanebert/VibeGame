@@ -82,21 +82,21 @@ vibegame/
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   ├── visualization/  # Minimal visualization with tree-shaking
-│   │   ├── context.md
-│   │   ├── src/main.ts
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   └── vite.config.ts
-│   └── sequencer/  # Animation sequencing with video recording
+│   └── visualization/  # Blog-style visualization with sequencing
 │       ├── context.md
-│       ├── src/
-│       │   ├── plugin.ts   # Components, systems, event helpers
-│       │   ├── main.ts     # Interactive mode
-│       │   └── record.ts   # Playwright frame capture
-│       ├── render.sh       # Record + encode to MP4
-│       ├── index.html
-│       └── package.json
+│       ├── index.html       # Blog harness (includes content.html)
+│       ├── record.html      # Video recording page
+│       ├── vite.config.ts   # Build config with html-include plugin
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/
+│           ├── content.html     # Single source of content
+│           ├── components.css   # Visualization styles
+│           ├── main.ts          # Blog entry point
+│           ├── record.ts        # Video recording entry point
+│           └── sequences/
+│               ├── index.ts     # Sequence loader
+│               └── intro.xml    # Camera tween sequences
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   ├── context-template.md  # Template for context files
