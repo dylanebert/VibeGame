@@ -7,6 +7,29 @@ import { TweenPlugin, playSequence, resetSequence } from 'vibegame/tweening';
 import { injectSequences, STEP_SEQUENCES } from './sequences';
 import { VisualizationPlugin } from './plugin';
 
+interface StepContent {
+  title: string;
+  description: string;
+}
+
+const STEP_CONTENT: StepContent[] = [
+  {
+    title: 'Initial State',
+    description:
+      'Scene at rest with default camera position. The camera is positioned at a distance with moderate yaw and pitch angles.',
+  },
+  {
+    title: 'Camera Reveal',
+    description:
+      'A tween animates the camera closer to the cube using expo-out easing. The yaw angle narrows from 2.0 to 0.6, distance reduces from 25 to 10 units, and pitch increases from 0.2 to 0.4 over 1.2 seconds.',
+  },
+  {
+    title: 'Breathe Effect',
+    description:
+      "The BreatheDriver component activates via a tweened intensity parameter (0 to 1). This applies a sine-wave oscillation to the cube's scale, creating a breathing animation without modifying the actual transform data.",
+  },
+];
+
 function calculateMaxStep(): number {
   let max = 0;
   for (const key of Object.keys(STEP_SEQUENCES)) {
@@ -73,10 +96,27 @@ function triggerSequence(state: State, fromStep: number, toStep: number): void {
 }
 
 function updateStepDisplay(instance: CanvasInstance): void {
-  const display = document.getElementById('step-display');
-  if (display) {
-    display.textContent = `Step: ${instance.currentStep}/${maxStep}`;
+  const { currentStep } = instance;
+  const maxStep = calculateMaxStep();
+
+  const counterEl = document.getElementById('step-counter');
+  const titleEl = document.getElementById('step-title');
+  const descriptionEl = document.getElementById('step-description');
+
+  if (counterEl) {
+    counterEl.textContent = `STEP ${currentStep + 1} OF ${maxStep + 1}`;
   }
+  if (titleEl && STEP_CONTENT[currentStep]) {
+    titleEl.textContent = STEP_CONTENT[currentStep].title;
+  }
+  if (descriptionEl && STEP_CONTENT[currentStep]) {
+    descriptionEl.textContent = STEP_CONTENT[currentStep].description;
+  }
+
+  const prevBtn = document.getElementById('btn-prev') as HTMLButtonElement;
+  const nextBtn = document.getElementById('btn-next') as HTMLButtonElement;
+  if (prevBtn) prevBtn.disabled = currentStep === 0;
+  if (nextBtn) nextBtn.disabled = currentStep === maxStep;
 }
 
 function goToStep(instance: CanvasInstance, newStep: number): void {

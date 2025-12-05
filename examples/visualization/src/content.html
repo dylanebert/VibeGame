@@ -1,11 +1,10 @@
 <h1>Visualization Demo</h1>
 <p>
   A demonstration of VibeGame's visualization and sequencing capabilities.
-  The camera smoothly tweens to reveal the cube.
 </p>
 
 <div class="visualization-container">
-  <div class="visualization-title">Camera Reveal Animation</div>
+  <div class="visualization-title">Visualization</div>
   <world canvas="#canvas-1" sky="#ffffff">
     <orbit-camera
       name="camera"
@@ -30,9 +29,15 @@
     <entity name="breathe-driver" breathe-driver="target: cube"></entity>
   </world>
   <canvas id="canvas-1" class="game-canvas"></canvas>
-  <div class="controls">
-    <button id="btn-prev">←</button>
-    <span id="step-display">Step: 0/2</span>
-    <button id="btn-next">→</button>
+  <div class="step-navigator">
+    <div class="step-controls">
+      <button id="btn-prev" class="step-btn" aria-label="Previous step">←</button>
+      <button id="btn-next" class="step-btn" aria-label="Next step">→</button>
+    </div>
+    <div class="step-info" role="region" aria-live="polite">
+      <div id="step-counter" class="step-counter">STEP 1 OF 3</div>
+      <div id="step-title" class="step-title">Initial State</div>
+      <div id="step-description" class="step-description">Scene at rest with default camera position.</div>
+    </div>
   </div>
 </div>
