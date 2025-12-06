@@ -21,10 +21,11 @@
     ></orbit-camera>
     <entity ambient-light="intensity: 0.6"></entity>
     <entity directional-light="intensity: 0.7; direction: -1 2 1"></entity>
-    <entity name="cube-row" horizontal-group="gap: 3"></entity>
-    <entity name="cube-left" transform renderer="shape: box; size: 2 2 2; color: #ff4444" horizontal-member="group: cube-row; index: 0" breathe></entity>
-    <entity name="cube-center" transform renderer="shape: box; size: 2 2 2; color: #44ff44" horizontal-member="group: cube-row; index: 1" breathe></entity>
-    <entity name="cube-right" transform renderer="shape: box; size: 2 2 2; color: #4444ff" horizontal-member="group: cube-row; index: 2" breathe></entity>
+    <entity name="cube-row" horizontal-group="gap: 3; blend: 1"></entity>
+    <entity name="cube-stack" vertical-group="gap: 3; blend: 0"></entity>
+    <entity name="cube-left" transform renderer="shape: box; size: 2 2 2; color: #ff4444" horizontal-member="group: cube-row; index: 0" vertical-member="group: cube-stack; index: 0" breathe></entity>
+    <entity name="cube-center" transform renderer="shape: box; size: 2 2 2; color: #44ff44" horizontal-member="group: cube-row; index: 1" vertical-member="group: cube-stack; index: 1" breathe></entity>
+    <entity name="cube-right" transform renderer="shape: box; size: 2 2 2; color: #4444ff" horizontal-member="group: cube-row; index: 2" vertical-member="group: cube-stack; index: 2" breathe></entity>
     <entity name="breathe-driver" breathe-driver="value: 0"></entity>
     <shaker name="scale-shaker" target="cube-right" attr="scale" value="0.5" intensity="0" mode="multiplicative"></shaker>
   </world>
@@ -35,7 +36,7 @@
       <button id="btn-next" class="step-btn" aria-label="Next step">→</button>
     </div>
     <div class="step-info" role="region" aria-live="polite">
-      <div id="step-counter" class="step-counter">STEP 1 OF 4</div>
+      <div id="step-counter" class="step-counter">STEP 1 OF 5</div>
       <div id="step-title" class="step-title">Initial State</div>
       <div id="step-description" class="step-description">Scene at rest with default camera position.</div>
     </div>

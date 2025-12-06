@@ -1011,147 +1011,66 @@ const MySystem: GAME.System = {
 
 ### Arrange
 
-Arranges entities in horizontal layouts with automatic positioning. Members reference a group entity and are positioned according to the group's gap and alignment settings. Blend controls whether arrangement is active (0 = frozen, >0 = active). Count is computed dynamically from member indices.
+Arranges entities in horizontal, vertical, or grid layouts. Members reference a group entity and smoothly lerp to calculated positions. Blend controls influence (0=none, 1=full), speed controls lerp rate.
 
 ### Components
 
-**HorizontalGroup** - Layout controller for a set of members
-- gap: f32 (1) - Spacing between members
-- align: ui8 (1) - Alignment mode (0=left, 1=center, 2=right)
-- blend: f32 (1) - Activation (0=frozen, >0=active)
+**HorizontalGroup** - gap (f32), align (ui8), blend (f32), speed (f32)
+**HorizontalMember** - group (eid), index (ui32)
 
-**HorizontalMember** - Links entity to a group
-- group: eid - Reference to HorizontalGroup entity
-- index: ui32 - Order within group (0, 1, 2...)
+**VerticalGroup** - gap (f32), align (ui8), blend (f32), speed (f32)
+**VerticalMember** - group (eid), index (ui32)
 
-### Alignment Modes
+**GridGroup** - gapX (f32), gapY (f32), columns (ui32), alignX (ui8), alignY (ui8), blend (f32), speed (f32)
+**GridMember** - group (eid), index (ui32) - row-first ordering
 
-| Mode | Value | Behavior |
-|------|-------|----------|
-| left | 0 | First item at x=0, extends positive |
-| center | 1 | Items centered around x=0 |
-| right | 2 | Last item at x=0, extends negative |
+### Parameters
 
-**Position Calculation:**
-```
-totalWidth = (memberCount - 1) * gap
+- **blend**: 0-1, influence of arrangement (0=frozen, 1=full control)
+- **speed**: lerp rate (0=instant, 30=default smooth, higher=faster)
 
-left:   startX = 0
-center: startX = -totalWidth / 2
-right:  startX = -totalWidth
+### Align Enum
 
-position[index] = { x: startX + index * gap, y: 0, z: 0 }
-```
-
-### System Behavior
-
-HorizontalArrangeSystem runs in the simulation batch:
-1. Computes member count per group from highest index + 1
-2. Queries all entities with HorizontalMember component
-3. Skips members without Transform
-4. Skips members whose group has blend <= 0
-5. Calculates position based on gap and alignment
-6. Sets Transform.posX/posY/posZ directly
+| Mode | Value | Usage |
+|------|-------|-------|
+| Left | 0 | Horizontal: start at x=0, extend positive |
+| Center | 1 | Both: center around origin |
+| Right | 2 | Horizontal: end at x=0, extend negative |
+| Top | 3 | Vertical: start at y=0, extend negative |
+| Bottom | 4 | Vertical: end at y=0, extend positive |
 
 #### Examples
 
-## XML (Declarative) Patterns
-
-### Basic Horizontal Arrangement (Centered)
+## XML Patterns
 
 ```xml
-<entity name="cube-row" horizontal-group="gap: 3"></entity>
-<entity name="cube-left" transform renderer="shape: box" horizontal-member="group: cube-row; index: 0"></entity>
-<entity name="cube-center" transform renderer="shape: box" horizontal-member="group: cube-row; index: 1"></entity>
-<entity name="cube-right" transform renderer="shape: box" horizontal-member="group: cube-row; index: 2"></entity>
-```
+<!-- Horizontal row with smooth lerping -->
+<entity name="row" horizontal-group="gap: 3"></entity>
+<entity horizontal-member="group: row; index: 0" transform renderer="shape: box"></entity>
+<entity horizontal-member="group: row; index: 1" transform renderer="shape: box"></entity>
 
-After step: positions at x=-3, x=0, x=3
+<!-- Vertical stack -->
+<entity name="stack" vertical-group="gap: 2; align: top"></entity>
+<entity vertical-member="group: stack; index: 0" transform renderer="shape: box"></entity>
 
-### Left-Aligned Arrangement
+<!-- Grid (row-first) -->
+<entity name="grid" grid-group="gapX: 2; gapY: 2; columns: 3"></entity>
+<entity grid-member="group: grid; index: 0" transform renderer="shape: box"></entity>
 
-```xml
-<entity name="left-row" horizontal-group="gap: 2; align: left"></entity>
-<entity transform renderer="shape: sphere" horizontal-member="group: left-row; index: 0"></entity>
-<entity transform renderer="shape: sphere" horizontal-member="group: left-row; index: 1"></entity>
-<entity transform renderer="shape: sphere" horizontal-member="group: left-row; index: 2"></entity>
-```
+<!-- Multi-group membership (entity in both layouts, blend controls which is active) -->
+<entity name="row" horizontal-group="gap: 3; blend: 1"></entity>
+<entity name="stack" vertical-group="gap: 3; blend: 0"></entity>
+<entity horizontal-member="group: row; index: 0" vertical-member="group: stack; index: 0" transform></entity>
 
-After step: positions at x=0, x=2, x=4
+<!-- Tween between layouts -->
+<tween target="row" attr="horizontal-group.blend" to="0" duration="1"></tween>
+<tween target="stack" attr="vertical-group.blend" to="1" duration="1"></tween>
 
-### Right-Aligned Arrangement
+<!-- Instant snap (speed: 0) -->
+<entity name="instant-row" horizontal-group="gap: 2; speed: 0"></entity>
 
-```xml
-<entity name="right-row" horizontal-group="gap: 2; align: right"></entity>
-<entity transform renderer="shape: sphere" horizontal-member="group: right-row; index: 0"></entity>
-<entity transform renderer="shape: sphere" horizontal-member="group: right-row; index: 1"></entity>
-<entity transform renderer="shape: sphere" horizontal-member="group: right-row; index: 2"></entity>
-```
-
-After step: positions at x=-4, x=-2, x=0
-
-### Frozen Arrangement (blend=0)
-
-```xml
-<entity name="frozen-row" horizontal-group="gap: 5; blend: 0"></entity>
-<entity transform="pos: 10 0 0" renderer="shape: sphere" horizontal-member="group: frozen-row; index: 0"></entity>
-<entity transform="pos: 20 0 0" renderer="shape: sphere" horizontal-member="group: frozen-row; index: 1"></entity>
-```
-
-Members keep their initial positions until blend becomes > 0.
-
-### Dynamic Gap with Tweening
-
-```xml
-<entity name="expandable" horizontal-group="gap: 2"></entity>
-<entity transform renderer="shape: box" horizontal-member="group: expandable; index: 0"></entity>
-<entity transform renderer="shape: box" horizontal-member="group: expandable; index: 1"></entity>
-
-<tween target="expandable" attr="horizontal-group.gap" to="10" duration="1"></tween>
-```
-
-## TypeScript (Imperative) Patterns
-
-### Manual Group Creation
-
-```typescript
-import { HorizontalGroup, HorizontalMember, Align } from 'vibegame/arrange';
-import { Transform } from 'vibegame/transforms';
-
-const groupEntity = state.createEntity();
-state.addComponent(groupEntity, HorizontalGroup);
-HorizontalGroup.gap[groupEntity] = 4;
-HorizontalGroup.align[groupEntity] = Align.Center;
-HorizontalGroup.blend[groupEntity] = 1;
-
-const member0 = state.createEntity();
-state.addComponent(member0, Transform);
-state.addComponent(member0, HorizontalMember);
-HorizontalMember.group[member0] = groupEntity;
-HorizontalMember.index[member0] = 0;
-
-const member1 = state.createEntity();
-state.addComponent(member1, Transform);
-state.addComponent(member1, HorizontalMember);
-HorizontalMember.group[member1] = groupEntity;
-HorizontalMember.index[member1] = 1;
-
-state.step(1/60);
-// member0 at x=-2, member1 at x=2
-```
-
-### Freeze/Unfreeze Pattern
-
-```typescript
-HorizontalGroup.blend[groupEntity] = 0;  // Freeze
-HorizontalGroup.blend[groupEntity] = 1;  // Unfreeze
-```
-
-### Change Alignment at Runtime
-
-```typescript
-HorizontalGroup.align[groupEntity] = Align.Left;  // Left-align
-HorizontalGroup.align[groupEntity] = Align.Right; // Right-align
+<!-- Slower animation -->
+<entity name="slow-row" horizontal-group="gap: 2; speed: 5"></entity>
 ```
 
 ### Input

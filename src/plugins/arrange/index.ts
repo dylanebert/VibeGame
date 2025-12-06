@@ -1,4 +1,22 @@
-export { Align, HorizontalGroup, HorizontalMember } from './components';
+export {
+  Align,
+  GridGroup,
+  GridMember,
+  HorizontalGroup,
+  HorizontalMember,
+  VerticalGroup,
+  VerticalMember,
+} from './components';
 export { ArrangePlugin } from './plugin';
-export { HorizontalArrangeSystem } from './systems';
-export { AlignNames, horizontalPosition, type Position } from './utils';
+export {
+  GridArrangeSystem,
+  HorizontalArrangeSystem,
+  VerticalArrangeSystem,
+} from './systems';
+export {
+  AlignNames,
+  gridPosition,
+  horizontalPosition,
+  verticalPosition,
+  type Position,
+} from './utils';

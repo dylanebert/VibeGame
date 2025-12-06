@@ -1,0 +1,9 @@
+<sequence name="step-3-4">
+  <tween target="cube-row" attr="horizontal-group.blend" to="0" duration="0.1" easing="linear"></tween>
+  <tween target="cube-stack" attr="vertical-group.blend" to="1" duration="0.1" easing="linear"></tween>
+</sequence>
+
+<sequence name="step-4-3">
+  <tween target="cube-row" attr="horizontal-group.blend" to="1" duration="0.1" easing="linear"></tween>
+  <tween target="cube-stack" attr="vertical-group.blend" to="0" duration="0.1" easing="linear"></tween>
+</sequence>

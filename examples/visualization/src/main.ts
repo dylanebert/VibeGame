@@ -34,6 +34,11 @@ const STEP_CONTENT: StepContent[] = [
     description:
       'A multiplicative scale shaker targets the right cube with value 0.5. Tweening its intensity from 0 to 1 systematically halves the cube\'s scale without interfering with the breathing effect, demonstrating layered presentation modifiers.',
   },
+  {
+    title: 'Layout Transition',
+    description:
+      'Each cube belongs to both a horizontal-group and vertical-group. Tweening horizontal blend from 1→0 and vertical blend from 0→1 smoothly transitions the layout from a row to a stack, demonstrating multi-group membership.',
+  },
 ];
 
 function calculateMaxStep(): number {
