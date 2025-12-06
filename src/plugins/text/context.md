@@ -117,9 +117,8 @@ state.addComponent(textEntity, Transform);
 state.addComponent(textEntity, WorldTransform);
 state.addComponent(textEntity, Text);
 
-setTextContent(state, textEntity, 'Hello World');
 Text.fontSize[textEntity] = 2;
 Text.color[textEntity] = 0x00ff00;
-Text.dirty[textEntity] = 1;
+setTextContent(state, textEntity, 'Hello World'); // auto-marks dirty
 ```
 <!-- /LLM:EXAMPLES -->

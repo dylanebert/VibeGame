@@ -1,8 +1,9 @@
 import type { State } from '../../core';
-import type { Text } from 'troika-three-text';
+import type { Text as TroikaText } from 'troika-three-text';
+import { Text } from './components';
 
 export interface TextContext {
-  textMeshes: Map<number, Text>;
+  textMeshes: Map<number, TroikaText>;
   textContent: Map<number, string>;
   defaultFont: string | null;
 }
@@ -36,6 +37,7 @@ export function setTextContent(
 ): void {
   const context = getTextContext(state);
   context.textContent.set(entity, text);
+  Text.dirty[entity] = 1;
 }
 
 export function getTextContent(state: State, entity: number): string {
