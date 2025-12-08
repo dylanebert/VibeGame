@@ -30,8 +30,11 @@ cli/
 ### Headless State
 
 - `createHeadlessState(options)` - Creates State with `headless=true`
-- `parseWorldXml(state, xml)` - Parses XML string, creates entities
+- `parseWorldXml(state, xml, options?)` - Parses XML string, creates entities
 - `loadWorldFromFile(state, path)` - Loads XML from file
+
+ParseOptions:
+- `ignoreUnknownAttributes?: string[]` - Skip validation for specified attributes
 
 ### Text Measurement
 

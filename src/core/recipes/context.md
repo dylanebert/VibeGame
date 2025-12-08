@@ -48,8 +48,11 @@ context.md  # This file, folder context (Tier 2)
 
 ### Functions
 
-#### parseXMLToEntities(state, xmlContent): EntityCreationResult[]
+#### parseXMLToEntities(state, xmlContent, options?): EntityCreationResult[]
 Converts XML elements to ECS entities with hierarchy
+
+#### ParseOptions
+- `ignoreUnknownAttributes?: string[]` - Skip validation for specified attributes
 
 #### createEntityFromRecipe(state, recipeName, attributes?): number
 Creates entity from recipe with attributes

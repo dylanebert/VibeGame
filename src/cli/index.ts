@@ -3,7 +3,7 @@ export {
   loadWorldFromFile,
   parseWorldXml,
 } from './headless';
-export type { HeadlessOptions } from './headless';
+export type { HeadlessOptions, ParseOptions } from './headless';
 export {
   getAllSequences,
   getComponentData,

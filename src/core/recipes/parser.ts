@@ -263,7 +263,11 @@ function applyAttributesFromRecipe(
         state
       );
 
-      if (!handled && !hasParser) {
+      if (
+        !handled &&
+        !hasParser &&
+        !context.shouldIgnoreUnknownAttribute(attrName)
+      ) {
         const availableAttrs = getAvailableAttributes(recipe, state);
         const availableShorthands: string[] = [];
 
@@ -297,12 +301,17 @@ function applyAttributesFromRecipe(
   }
 }
 
+export interface ParseOptions {
+  ignoreUnknownAttributes?: string[];
+}
+
 export function parseXMLToEntities(
   state: State,
-  xmlContent: ParsedElement
+  xmlContent: ParsedElement,
+  options?: ParseOptions
 ): EntityCreationResult[] {
   const results: EntityCreationResult[] = [];
-  const context = new ParseContext(state);
+  const context = new ParseContext(state, options);
 
   function processElement(element: ParsedElement): EntityCreationResult | null {
     if (state.hasRecipe(element.tagName)) {

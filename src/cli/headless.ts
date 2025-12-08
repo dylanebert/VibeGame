@@ -46,14 +46,22 @@ export function createHeadlessState(options: HeadlessOptions = {}): State {
   return state;
 }
 
-export function parseWorldXml(state: State, xml: string): void {
+export interface ParseOptions {
+  ignoreUnknownAttributes?: string[];
+}
+
+export function parseWorldXml(
+  state: State,
+  xml: string,
+  options?: ParseOptions
+): void {
   ensureDom();
   const normalized = normalizeBooleanAttributes(xml);
   const wrapped = normalized.includes('<world')
     ? normalized
     : `<world>${normalized}</world>`;
   const result = XMLParser.parse(wrapped);
-  parseXMLToEntities(state, result.root);
+  parseXMLToEntities(state, result.root, options);
 }
 
 export async function loadWorldFromFile(
