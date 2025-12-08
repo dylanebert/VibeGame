@@ -22,3 +22,5 @@ export {
   setHeadlessFont,
   type Font,
 } from './text';
+export { projectToScreen } from './projection';
+export type { ScreenCoordinate, ViewportConfig } from './projection';

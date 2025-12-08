@@ -11,13 +11,14 @@ cli/
 ├── context.md
 ├── index.ts       # Public exports
 ├── headless.ts    # Headless state creation
+├── projection.ts  # Screen-space coordinate projection
 ├── queries.ts     # Entity/sequence query utilities
 └── text.ts        # Typr.js text measurement
 ```
 
 ## Scope
 
-- **In-scope**: Headless state, XML parsing, DOM polyfills, text measurement, entity discovery, sequence inspection
+- **In-scope**: Headless state, XML parsing, DOM polyfills, text measurement, entity discovery, sequence inspection, screen-space projection
 - **Out-of-scope**: Rendering, WebGL, browser-only features
 
 ## Dependencies
@@ -54,6 +55,14 @@ cli/
 ### Output
 
 - `toJSON(snapshot)` - Structured JSON for AI parsing
+
+### Screen Projection
+
+- `projectToScreen(state, entityId, viewport?)` - Projects entity world position to screen coordinates
+- Returns `{ x, y, z, visible }` or `null` if entity/camera missing
+- Default viewport: 1920x1080 (configurable via `{ width, height }`)
+- Coordinates: (0,0) top-left, (width, height) bottom-right
+- `z` is NDC depth (-1 to 1); `visible` true when entity in front of camera
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
