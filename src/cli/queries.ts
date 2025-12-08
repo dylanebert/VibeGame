@@ -1,6 +1,7 @@
 import { defineQuery } from 'bitecs';
 import type { State } from '../core';
 import { Sequence, SequenceState } from '../plugins/tweening';
+import type { WorldSnapshot } from './snapshot';
 
 export interface SequenceInfo {
   name: string;
@@ -140,23 +141,7 @@ export function getEntityData(
   return result;
 }
 
-interface ScreenCoordinate {
-  x: number;
-  y: number;
-  z: number;
-  visible: boolean;
-}
-
-export function toJSON(snapshot: {
-  elapsed: number;
-  entities: Array<{
-    eid: number;
-    name?: string;
-    components: Record<string, Record<string, number>>;
-    screen?: ScreenCoordinate;
-  }>;
-  sequences?: SequenceInfo[];
-}): string {
+export function toJSON(snapshot: WorldSnapshot): string {
   const result: {
     elapsed: number;
     entities: Record<
@@ -164,7 +149,7 @@ export function toJSON(snapshot: {
       {
         eid: number;
         components: Record<string, Record<string, number>>;
-        screen?: ScreenCoordinate;
+        screen?: { x: number; y: number; z: number; visible: boolean };
       }
     >;
     sequences?: Record<

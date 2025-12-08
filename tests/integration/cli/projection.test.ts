@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import { State, XMLParser, parseXMLToEntities, TIME_CONSTANTS } from 'vibegame';
 import { TransformsPlugin } from 'vibegame/transforms';
 import { RenderingPlugin } from 'vibegame/rendering';
-import { projectToScreen } from '../../../src/cli/projection';
+import { createSnapshot } from '../../../src/cli/snapshot';
 
 describe('Screen Projection', () => {
   let state: State;
@@ -18,29 +18,50 @@ describe('Screen Projection', () => {
     state.registerPlugin(RenderingPlugin);
   });
 
-  it('returns null when no camera exists', () => {
+  it('throws when no camera exists and project is true', () => {
     const xml =
       '<root><entity name="cube" transform="pos: 0 0 -10"></entity></root>';
-    const parsed = XMLParser.parse(xml);
-    const entities = parseXMLToEntities(state, parsed.root);
-    const entity = entities[0].entity;
-
-    state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
-
-    const result = projectToScreen(state, entity);
-    expect(result).toBeNull();
-  });
-
-  it('returns null when entity has no WorldTransform', () => {
-    const xml =
-      '<root><entity name="camera" main-camera="" transform="pos: 0 0 10"></entity></root>';
     const parsed = XMLParser.parse(xml);
     parseXMLToEntities(state, parsed.root);
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const result = projectToScreen(state, 99999);
-    expect(result).toBeNull();
+    expect(() => createSnapshot(state, { entities: ['cube'] })).toThrow(
+      'No camera found'
+    );
+  });
+
+  it('succeeds without camera when project is false', () => {
+    const xml =
+      '<root><entity name="cube" transform="pos: 0 0 -10"></entity></root>';
+    const parsed = XMLParser.parse(xml);
+    parseXMLToEntities(state, parsed.root);
+
+    state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
+
+    const snapshot = createSnapshot(state, {
+      entities: ['cube'],
+      project: false,
+    });
+    expect(snapshot.entities).toHaveLength(1);
+    expect(snapshot.entities[0].screen).toBeUndefined();
+  });
+
+  it('skips screen coords for entity without WorldTransform', () => {
+    const xml =
+      '<root><entity name="camera" main-camera="" transform="pos: 0 0 10"></entity><entity name="noTransform" main-camera=""></entity></root>';
+    const parsed = XMLParser.parse(xml);
+    parseXMLToEntities(state, parsed.root);
+
+    // Entity has MainCamera component but no transform, so no WorldTransform
+    const snapshot = createSnapshot(state, {
+      entities: ['noTransform'],
+      project: false,
+    });
+    const noTransform = snapshot.entities.find((e) => e.name === 'noTransform');
+    expect(noTransform).toBeDefined();
+    // Without project, no screen coords
+    expect(noTransform!.screen).toBeUndefined();
   });
 
   it('projects entity at origin to screen center when camera looks down -Z', () => {
@@ -51,13 +72,13 @@ describe('Screen Projection', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const cubeEid = state.getEntityByName('cube')!;
-    const result = projectToScreen(state, cubeEid);
+    const snapshot = createSnapshot(state, { entities: ['cube'] });
+    const cube = snapshot.entities.find((e) => e.name === 'cube')!;
 
-    expect(result).not.toBeNull();
-    expect(result!.x).toBeCloseTo(960, 0);
-    expect(result!.y).toBeCloseTo(540, 0);
-    expect(result!.visible).toBe(true);
+    expect(cube.screen).toBeDefined();
+    expect(cube.screen!.x).toBeCloseTo(960, 0);
+    expect(cube.screen!.y).toBeCloseTo(540, 0);
+    expect(cube.screen!.visible).toBe(true);
   });
 
   it('projects entity behind camera with visible=false', () => {
@@ -68,12 +89,12 @@ describe('Screen Projection', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const cubeEid = state.getEntityByName('cube')!;
-    const result = projectToScreen(state, cubeEid);
+    const snapshot = createSnapshot(state, { entities: ['cube'] });
+    const cube = snapshot.entities.find((e) => e.name === 'cube')!;
 
-    expect(result).not.toBeNull();
-    expect(result!.visible).toBe(false);
-    expect(result!.z).toBeGreaterThan(1);
+    expect(cube.screen).toBeDefined();
+    expect(cube.screen!.visible).toBe(false);
+    expect(cube.screen!.z).toBeGreaterThan(1);
   });
 
   it('projects off-center entity to offset screen coordinates', () => {
@@ -84,13 +105,13 @@ describe('Screen Projection', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const cubeEid = state.getEntityByName('cube')!;
-    const result = projectToScreen(state, cubeEid);
+    const snapshot = createSnapshot(state, { entities: ['cube'] });
+    const cube = snapshot.entities.find((e) => e.name === 'cube')!;
 
-    expect(result).not.toBeNull();
-    expect(result!.x).toBeGreaterThan(960);
-    expect(result!.y).toBeLessThan(540);
-    expect(result!.visible).toBe(true);
+    expect(cube.screen).toBeDefined();
+    expect(cube.screen!.x).toBeGreaterThan(960);
+    expect(cube.screen!.y).toBeLessThan(540);
+    expect(cube.screen!.visible).toBe(true);
   });
 
   it('respects custom viewport dimensions', () => {
@@ -101,12 +122,15 @@ describe('Screen Projection', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const cubeEid = state.getEntityByName('cube')!;
-    const result = projectToScreen(state, cubeEid, { width: 800, height: 600 });
+    const snapshot = createSnapshot(state, {
+      entities: ['cube'],
+      viewport: { width: 800, height: 600 },
+    });
+    const cube = snapshot.entities.find((e) => e.name === 'cube')!;
 
-    expect(result).not.toBeNull();
-    expect(result!.x).toBeCloseTo(400, 0);
-    expect(result!.y).toBeCloseTo(300, 0);
+    expect(cube.screen).toBeDefined();
+    expect(cube.screen!.x).toBeCloseTo(400, 0);
+    expect(cube.screen!.y).toBeCloseTo(300, 0);
   });
 
   it('handles orthographic projection', () => {
@@ -117,13 +141,13 @@ describe('Screen Projection', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const cubeEid = state.getEntityByName('cube')!;
-    const result = projectToScreen(state, cubeEid);
+    const snapshot = createSnapshot(state, { entities: ['cube'] });
+    const cube = snapshot.entities.find((e) => e.name === 'cube')!;
 
-    expect(result).not.toBeNull();
-    expect(result!.x).toBeCloseTo(960, 0);
-    expect(result!.y).toBeCloseTo(540, 0);
-    expect(result!.visible).toBe(true);
+    expect(cube.screen).toBeDefined();
+    expect(cube.screen!.x).toBeCloseTo(960, 0);
+    expect(cube.screen!.y).toBeCloseTo(540, 0);
+    expect(cube.screen!.visible).toBe(true);
   });
 
   it('returns consistent results across multiple calls', () => {
@@ -134,14 +158,16 @@ describe('Screen Projection', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    const cubeEid = state.getEntityByName('cube')!;
-    const result1 = projectToScreen(state, cubeEid);
-    const result2 = projectToScreen(state, cubeEid);
+    const snapshot1 = createSnapshot(state, { entities: ['cube'] });
+    const snapshot2 = createSnapshot(state, { entities: ['cube'] });
 
-    expect(result1).not.toBeNull();
-    expect(result2).not.toBeNull();
-    expect(result1!.x).toBe(result2!.x);
-    expect(result1!.y).toBe(result2!.y);
-    expect(result1!.z).toBe(result2!.z);
+    const cube1 = snapshot1.entities.find((e) => e.name === 'cube')!;
+    const cube2 = snapshot2.entities.find((e) => e.name === 'cube')!;
+
+    expect(cube1.screen).toBeDefined();
+    expect(cube2.screen).toBeDefined();
+    expect(cube1.screen!.x).toBe(cube2.screen!.x);
+    expect(cube1.screen!.y).toBe(cube2.screen!.y);
+    expect(cube1.screen!.z).toBe(cube2.screen!.z);
   });
 });

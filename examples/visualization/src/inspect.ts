@@ -1,5 +1,6 @@
 import {
   createHeadlessState,
+  createSnapshot,
   getAllSequences,
   getEntityNames,
   getSequenceInfo,
@@ -58,9 +59,9 @@ async function main() {
   console.log('=== Initial State ===');
   console.log(
     toJSON(
-      state.snapshot({
+      createSnapshot(state, {
         entities: names,
-        includeSequences: true,
+        sequences: true,
       })
     )
   );
@@ -85,9 +86,9 @@ async function main() {
   console.log('\n=== After 60 frames (sequence step-0-1) ===');
   console.log(
     toJSON(
-      state.snapshot({
+      createSnapshot(state, {
         entities: names,
-        includeSequences: true,
+        sequences: true,
       })
     )
   );

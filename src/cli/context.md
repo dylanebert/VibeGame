@@ -1,7 +1,7 @@
 # CLI Module
 
 <!-- LLM:OVERVIEW -->
-Headless state creation, XML parsing, text measurement, and query utilities for Node.js/Bun. Enables AI testing and video creation without browser/WebGL.
+Headless state creation, XML parsing, text measurement, snapshot, and query utilities for Node.js/Bun. Enables AI testing and video creation without browser/WebGL.
 <!-- /LLM:OVERVIEW -->
 
 ## Layout
@@ -11,20 +11,20 @@ cli/
 ├── context.md
 ├── index.ts       # Public exports
 ├── headless.ts    # Headless state creation
-├── projection.ts  # Screen-space coordinate projection
+├── snapshot.ts    # World snapshot with screen projection
 ├── queries.ts     # Entity/sequence query utilities
 └── text.ts        # Typr.js text measurement
 ```
 
 ## Scope
 
-- **In-scope**: Headless state, XML parsing, DOM polyfills, text measurement, entity discovery, sequence inspection, screen-space projection
+- **In-scope**: Headless state, XML parsing, DOM polyfills, text measurement, entity discovery, sequence inspection, world snapshots, screen-space projection
 - **Out-of-scope**: Rendering, WebGL, browser-only features
 
 ## Dependencies
 
-- **Internal**: Core ECS (State), XML parser, TextPlugin, TweenPlugin
-- **External**: jsdom, @fredli74/typr
+- **Internal**: Core ECS (State), XML parser, TextPlugin, TweenPlugin, RenderingPlugin (for projection)
+- **External**: jsdom, @fredli74/typr, three (for projection math)
 
 <!-- LLM:REFERENCE -->
 ### Headless State
@@ -52,18 +52,20 @@ cli/
 - `getSequenceInfo(state, name)` - Sequence state by name
 - `getAllSequences(state)` - All sequences with state/progress
 
-### Output
+### Snapshot
 
+- `createSnapshot(state, options?)` - Creates world snapshot with entity/component data
+- `formatSnapshot(snapshot)` - Human-readable text format
 - `toJSON(snapshot)` - Structured JSON for AI parsing
 
-### Screen Projection
+Options:
+- `entities?: string[]` - Filter by entity names
+- `components?: string[]` - Filter by component names
+- `sequences?: boolean` - Include sequence state
+- `project?: boolean` - Include screen projection (default: true, requires camera)
+- `viewport?: { width, height }` - Custom viewport (default: 1920x1080)
 
-- `projectToScreen(state, entityId, viewport?)` - Projects entity world position to screen coordinates
-- `createProjector(state, viewport?)` - Returns projector function for use with `snapshot({ project })`
-- Returns `{ x, y, z, visible }` or `null` if entity/camera missing
-- Default viewport: 1920x1080 (configurable via `{ width, height }`)
-- Coordinates: (0,0) top-left, (width, height) bottom-right
-- `z` is NDC depth (-1 to 1); `visible` true when entity in front of camera
+Screen coordinates: `{ x, y, z, visible }` - (0,0) top-left, z is NDC depth, visible true when in front of camera.
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -72,7 +74,7 @@ cli/
 ```typescript
 import {
   createHeadlessState, loadFont, parseWorldXml, setHeadlessFont,
-  getEntityNames, getAllSequences, toJSON, createProjector
+  getEntityNames, getAllSequences, createSnapshot, toJSON
 } from 'vibegame/cli';
 import { playSequence, resetSequence } from 'vibegame/tweening';
 
@@ -86,10 +88,9 @@ parseWorldXml(state, xmlContent);
 const names = getEntityNames(state);
 const sequences = getAllSequences(state);
 
-// Step and snapshot with screen projection
+// Step and snapshot (screen projection included by default)
 state.step(0);
-const project = createProjector(state);
-console.log(toJSON(state.snapshot({ entities: names, project })));
+console.log(toJSON(createSnapshot(state, { entities: names })));
 
 // Play sequence, step frames
 const seq = state.getEntityByName('intro');

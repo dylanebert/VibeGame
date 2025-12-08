@@ -1,11 +1,16 @@
+import { Matrix4, Quaternion, Vector3 } from 'three';
 import { defineQuery, type Component } from 'bitecs';
-import type { State } from './state';
+import type { State } from '../core';
+import { MainCamera } from '../plugins/rendering/components';
+import { CameraProjection } from '../plugins/rendering/utils';
+import { WorldTransform } from '../plugins/transforms/components';
 
 export interface SnapshotOptions {
   entities?: string[];
   components?: string[];
-  includeSequences?: boolean;
-  project?: (eid: number) => ScreenCoordinate | null;
+  sequences?: boolean;
+  project?: boolean;
+  viewport?: { width: number; height: number };
 }
 
 export interface SequenceSnapshot {
@@ -44,6 +49,21 @@ type ComponentField =
   | Uint16Array
   | Uint32Array;
 
+const DEFAULT_WIDTH = 1920;
+const DEFAULT_HEIGHT = 1080;
+const NEAR = 0.1;
+const FAR = 1000;
+
+const cameraQuery = defineQuery([MainCamera, WorldTransform]);
+
+const position = new Vector3();
+const quaternion = new Quaternion();
+const scale = new Vector3(1, 1, 1);
+const worldMatrix = new Matrix4();
+const viewMatrix = new Matrix4();
+const projectionMatrix = new Matrix4();
+const entityPos = new Vector3();
+
 function getComponentFields(
   component: Component,
   eid: number
@@ -63,6 +83,78 @@ function getComponentFields(
     }
   }
   return fields;
+}
+
+function projectToScreen(
+  state: State,
+  cameraEid: number,
+  entityId: number,
+  width: number,
+  height: number
+): ScreenCoordinate | null {
+  const worldTransform = state.getComponent('world-transform');
+  if (!worldTransform || !state.hasComponent(entityId, worldTransform)) {
+    return null;
+  }
+
+  const aspect = width / height;
+
+  position.set(
+    WorldTransform.posX[cameraEid],
+    WorldTransform.posY[cameraEid],
+    WorldTransform.posZ[cameraEid]
+  );
+  quaternion.set(
+    WorldTransform.rotX[cameraEid],
+    WorldTransform.rotY[cameraEid],
+    WorldTransform.rotZ[cameraEid],
+    WorldTransform.rotW[cameraEid]
+  );
+  worldMatrix.compose(position, quaternion, scale);
+  viewMatrix.copy(worldMatrix).invert();
+
+  const projType = MainCamera.projection[cameraEid];
+  const fov = MainCamera.fov[cameraEid] || 75;
+  const orthoSize = MainCamera.orthoSize[cameraEid] || 10;
+
+  if (projType === CameraProjection.ORTHOGRAPHIC) {
+    const halfHeight = orthoSize / 2;
+    const halfWidth = halfHeight * aspect;
+    projectionMatrix.makeOrthographic(
+      -halfWidth,
+      halfWidth,
+      halfHeight,
+      -halfHeight,
+      NEAR,
+      FAR
+    );
+  } else {
+    const fovRad = (fov * Math.PI) / 180;
+    projectionMatrix.makePerspective(
+      -NEAR * Math.tan(fovRad / 2) * aspect,
+      NEAR * Math.tan(fovRad / 2) * aspect,
+      NEAR * Math.tan(fovRad / 2),
+      -NEAR * Math.tan(fovRad / 2),
+      NEAR,
+      FAR
+    );
+  }
+
+  entityPos.set(
+    WorldTransform.posX[entityId],
+    WorldTransform.posY[entityId],
+    WorldTransform.posZ[entityId]
+  );
+
+  entityPos.applyMatrix4(viewMatrix);
+  entityPos.applyMatrix4(projectionMatrix);
+
+  return {
+    x: ((entityPos.x + 1) / 2) * width,
+    y: ((1 - entityPos.y) / 2) * height,
+    z: entityPos.z,
+    visible: entityPos.z >= -1 && entityPos.z <= 1,
+  };
 }
 
 export function createSnapshot(
@@ -115,9 +207,24 @@ export function createSnapshot(
     return a.eid - b.eid;
   });
 
-  if (options?.project) {
+  const shouldProject = options?.project ?? true;
+  if (shouldProject) {
+    const cameras = cameraQuery(state.world);
+    if (cameras.length === 0) {
+      throw new Error('No camera found in state for screen projection');
+    }
+    const cameraEid = cameras[0];
+    const width = options?.viewport?.width ?? DEFAULT_WIDTH;
+    const height = options?.viewport?.height ?? DEFAULT_HEIGHT;
+
     for (const entity of entities) {
-      const screen = options.project(entity.eid);
+      const screen = projectToScreen(
+        state,
+        cameraEid,
+        entity.eid,
+        width,
+        height
+      );
       if (screen) entity.screen = screen;
     }
   }
@@ -127,7 +234,7 @@ export function createSnapshot(
     entities,
   };
 
-  if (options?.includeSequences) {
+  if (options?.sequences) {
     const sequenceComponent = state.getComponent('sequence');
     if (sequenceComponent) {
       const query = defineQuery([sequenceComponent]);

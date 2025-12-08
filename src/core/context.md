@@ -34,7 +34,6 @@ ECS foundation: State management, XML parsing, plugin architecture, scheduling.
 **Runtime**
 - `step(deltaTime?)`, `dispose()`
 - `time.deltaTime`, `time.fixedDeltaTime`, `time.elapsed`
-- `snapshot(options?)` - `{ entities?, components?, includeSequences?, project? }`
 
 ### Types
 

@@ -22,5 +22,11 @@ export {
   setHeadlessFont,
   type Font,
 } from './text';
-export { createProjector, projectToScreen } from './projection';
-export type { ScreenCoordinate, ViewportConfig } from './projection';
+export { createSnapshot, formatSnapshot } from './snapshot';
+export type {
+  EntitySnapshot,
+  ScreenCoordinate,
+  SequenceSnapshot,
+  SnapshotOptions,
+  WorldSnapshot,
+} from './snapshot';

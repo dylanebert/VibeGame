@@ -191,15 +191,17 @@ state.time.fixed    // Fixed timestep (1/50)
 For testing without browser/WebGL:
 
 ```typescript
-import { createHeadlessState, parseWorldXml, getEntityNames, toJSON } from 'vibegame/cli';
+import { createHeadlessState, parseWorldXml, getEntityNames, createSnapshot, toJSON } from 'vibegame/cli';
 
 const state = createHeadlessState({ plugins: DefaultPlugins });
 await state.initializePlugins();
 parseWorldXml(state, xmlContent);
 
 state.step(1/60);
-console.log(toJSON(state.snapshot({ entities: getEntityNames(state) })));
+console.log(toJSON(createSnapshot(state, { entities: getEntityNames(state) })));
 ```
+
+Screen projection is included by default, returning `{ x, y, z, visible }` for each entity (1920x1080 viewport). Use `project: false` to disable.
 
 ## Common Mistakes
 
