@@ -32,6 +32,7 @@ export type {
   ParserParams,
   Plugin,
   Recipe,
+  ScreenCoordinate,
   SequenceSnapshot,
   ShorthandMapping,
   SnapshotOptions,

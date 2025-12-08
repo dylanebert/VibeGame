@@ -4,6 +4,7 @@ export { State } from './state';
 export { createSnapshot, formatSnapshot } from './snapshot';
 export type {
   EntitySnapshot,
+  ScreenCoordinate,
   SequenceSnapshot,
   SnapshotOptions,
   WorldSnapshot,

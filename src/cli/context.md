@@ -59,6 +59,7 @@ cli/
 ### Screen Projection
 
 - `projectToScreen(state, entityId, viewport?)` - Projects entity world position to screen coordinates
+- `createProjector(state, viewport?)` - Returns projector function for use with `snapshot({ project })`
 - Returns `{ x, y, z, visible }` or `null` if entity/camera missing
 - Default viewport: 1920x1080 (configurable via `{ width, height }`)
 - Coordinates: (0,0) top-left, (width, height) bottom-right
@@ -71,7 +72,7 @@ cli/
 ```typescript
 import {
   createHeadlessState, loadFont, parseWorldXml, setHeadlessFont,
-  getEntityNames, getAllSequences, toJSON
+  getEntityNames, getAllSequences, toJSON, createProjector
 } from 'vibegame/cli';
 import { playSequence, resetSequence } from 'vibegame/tweening';
 
@@ -85,9 +86,10 @@ parseWorldXml(state, xmlContent);
 const names = getEntityNames(state);
 const sequences = getAllSequences(state);
 
-// Step and snapshot with JSON output
+// Step and snapshot with screen projection
 state.step(0);
-console.log(toJSON(state.snapshot({ entities: names, includeSequences: true })));
+const project = createProjector(state);
+console.log(toJSON(state.snapshot({ entities: names, project })));
 
 // Play sequence, step frames
 const seq = state.getEntityByName('intro');

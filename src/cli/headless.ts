@@ -37,8 +37,7 @@ export interface HeadlessOptions {
 
 export function createHeadlessState(options: HeadlessOptions = {}): State {
   ensureDom();
-  const state = new State();
-  state.headless = true;
+  const state = new State({ headless: true });
   if (options.plugins) {
     for (const plugin of options.plugins) {
       state.registerPlugin(plugin);

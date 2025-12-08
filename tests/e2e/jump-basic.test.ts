@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS } from 'vibegame';
-import { createHeadlessState, parseWorldXml, queryEntities } from 'vibegame/cli';
+import {
+  createHeadlessState,
+  parseWorldXml,
+  queryEntities,
+} from 'vibegame/cli';
 import { DefaultPlugins } from 'vibegame/defaults';
 import { InputState } from 'vibegame/input';
 import { Body, CharacterController, CharacterMovement } from 'vibegame/physics';
@@ -15,12 +19,15 @@ describe('E2E: Player Jump Mechanics', () => {
   });
 
   it('should not jump automatically on startup', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 0 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
         collider="shape: box; size: 20 1 20" />
-    `);
+    `
+    );
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
@@ -57,12 +64,15 @@ describe('E2E: Player Jump Mechanics', () => {
   });
 
   it('should jump once and land properly', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 0 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
         collider="shape: box; size: 20 1 20" />
-    `);
+    `
+    );
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
@@ -118,12 +128,15 @@ describe('E2E: Player Jump Mechanics', () => {
   });
 
   it('should allow multiple consecutive jumps with proper timing', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 0 0"
         renderer="shape: box; size: 50 1 50; color: 0x90ee90"
         collider="shape: box; size: 50 1 50" />
-    `);
+    `
+    );
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
@@ -226,12 +239,15 @@ describe('E2E: Player Jump Mechanics', () => {
   });
 
   it('should respect jump cooldown timing', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 0 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
         collider="shape: box; size: 20 1 20" />
-    `);
+    `
+    );
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 

@@ -1,16 +1,11 @@
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { defineQuery } from 'bitecs';
-import type { State } from '../core';
+import type { State, ScreenCoordinate } from '../core';
 import { MainCamera } from '../plugins/rendering/components';
 import { CameraProjection } from '../plugins/rendering/utils';
 import { WorldTransform } from '../plugins/transforms/components';
 
-export interface ScreenCoordinate {
-  x: number;
-  y: number;
-  z: number;
-  visible: boolean;
-}
+export type { ScreenCoordinate };
 
 export interface ViewportConfig {
   width?: number;
@@ -110,4 +105,11 @@ export function projectToScreen(
     z: entityPos.z,
     visible: entityPos.z >= -1 && entityPos.z <= 1,
   };
+}
+
+export function createProjector(
+  state: State,
+  viewport?: ViewportConfig
+): (eid: number) => ScreenCoordinate | null {
+  return (eid) => projectToScreen(state, eid, viewport);
 }

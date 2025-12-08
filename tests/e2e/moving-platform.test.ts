@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS } from 'vibegame';
-import { createHeadlessState, parseWorldXml, queryEntities } from 'vibegame/cli';
+import {
+  createHeadlessState,
+  parseWorldXml,
+  queryEntities,
+} from 'vibegame/cli';
 import { DefaultPlugins } from 'vibegame/defaults';
 import { Body, BodyType, CharacterController } from 'vibegame/physics';
-import { Player } from 'vibegame/player';
-import { Transform } from 'vibegame/transforms';
 
 describe('E2E: Moving Platform Character Controller', () => {
   let state: State;
@@ -15,7 +17,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should keep player at rest on stationary kinematic platform (base case)', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -10 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
@@ -25,7 +29,8 @@ describe('E2E: Moving Platform Character Controller', () => {
         body="pos: 0 2 0"
         renderer="shape: box; size: 4 1 4; color: 0xff6600"
         collider="shape: box; size: 4 1 4" />
-    `);
+    `
+    );
 
     let kinematicPlatform: number | undefined;
     const entities = queryEntities(state, 'body');
@@ -80,7 +85,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player downward with kinematic platform using tween', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -10 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
@@ -92,7 +99,8 @@ describe('E2E: Moving Platform Character Controller', () => {
         collider="shape: box; size: 4 1 4">
       </kinematic-part>
       <tween target="platform" attr="body.pos-y" from="5" to="0" duration="2"></tween>
-    `);
+    `
+    );
 
     const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
@@ -173,7 +181,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player upward with kinematic platform using tween', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -5 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
@@ -185,7 +195,8 @@ describe('E2E: Moving Platform Character Controller', () => {
         collider="shape: box; size: 4 1 4">
       </kinematic-part>
       <tween target="platform" attr="body.pos-y" from="0" to="5" duration="2"></tween>
-    `);
+    `
+    );
 
     const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
@@ -244,7 +255,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should handle player on multiple moving platforms', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -10 0"
         renderer="shape: box; size: 50 1 50; color: 0x90ee90"
@@ -263,7 +276,8 @@ describe('E2E: Moving Platform Character Controller', () => {
         collider="shape: box; size: 4 1 4">
       </kinematic-part>
       <tween target="platform2" attr="body.pos-y" from="2" to="6" duration="2"></tween>
-    `);
+    `
+    );
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
@@ -292,7 +306,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player horizontally with kinematic platform using tween', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -10 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
@@ -304,7 +320,8 @@ describe('E2E: Moving Platform Character Controller', () => {
         collider="shape: box; size: 4 1 4">
       </kinematic-part>
       <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
-    `);
+    `
+    );
 
     const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
@@ -363,7 +380,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player diagonally upward with kinematic platform', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -5 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
@@ -376,7 +395,8 @@ describe('E2E: Moving Platform Character Controller', () => {
       </kinematic-part>
       <tween target="platform" attr="body.pos-y" from="0" to="5" duration="2"></tween>
       <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
-    `);
+    `
+    );
 
     const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
@@ -482,7 +502,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should move player diagonally downward with kinematic platform', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -10 0"
         renderer="shape: box; size: 20 1 20; color: 0x90ee90"
@@ -495,7 +517,8 @@ describe('E2E: Moving Platform Character Controller', () => {
       </kinematic-part>
       <tween target="platform" attr="body.pos-x" from="0" to="5" duration="2"></tween>
       <tween target="platform" attr="body.pos-y" from="5" to="2" duration="2"></tween>
-    `);
+    `
+    );
 
     const platforms = queryEntities(state, 'body').filter(
       (ent) => Body.type[ent] === BodyType.KinematicVelocityBased
@@ -585,7 +608,9 @@ describe('E2E: Moving Platform Character Controller', () => {
   });
 
   it('should handle platform moving with ping-pong loop', () => {
-    parseWorldXml(state, `
+    parseWorldXml(
+      state,
+      `
       <static-part
         body="pos: 0 -5 0"
         renderer="shape: box; size: 30 1 30; color: 0x90ee90"
@@ -597,7 +622,8 @@ describe('E2E: Moving Platform Character Controller', () => {
         collider="shape: box; size: 6 1 6">
       </kinematic-part>
       <tween target="platform" attr="body.pos-y" from="0" to="4" duration="1"></tween>
-    `);
+    `
+    );
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 

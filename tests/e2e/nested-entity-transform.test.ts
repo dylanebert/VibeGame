@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { State, TIME_CONSTANTS } from 'vibegame';
-import { createHeadlessState, parseWorldXml, queryEntities } from 'vibegame/cli';
+import {
+  createHeadlessState,
+  parseWorldXml,
+  queryEntities,
+} from 'vibegame/cli';
 import { DefaultPlugins } from 'vibegame/defaults';
 import { Parent, Transform, WorldTransform } from 'vibegame/transforms';
 

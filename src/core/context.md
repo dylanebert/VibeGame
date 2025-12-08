@@ -13,6 +13,9 @@ ECS foundation: State management, XML parsing, plugin architecture, scheduling.
 <!-- LLM:REFERENCE -->
 ### State Class
 
+**Constructor**
+- `new State(options?)` - `{ headless?: boolean }`
+
 **Entity Management**
 - `createEntity(): number`
 - `destroyEntity(eid)`, `exists(eid): boolean`
@@ -31,6 +34,7 @@ ECS foundation: State management, XML parsing, plugin architecture, scheduling.
 **Runtime**
 - `step(deltaTime?)`, `dispose()`
 - `time.deltaTime`, `time.fixedDeltaTime`, `time.elapsed`
+- `snapshot(options?)` - `{ entities?, components?, includeSequences?, project? }`
 
 ### Types
 

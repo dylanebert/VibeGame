@@ -140,12 +140,20 @@ export function getEntityData(
   return result;
 }
 
+interface ScreenCoordinate {
+  x: number;
+  y: number;
+  z: number;
+  visible: boolean;
+}
+
 export function toJSON(snapshot: {
   elapsed: number;
   entities: Array<{
     eid: number;
     name?: string;
     components: Record<string, Record<string, number>>;
+    screen?: ScreenCoordinate;
   }>;
   sequences?: SequenceInfo[];
 }): string {
@@ -153,7 +161,11 @@ export function toJSON(snapshot: {
     elapsed: number;
     entities: Record<
       string,
-      { eid: number; components: Record<string, Record<string, number>> }
+      {
+        eid: number;
+        components: Record<string, Record<string, number>>;
+        screen?: ScreenCoordinate;
+      }
     >;
     sequences?: Record<
       string,
@@ -169,6 +181,7 @@ export function toJSON(snapshot: {
     result.entities[key] = {
       eid: entity.eid,
       components: entity.components,
+      screen: entity.screen,
     };
   }
 

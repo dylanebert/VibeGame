@@ -45,13 +45,14 @@ export class State {
   private readonly entityNames = new Map<string, number>();
   private isDisposed = false;
 
-  constructor() {
+  constructor(options?: { headless?: boolean }) {
     this.world = createWorld();
     this.time = {
       deltaTime: 0,
       fixedDeltaTime: TIME_CONSTANTS.FIXED_TIMESTEP,
       elapsed: 0,
     };
+    this.headless = options?.headless ?? false;
 
     this.registerComponent('parent', Parent);
     this.registerRecipe({

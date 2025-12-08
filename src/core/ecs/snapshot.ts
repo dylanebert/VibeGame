@@ -5,6 +5,7 @@ export interface SnapshotOptions {
   entities?: string[];
   components?: string[];
   includeSequences?: boolean;
+  project?: (eid: number) => ScreenCoordinate | null;
 }
 
 export interface SequenceSnapshot {
@@ -16,10 +17,18 @@ export interface SequenceSnapshot {
   progress: number;
 }
 
+export interface ScreenCoordinate {
+  x: number;
+  y: number;
+  z: number;
+  visible: boolean;
+}
+
 export interface EntitySnapshot {
   eid: number;
   name?: string;
   components: Record<string, Record<string, number>>;
+  screen?: ScreenCoordinate;
 }
 
 export interface WorldSnapshot {
@@ -105,6 +114,13 @@ export function createSnapshot(
     if (b.name) return 1;
     return a.eid - b.eid;
   });
+
+  if (options?.project) {
+    for (const entity of entities) {
+      const screen = options.project(entity.eid);
+      if (screen) entity.screen = screen;
+    }
+  }
 
   const result: WorldSnapshot = {
     elapsed: state.time.elapsed,
