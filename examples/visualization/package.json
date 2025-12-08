@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "inspect": "bun run src/inspect.ts"
   },
   "devDependencies": {
     "vite": "^5.4.10"

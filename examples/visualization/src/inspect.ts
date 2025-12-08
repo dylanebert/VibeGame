@@ -56,6 +56,7 @@ async function main() {
   console.log('Sequences:', seqs.map((s) => s.name));
 
   state.step(0);
+  state.step(0);
   console.log('=== Initial State ===');
   console.log(
     toJSON(
