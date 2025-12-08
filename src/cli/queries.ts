@@ -149,7 +149,7 @@ export function toJSON(snapshot: WorldSnapshot): string {
       {
         eid: number;
         components: Record<string, Record<string, number>>;
-        screen?: { x: number; y: number; z: number; visible: boolean };
+        viewport?: { x: number; y: number; z: number; visible: boolean };
       }
     >;
     sequences?: Record<
@@ -166,7 +166,7 @@ export function toJSON(snapshot: WorldSnapshot): string {
     result.entities[key] = {
       eid: entity.eid,
       components: entity.components,
-      screen: entity.screen,
+      viewport: entity.viewport,
     };
   }
 

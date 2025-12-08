@@ -25,7 +25,7 @@ export {
 export { createSnapshot, formatSnapshot } from './snapshot';
 export type {
   EntitySnapshot,
-  ScreenCoordinate,
+  ViewportCoordinate,
   SequenceSnapshot,
   SnapshotOptions,
   WorldSnapshot,

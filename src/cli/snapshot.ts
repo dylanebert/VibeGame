@@ -10,7 +10,6 @@ export interface SnapshotOptions {
   components?: string[];
   sequences?: boolean;
   project?: boolean;
-  viewport?: { width: number; height: number };
 }
 
 export interface SequenceSnapshot {
@@ -22,7 +21,7 @@ export interface SequenceSnapshot {
   progress: number;
 }
 
-export interface ScreenCoordinate {
+export interface ViewportCoordinate {
   x: number;
   y: number;
   z: number;
@@ -33,7 +32,7 @@ export interface EntitySnapshot {
   eid: number;
   name?: string;
   components: Record<string, Record<string, number>>;
-  screen?: ScreenCoordinate;
+  viewport?: ViewportCoordinate;
 }
 
 export interface WorldSnapshot {
@@ -49,8 +48,6 @@ type ComponentField =
   | Uint16Array
   | Uint32Array;
 
-const DEFAULT_WIDTH = 1920;
-const DEFAULT_HEIGHT = 1080;
 const NEAR = 0.1;
 const FAR = 1000;
 
@@ -85,19 +82,17 @@ function getComponentFields(
   return fields;
 }
 
-function projectToScreen(
+function projectToViewport(
   state: State,
   cameraEid: number,
-  entityId: number,
-  width: number,
-  height: number
-): ScreenCoordinate | null {
+  entityId: number
+): ViewportCoordinate | null {
   const worldTransform = state.getComponent('world-transform');
   if (!worldTransform || !state.hasComponent(entityId, worldTransform)) {
     return null;
   }
 
-  const aspect = width / height;
+  const aspect = 16 / 9;
 
   position.set(
     WorldTransform.posX[cameraEid],
@@ -150,8 +145,8 @@ function projectToScreen(
   entityPos.applyMatrix4(projectionMatrix);
 
   return {
-    x: ((entityPos.x + 1) / 2) * width,
-    y: ((1 - entityPos.y) / 2) * height,
+    x: (entityPos.x + 1) / 2,
+    y: (1 - entityPos.y) / 2,
     z: entityPos.z,
     visible: entityPos.z >= -1 && entityPos.z <= 1,
   };
@@ -211,21 +206,13 @@ export function createSnapshot(
   if (shouldProject) {
     const cameras = cameraQuery(state.world);
     if (cameras.length === 0) {
-      throw new Error('No camera found in state for screen projection');
+      throw new Error('No camera found for viewport projection');
     }
     const cameraEid = cameras[0];
-    const width = options?.viewport?.width ?? DEFAULT_WIDTH;
-    const height = options?.viewport?.height ?? DEFAULT_HEIGHT;
 
     for (const entity of entities) {
-      const screen = projectToScreen(
-        state,
-        cameraEid,
-        entity.eid,
-        width,
-        height
-      );
-      if (screen) entity.screen = screen;
+      const coord = projectToViewport(state, cameraEid, entity.eid);
+      if (coord) entity.viewport = coord;
     }
   }
 

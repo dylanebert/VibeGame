@@ -11,14 +11,14 @@ cli/
 ├── context.md
 ├── index.ts       # Public exports
 ├── headless.ts    # Headless state creation
-├── snapshot.ts    # World snapshot with screen projection
+├── snapshot.ts    # World snapshot with viewport projection
 ├── queries.ts     # Entity/sequence query utilities
 └── text.ts        # Typr.js text measurement
 ```
 
 ## Scope
 
-- **In-scope**: Headless state, XML parsing, DOM polyfills, text measurement, entity discovery, sequence inspection, world snapshots, screen-space projection
+- **In-scope**: Headless state, XML parsing, DOM polyfills, text measurement, entity discovery, sequence inspection, world snapshots, viewport projection
 - **Out-of-scope**: Rendering, WebGL, browser-only features
 
 ## Dependencies
@@ -62,10 +62,9 @@ Options:
 - `entities?: string[]` - Filter by entity names
 - `components?: string[]` - Filter by component names
 - `sequences?: boolean` - Include sequence state
-- `project?: boolean` - Include screen projection (default: true, requires camera)
-- `viewport?: { width, height }` - Custom viewport (default: 1920x1080)
+- `project?: boolean` - Include viewport projection (default: true, requires camera)
 
-Screen coordinates: `{ x, y, z, visible }` - (0,0) top-left, z is NDC depth, visible true when in front of camera.
+Viewport coordinates: `{ x, y, z, visible }` - normalized 0-1 range, (0,0) top-left, z is NDC depth, visible true when in front of camera.
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -88,7 +87,7 @@ parseWorldXml(state, xmlContent);
 const names = getEntityNames(state);
 const sequences = getAllSequences(state);
 
-// Step and snapshot (screen projection included by default)
+// Step and snapshot (viewport projection included by default)
 state.step(0);
 console.log(toJSON(createSnapshot(state, { entities: names })));
 
