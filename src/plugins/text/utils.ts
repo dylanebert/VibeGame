@@ -85,7 +85,18 @@ export function measureText(
   const textMesh = context.textMeshes.get(entity);
 
   if (!textMesh) {
-    console.warn(`measureText: No text mesh found for entity ${entity}`);
+    if (context.measureFn) {
+      const text = context.textContent.get(entity) || '';
+      const fontSize = Word.fontSize[entity];
+      const width = context.measureFn(text, fontSize);
+      const height = fontSize;
+      callback({
+        width,
+        height,
+        blockBounds: [0, 0, width, height],
+        visibleBounds: [0, 0, width, height],
+      });
+    }
     return;
   }
 
