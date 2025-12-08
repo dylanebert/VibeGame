@@ -18,7 +18,7 @@ describe('Viewport Projection', () => {
     state.registerPlugin(RenderingPlugin);
   });
 
-  it('throws when no camera exists and project is true', () => {
+  it('skips viewport projection gracefully when no camera exists', () => {
     const xml =
       '<root><entity name="cube" transform="pos: 0 0 -10"></entity></root>';
     const parsed = XMLParser.parse(xml);
@@ -26,9 +26,9 @@ describe('Viewport Projection', () => {
 
     state.step(TIME_CONSTANTS.FIXED_TIMESTEP);
 
-    expect(() => createSnapshot(state, { entities: ['cube'] })).toThrow(
-      'No camera found'
-    );
+    const snapshot = createSnapshot(state, { entities: ['cube'] });
+    expect(snapshot.entities).toHaveLength(1);
+    expect(snapshot.entities[0].viewport).toBeUndefined();
   });
 
   it('succeeds without camera when project is false', () => {

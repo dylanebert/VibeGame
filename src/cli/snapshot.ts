@@ -10,6 +10,8 @@ export interface SnapshotOptions {
   components?: string[];
   sequences?: boolean;
   project?: boolean;
+  detail?: 'brief' | 'standard' | 'full';
+  precision?: number;
 }
 
 export interface SequenceSnapshot {
@@ -33,12 +35,20 @@ export interface EntitySnapshot {
   name?: string;
   components: Record<string, Record<string, number>>;
   viewport?: ViewportCoordinate;
+  summary?: string;
+}
+
+export interface SnapshotHint {
+  type: 'warning' | 'info' | 'sequence';
+  entity?: string;
+  message: string;
 }
 
 export interface WorldSnapshot {
   elapsed: number;
   entities: EntitySnapshot[];
   sequences?: SequenceSnapshot[];
+  hints?: SnapshotHint[];
 }
 
 type ComponentField =
@@ -50,6 +60,34 @@ type ComponentField =
 
 const NEAR = 0.1;
 const FAR = 1000;
+const DEFAULT_PRECISION = 2;
+
+const INTERNAL_COMPONENTS = new Set([
+  'world-transform',
+  'parent',
+  'children',
+  'mesh-ref',
+  'scene-ref',
+]);
+
+const TRANSFORM_COMPONENTS = new Set(['transform', 'world-transform']);
+
+function truncate(value: number, precision: number): number {
+  if (Number.isInteger(value)) return value;
+  const factor = Math.pow(10, precision);
+  return Math.round(value * factor) / factor;
+}
+
+function truncateFields(
+  fields: Record<string, number>,
+  precision: number
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    result[key] = truncate(value, precision);
+  }
+  return result;
+}
 
 const cameraQuery = defineQuery([MainCamera, WorldTransform]);
 
@@ -152,10 +190,74 @@ function projectToViewport(
   };
 }
 
+function generateHints(
+  entities: EntitySnapshot[],
+  sequences?: SequenceSnapshot[]
+): SnapshotHint[] {
+  const hints: SnapshotHint[] = [];
+
+  for (const entity of entities) {
+    if (!entity.name || !entity.viewport) continue;
+
+    const { x, y, visible } = entity.viewport;
+
+    if (!visible) {
+      hints.push({
+        type: 'warning',
+        entity: entity.name,
+        message: `'${entity.name}' behind camera`,
+      });
+    } else if (x < 0.05 || x > 0.95 || y < 0.05 || y > 0.95) {
+      const edge =
+        x < 0.05 ? 'left' : x > 0.95 ? 'right' : y < 0.05 ? 'top' : 'bottom';
+      hints.push({
+        type: 'warning',
+        entity: entity.name,
+        message: `'${entity.name}' near ${edge} edge`,
+      });
+    }
+  }
+
+  if (sequences) {
+    for (const seq of sequences) {
+      if (seq.state === 'playing') {
+        const pct = Math.round(seq.progress * 100);
+        hints.push({
+          type: 'sequence',
+          entity: seq.name,
+          message: `'${seq.name}' playing (${pct}%)`,
+        });
+      } else if (seq.progress > 0.9 && seq.progress < 1) {
+        hints.push({
+          type: 'info',
+          entity: seq.name,
+          message: `'${seq.name}' nearly complete`,
+        });
+      }
+    }
+  }
+
+  return hints;
+}
+
+function shouldIncludeComponent(
+  componentName: string,
+  detail: 'brief' | 'standard' | 'full'
+): boolean {
+  if (detail === 'full') return true;
+  if (INTERNAL_COMPONENTS.has(componentName)) return false;
+  if (detail === 'brief') {
+    return TRANSFORM_COMPONENTS.has(componentName);
+  }
+  return true;
+}
+
 export function createSnapshot(
   state: State,
   options?: SnapshotOptions
 ): WorldSnapshot {
+  const detail = options?.detail ?? 'standard';
+  const precision = options?.precision ?? DEFAULT_PRECISION;
   const entityMap = new Map<number, EntitySnapshot>();
   const nameFilter = options?.entities ? new Set(options.entities) : null;
   const componentFilter = options?.components
@@ -167,6 +269,8 @@ export function createSnapshot(
   for (const [name, eid] of entityNames) {
     nameByEid.set(eid, name);
   }
+
+  const componentSummaries = new Map<number, string[]>();
 
   for (const componentName of state.getComponentNames()) {
     if (componentFilter && !componentFilter.has(componentName)) continue;
@@ -180,6 +284,7 @@ export function createSnapshot(
     for (const eid of entities) {
       const entityName = nameByEid.get(eid);
 
+      if (detail !== 'full' && !entityName) continue;
       if (nameFilter && (!entityName || !nameFilter.has(entityName))) continue;
 
       if (!entityMap.has(eid)) {
@@ -188,10 +293,25 @@ export function createSnapshot(
           name: entityName,
           components: {},
         });
+        componentSummaries.set(eid, []);
       }
 
-      const snapshot = entityMap.get(eid)!;
-      snapshot.components[componentName] = getComponentFields(component, eid);
+      componentSummaries.get(eid)!.push(componentName);
+
+      if (shouldIncludeComponent(componentName, detail)) {
+        const snapshot = entityMap.get(eid)!;
+        const fields = getComponentFields(component, eid);
+        snapshot.components[componentName] = truncateFields(fields, precision);
+      }
+    }
+  }
+
+  for (const [eid, names] of componentSummaries) {
+    const entity = entityMap.get(eid);
+    if (entity && detail === 'brief') {
+      entity.summary = names
+        .filter((n) => !INTERNAL_COMPONENTS.has(n))
+        .join(', ');
     }
   }
 
@@ -205,23 +325,34 @@ export function createSnapshot(
   const shouldProject = options?.project ?? true;
   if (shouldProject) {
     const cameras = cameraQuery(state.world);
-    if (cameras.length === 0) {
-      throw new Error('No camera found for viewport projection');
-    }
-    const cameraEid = cameras[0];
-
-    for (const entity of entities) {
-      const coord = projectToViewport(state, cameraEid, entity.eid);
-      if (coord) entity.viewport = coord;
+    if (cameras.length > 0) {
+      const cameraEid = cameras[0];
+      for (const entity of entities) {
+        if (entity.eid === cameraEid) continue;
+        const coord = projectToViewport(state, cameraEid, entity.eid);
+        if (
+          coord &&
+          isFinite(coord.x) &&
+          isFinite(coord.y) &&
+          isFinite(coord.z)
+        ) {
+          entity.viewport = {
+            x: truncate(coord.x, precision),
+            y: truncate(coord.y, precision),
+            z: truncate(coord.z, precision),
+            visible: coord.visible,
+          };
+        }
+      }
     }
   }
 
   const result: WorldSnapshot = {
-    elapsed: state.time.elapsed,
+    elapsed: truncate(state.time.elapsed, precision),
     entities,
   };
 
-  if (options?.sequences) {
+  if (options?.sequences !== false) {
     const sequenceComponent = state.getComponent('sequence');
     if (sequenceComponent) {
       const query = defineQuery([sequenceComponent]);
@@ -231,19 +362,23 @@ export function createSnapshot(
       for (const eid of seqEntities) {
         const fields = getComponentFields(sequenceComponent, eid);
         const itemCount = fields.itemCount ?? 0;
+        const progress =
+          itemCount > 0 ? (fields.currentIndex ?? 0) / itemCount : 0;
         sequences.push({
           name: nameByEid.get(eid) ?? `eid-${eid}`,
           eid,
           state: fields.state === 1 ? 'playing' : 'idle',
           currentIndex: fields.currentIndex ?? 0,
           itemCount,
-          progress: itemCount > 0 ? (fields.currentIndex ?? 0) / itemCount : 0,
+          progress: truncate(progress, precision),
         });
       }
 
       result.sequences = sequences.sort((a, b) => a.name.localeCompare(b.name));
     }
   }
+
+  result.hints = generateHints(entities, result.sequences);
 
   return result;
 }

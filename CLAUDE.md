@@ -30,3 +30,25 @@ VibeGame - A vibe coding game engine using an ECS architecture with bitECS, feat
 
 - **Inputs & secrets**: Validate inputs; secrets only in env; never log sensitive data
 - **Auth**: Gateway auth; server-side token validation; sanitize inputs
+
+## Vibe Development Workflow
+
+The CLI module (`vibegame/cli`) enables AI-assisted development by providing headless world inspection.
+
+### Inspect Before Acting
+Use CLI snapshots to understand world state before making changes:
+```typescript
+import { createSnapshot, toJSON } from 'vibegame/cli';
+console.log(toJSON(createSnapshot(state)));
+```
+
+### Iterate Small
+Request minimal changes, test with snapshot after each step. Start with `detail: 'standard'`, drill down to `detail: 'full'` only when debugging.
+
+### Use Hints
+CLI snapshots include contextual hints (playing sequences, entities near screen edges, etc.) to guide attention to relevant state.
+
+### Detail Levels
+- **brief**: Entity names and summaries only
+- **standard** (default): Key component values, no internal components
+- **full**: All data including internal transforms and unnamed entities

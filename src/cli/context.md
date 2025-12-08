@@ -54,17 +54,23 @@ cli/
 
 ### Snapshot
 
-- `createSnapshot(state, options?)` - Creates world snapshot with entity/component data
+- `createSnapshot(state, options?)` - Creates world snapshot
 - `formatSnapshot(snapshot)` - Human-readable text format
-- `toJSON(snapshot)` - Structured JSON for AI parsing
+- `toJSON(snapshot, options?)` - Structured JSON output
 
-Options:
+SnapshotOptions:
 - `entities?: string[]` - Filter by entity names
 - `components?: string[]` - Filter by component names
-- `sequences?: boolean` - Include sequence state
-- `project?: boolean` - Include viewport projection (default: true, requires camera)
+- `sequences?: boolean` - Include sequence state (default: true)
+- `project?: boolean` - Include viewport projection (default: true)
+- `detail?: 'brief' | 'standard' | 'full'` - Output verbosity (default: 'standard')
+- `precision?: number` - Decimal places for floats (default: 2)
 
-Viewport coordinates: `{ x, y, z, visible }` - normalized 0-1 range, (0,0) top-left, z is NDC depth, visible true when in front of camera.
+ToJSONOptions:
+- `compact?: boolean` - Omit indentation
+
+Viewport: `{ x, y, z, visible }` - normalized 0-1, (0,0) top-left.
+Hints: `{ type, entity?, message }` - contextual warnings/info.
 <!-- /LLM:REFERENCE -->
 
 <!-- LLM:EXAMPLES -->
@@ -100,3 +106,64 @@ for (let i = 0; i < 60; i++) state.step(1/60);
 state.dispose();
 ```
 <!-- /LLM:EXAMPLES -->
+
+## AI Usage Patterns
+
+### Quick State Check (Default)
+```typescript
+// Brief overview with hints - start here
+toJSON(createSnapshot(state))
+```
+
+Output includes: named entities, sequence states, viewport positions, contextual hints. Floats truncated to 2 decimals.
+
+### Detail Tiers
+
+| Tier | Use Case | What's Included |
+|------|----------|-----------------|
+| `brief` | Quick context | Entity names, summaries, viewport, sequences, hints |
+| `standard` | Debugging | Above + key component values (no internal components) |
+| `full` | Deep inspection | All components including internal, unnamed entities |
+
+```typescript
+// Standard (default) - component values visible
+toJSON(createSnapshot(state, { detail: 'standard' }))
+
+// Full - includes world-transform, parent/children, unnamed entities
+toJSON(createSnapshot(state, { detail: 'full' }))
+```
+
+### Debug Specific Entity
+```typescript
+toJSON(createSnapshot(state, {
+  entities: ['player'],
+  detail: 'full',
+  precision: 4
+}))
+```
+
+### Track Sequence Progress
+```typescript
+getAllSequences(state) // All sequences with state/progress
+getSequenceInfo(state, 'intro') // Single sequence details
+```
+
+### Hints System
+
+Snapshots include contextual hints to guide attention:
+
+| Hint Type | Trigger | Example |
+|-----------|---------|---------|
+| `warning` | Entity behind camera | `'player' behind camera` |
+| `warning` | Entity near screen edge | `'enemy' near right edge` |
+| `sequence` | Sequence playing | `'intro' playing (45%)` |
+| `info` | Sequence nearly done | `'intro' nearly complete` |
+
+### Precision Control
+
+Default precision is 2 decimal places. Override when needed:
+
+```typescript
+createSnapshot(state, { precision: 0 }) // Integers only
+createSnapshot(state, { precision: 4 }) // High precision for debugging
+```

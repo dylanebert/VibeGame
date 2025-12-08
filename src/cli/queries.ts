@@ -141,7 +141,14 @@ export function getEntityData(
   return result;
 }
 
-export function toJSON(snapshot: WorldSnapshot): string {
+export interface ToJSONOptions {
+  compact?: boolean;
+}
+
+export function toJSON(
+  snapshot: WorldSnapshot,
+  options?: ToJSONOptions
+): string {
   const result: {
     elapsed: number;
     entities: Record<
@@ -150,12 +157,14 @@ export function toJSON(snapshot: WorldSnapshot): string {
         eid: number;
         components: Record<string, Record<string, number>>;
         viewport?: { x: number; y: number; z: number; visible: boolean };
+        summary?: string;
       }
     >;
     sequences?: Record<
       string,
       { eid: number; state: string; progress: number; itemCount: number }
     >;
+    hints?: Array<{ type: string; entity?: string; message: string }>;
   } = {
     elapsed: snapshot.elapsed,
     entities: {},
@@ -163,14 +172,16 @@ export function toJSON(snapshot: WorldSnapshot): string {
 
   for (const entity of snapshot.entities) {
     const key = entity.name ?? `eid-${entity.eid}`;
-    result.entities[key] = {
+    const entry: (typeof result.entities)[string] = {
       eid: entity.eid,
       components: entity.components,
-      viewport: entity.viewport,
     };
+    if (entity.viewport) entry.viewport = entity.viewport;
+    if (entity.summary) entry.summary = entity.summary;
+    result.entities[key] = entry;
   }
 
-  if (snapshot.sequences) {
+  if (snapshot.sequences && snapshot.sequences.length > 0) {
     result.sequences = {};
     for (const seq of snapshot.sequences) {
       result.sequences[seq.name] = {
@@ -182,5 +193,10 @@ export function toJSON(snapshot: WorldSnapshot): string {
     }
   }
 
-  return JSON.stringify(result, null, 2);
+  if (snapshot.hints && snapshot.hints.length > 0) {
+    result.hints = snapshot.hints;
+  }
+
+  const indent = options?.compact ? undefined : 2;
+  return JSON.stringify(result, null, indent);
 }

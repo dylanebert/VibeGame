@@ -14,7 +14,7 @@ export {
   queryEntities,
   toJSON,
 } from './queries';
-export type { SequenceInfo } from './queries';
+export type { SequenceInfo, ToJSONOptions } from './queries';
 export {
   createMeasureFn,
   loadFont,
@@ -27,6 +27,7 @@ export type {
   EntitySnapshot,
   ViewportCoordinate,
   SequenceSnapshot,
+  SnapshotHint,
   SnapshotOptions,
   WorldSnapshot,
 } from './snapshot';

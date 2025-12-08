@@ -30,6 +30,8 @@ function getModuleName(filePath) {
   if (parts[0] === 'src') {
     if (parts[1] === 'core') {
       return 'core';
+    } else if (parts[1] === 'cli') {
+      return 'cli';
     } else if (parts[1] === 'plugins' && parts[2]) {
       return parts[2];
     }
