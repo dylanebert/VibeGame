@@ -20,15 +20,23 @@ function ensureDom(): void {
 }
 
 function normalizeBooleanAttributes(html: string): string {
-  return html.replace(
-    /<([a-z-]+)([^>]*?)(\s+)([a-z-]+)(?=\s*>|\s+[a-z])/gi,
-    (match, tag, before, space, attr) => {
-      if (before.includes(`${attr}=`) || before.includes(`${attr} =`)) {
-        return match;
+  return html.replace(/<([a-z-]+)((?:\s+[^>]*?)?)>/gi, (match, tag, attrs) => {
+    if (!attrs) return match;
+
+    const normalized = attrs.replace(
+      /(\s+)([a-z-]+)(?=\s*$|\s+[a-z-]+=|\s+[a-z-]+\s*$|\s*>)/gi,
+      (attrMatch: string, space: string, attr: string, offset: number) => {
+        const before = attrs.substring(0, offset);
+        const doubleQuotes = (before.match(/"/g) || []).length;
+        const singleQuotes = (before.match(/'/g) || []).length;
+        if (doubleQuotes % 2 !== 0 || singleQuotes % 2 !== 0) {
+          return attrMatch;
+        }
+        return `${space}${attr}=""`;
       }
-      return `<${tag}${before}${space}${attr}=""`;
-    }
-  );
+    );
+    return `<${tag}${normalized}>`;
+  });
 }
 
 export interface HeadlessOptions {
