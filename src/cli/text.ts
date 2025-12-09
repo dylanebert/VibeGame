@@ -5,9 +5,24 @@ import { setMeasureFn, type MeasureFn } from '../plugins/text';
 
 export type { Font };
 
+function withSuppressedTyprWarnings<T>(fn: () => T): T {
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].startsWith('unsupported G')) {
+      return;
+    }
+    originalWarn.apply(console, args);
+  };
+  try {
+    return fn();
+  } finally {
+    console.warn = originalWarn;
+  }
+}
+
 export async function loadFont(path: string): Promise<Font> {
   const buffer = await readFile(path);
-  return new Font(buffer.buffer as ArrayBuffer);
+  return withSuppressedTyprWarnings(() => new Font(buffer.buffer as ArrayBuffer));
 }
 
 export function measureTextWidth(
@@ -15,25 +30,27 @@ export function measureTextWidth(
   text: string,
   fontSize: number
 ): number {
-  if (!text || !font.hmtx || !font.head) return 0;
+  return withSuppressedTyprWarnings(() => {
+    if (!text || !font.hmtx || !font.head) return 0;
 
-  const glyphs = font.stringToGlyphs(text);
-  let totalAdvance = 0;
+    const glyphs = font.stringToGlyphs(text);
+    let totalAdvance = 0;
 
-  for (let i = 0; i < glyphs.length; i++) {
-    const gid = glyphs[i];
-    const advance = font.hmtx.aWidth[gid] ?? 0;
-    totalAdvance += advance;
+    for (let i = 0; i < glyphs.length; i++) {
+      const gid = glyphs[i];
+      const advance = font.hmtx.aWidth[gid] ?? 0;
+      totalAdvance += advance;
 
-    if (i < glyphs.length - 1) {
-      const nextGid = glyphs[i + 1];
-      const kern = font.getPairAdjustment(gid, nextGid);
-      totalAdvance += kern;
+      if (i < glyphs.length - 1) {
+        const nextGid = glyphs[i + 1];
+        const kern = font.getPairAdjustment(gid, nextGid);
+        totalAdvance += kern;
+      }
     }
-  }
 
-  const scale = fontSize / font.head.unitsPerEm;
-  return totalAdvance * scale;
+    const scale = fontSize / font.head.unitsPerEm;
+    return totalAdvance * scale;
+  });
 }
 
 export function createMeasureFn(font: Font): MeasureFn {
