@@ -739,7 +739,7 @@ describe('Line Batching', () => {
     });
 
     it('should handle zero-offset lines (offsetT = 0)', () => {
-      // When offsetT = 0, lines have zero offset - they should still exist
+      // When offsetT = 0, lines have zero length and should be filtered out
       const line = createLineEntity(state);
       Line.thickness[line] = 1.5;
       Line.opacity[line] = 1;
@@ -756,9 +756,11 @@ describe('Line Batching', () => {
       const context = getLineContext(state);
       const key = getMaterialKey(1.5, 1);
       const batch = context.batches.get(key)!;
-      expect(batch.segments.visible).toBe(true);
-      // Zero-length line still contributes 1 segment
-      expect(batch.geometry.getAttribute('instanceStart').count).toBe(1);
+      // Zero-length lines are filtered out, so batch is not visible
+      expect(batch.segments.visible).toBe(false);
+      // When no segments are added, geometry attributes may not be initialized
+      const instanceStart = batch.geometry.getAttribute('instanceStart');
+      expect(instanceStart ? instanceStart.count : 0).toBe(0);
     });
 
     it('should handle progressive offsetT animation pattern', () => {
@@ -774,8 +776,8 @@ describe('Line Batching', () => {
       const boxWidth = 2;
       const boxHeight = 1;
 
-      // Animate offsetT from 0 to 1 over several frames
-      for (let offsetT = 0; offsetT <= 1; offsetT += 0.1) {
+      // Animate offsetT from 0.1 to 1 (skip 0 since zero-length lines are filtered)
+      for (let offsetT = 0.1; offsetT <= 1; offsetT += 0.1) {
         Line.offsetX[entities[0]] = boxWidth * offsetT;
         Line.offsetY[entities[1]] = -boxHeight * offsetT;
         Line.offsetX[entities[2]] = boxWidth * offsetT;

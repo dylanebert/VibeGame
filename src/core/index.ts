@@ -12,7 +12,16 @@ export {
   type IWorld,
 } from 'bitecs';
 
-export { NULL_ENTITY, Parent, State, TIME_CONSTANTS } from './ecs';
+export {
+  ComponentRegistry,
+  EntityRegistry,
+  NULL_ENTITY,
+  Parent,
+  RecipeRegistry,
+  State,
+  SystemRegistry,
+  TIME_CONSTANTS,
+} from './ecs';
 export type {
   Adapter,
   ComponentDefaults,

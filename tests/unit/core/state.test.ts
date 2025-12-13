@@ -167,3 +167,124 @@ describe('State', () => {
     expect(TestWithDefaults.scale[entity]).toBe(1);
   });
 });
+
+describe('State Registry Integration', () => {
+  let state: State;
+
+  beforeEach(() => {
+    state = new State();
+  });
+
+  describe('backward compatibility', () => {
+    it('should maintain component registration API', () => {
+      const TestComp = defineComponent({ value: Types.f32 });
+      state.registerComponent('test-component', TestComp);
+
+      expect(state.getComponent('test-component')).toBe(TestComp);
+      expect(state.getComponentNames()).toContain('test-component');
+    });
+
+    it('should maintain entity naming API', () => {
+      const entity = state.createEntity();
+      state.setEntityName('player', entity);
+
+      expect(state.getEntityByName('player')).toBe(entity);
+      expect(state.getEntityName(entity)).toBe('player');
+      expect(state.getNamedEntities().get('player')).toBe(entity);
+    });
+
+    it('should maintain recipe registration API', () => {
+      const recipe = { name: 'box', components: ['transform'] };
+      state.registerRecipe(recipe);
+
+      expect(state.getRecipe('box')).toBe(recipe);
+      expect(state.hasRecipe('box')).toBe(true);
+      expect(state.getRecipeNames().has('box')).toBe(true);
+    });
+
+    it('should maintain system registration API', () => {
+      const system = {
+        group: 'simulation' as const,
+        update: () => {},
+      };
+      state.registerSystem(system);
+
+      expect(state.systems.has(system)).toBe(true);
+      expect(state.systems.size).toBe(1);
+
+      const array = Array.from(state.systems);
+      expect(array).toContain(system);
+    });
+
+    it('should support Scheduler access pattern', () => {
+      const system1 = { group: 'simulation' as const, update: () => {} };
+      const system2 = { group: 'fixed' as const, update: () => {} };
+
+      state.registerSystem(system1);
+      state.registerSystem(system2);
+
+      // Scheduler relies on state.systems.size
+      expect(state.systems.size).toBe(2);
+
+      // Scheduler relies on Array.from(state.systems)
+      const allSystems = Array.from(state.systems);
+      expect(allSystems).toContain(system1);
+      expect(allSystems).toContain(system2);
+    });
+  });
+
+  describe('O(1) performance improvements', () => {
+    it('should perform component reverse lookup in O(1) time', () => {
+      const components = [];
+      for (let i = 0; i < 1000; i++) {
+        const comp = defineComponent({ val: Types.f32 });
+        state.registerComponent(`comp-${i}`, comp);
+        components.push(comp);
+      }
+
+      const start = performance.now();
+      for (let i = 0; i < 100; i++) {
+        (state as any).getComponentName(components[500]);
+      }
+      const elapsed = performance.now() - start;
+
+      expect(elapsed).toBeLessThan(5);
+    });
+
+    it('should perform entity reverse lookup in O(1) time', () => {
+      for (let i = 0; i < 1000; i++) {
+        const entity = state.createEntity();
+        state.setEntityName(`entity-${i}`, entity);
+      }
+
+      const start = performance.now();
+      for (let i = 0; i < 100; i++) {
+        state.getEntityName(500);
+      }
+      const elapsed = performance.now() - start;
+
+      expect(elapsed).toBeLessThan(5);
+    });
+  });
+
+  describe('plugin registration integration', () => {
+    it('should register plugin components, systems, and recipes', () => {
+      const TestComp = defineComponent({ value: Types.f32 });
+      const testSystem = {
+        group: 'simulation' as const,
+        update: () => {},
+      };
+      const testRecipe = { name: 'test-entity', components: ['test'] };
+
+      state.registerPlugin({
+        components: { TestComponent: TestComp },
+        systems: [testSystem],
+        recipes: [testRecipe],
+      });
+
+      expect(state.getComponent('test-component')).toBe(TestComp);
+      expect(state.systems.has(testSystem)).toBe(true);
+      expect(state.getRecipe('test-entity')).toBe(testRecipe);
+    });
+  });
+});

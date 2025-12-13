@@ -36,7 +36,7 @@ vibegame/
 ├── src/
 │   ├── core/  # Engine foundation
 │   │   ├── context.md  # Core module context
-│   │   ├── ecs/  # ECS scheduler, state, ordering
+│   │   ├── ecs/  # ECS scheduler, state, registries, ordering
 │   │   ├── xml/  # XML parsing and entity creation
 │   │   ├── math/  # Math utilities
 │   │   ├── utils/  # Core utilities

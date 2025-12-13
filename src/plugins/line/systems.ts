@@ -79,7 +79,8 @@ function buildBatchArrays(lines: LineData[]): {
   for (const line of lines) {
     if (!line.visible) continue;
 
-    if (!Number.isFinite(line.startPos.x) || !Number.isFinite(line.endPos.x)) continue;
+    if (!Number.isFinite(line.startPos.x) || !Number.isFinite(line.endPos.x))
+      continue;
 
     const dx = line.endPos.x - line.startPos.x;
     const dy = line.endPos.y - line.startPos.y;
@@ -166,8 +167,8 @@ export const LineSystem: System = {
 
       const unscaledLength = Math.sqrt(
         LineComponent.offsetX[entity] ** 2 +
-        LineComponent.offsetY[entity] ** 2 +
-        LineComponent.offsetZ[entity] ** 2
+          LineComponent.offsetY[entity] ** 2 +
+          LineComponent.offsetZ[entity] ** 2
       );
       const scaledLength = scaledOffset.length();
       const arrowScale = unscaledLength > 0 ? scaledLength / unscaledLength : 1;

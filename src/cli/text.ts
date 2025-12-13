@@ -22,7 +22,9 @@ function withSuppressedTyprWarnings<T>(fn: () => T): T {
 
 export async function loadFont(path: string): Promise<Font> {
   const buffer = await readFile(path);
-  return withSuppressedTyprWarnings(() => new Font(buffer.buffer as ArrayBuffer));
+  return withSuppressedTyprWarnings(
+    () => new Font(buffer.buffer as ArrayBuffer)
+  );
 }
 
 export function measureTextWidth(

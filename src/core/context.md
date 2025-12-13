@@ -48,6 +48,12 @@ ECS foundation: State management, XML parsing, plugin architecture, scheduling.
 **Config**
 - parsers?, defaults?, shorthands?, enums?, validations?, adapters?
 
+### Registries
+- `ComponentRegistry` - Component storage with O(1) reverse lookup
+- `EntityRegistry` - Entity name mapping with O(1) reverse lookup
+- `RecipeRegistry` - Recipe storage
+- `SystemRegistry` - System Set encapsulation
+
 ### bitECS Exports
 - `defineComponent(schema)`, `defineQuery(components[])`
 - `Types` - f32, i32, ui8, eid, etc.

@@ -9,8 +9,11 @@ import {
   type Component,
   type IWorld,
 } from 'bitecs';
-import { toKebabCase } from '../utils/naming';
+import { ComponentRegistry } from './component-registry';
 import { ConfigRegistry } from './config';
+import { EntityRegistry } from './entity-registry';
+import { RecipeRegistry } from './recipe-registry';
+import { SystemRegistry } from './system-registry';
 import { setComponentFields } from './utils';
 import { Parent } from './components';
 import { TIME_CONSTANTS } from './constants';
@@ -30,14 +33,22 @@ export class State {
   public readonly world: IWorld;
   public readonly time: GameTime;
   public readonly scheduler = new Scheduler();
-  public readonly systems = new Set<System>();
   public readonly config = new ConfigRegistry();
   public headless = false;
-  private readonly recipes = new Map<string, Recipe>();
-  private readonly components = new Map<string, Component>();
+  private readonly componentRegistry = new ComponentRegistry();
+  private readonly entityRegistry = new EntityRegistry();
+  private readonly recipeRegistry = new RecipeRegistry();
+  private readonly systemRegistry = new SystemRegistry();
   private readonly plugins: Plugin[] = [];
-  private readonly entityNames = new Map<string, number>();
   private isDisposed = false;
+
+  /**
+   * Get all registered systems as a ReadonlySet for compatibility with Scheduler.
+   * Supports state.systems.size and Array.from(state.systems).
+   */
+  get systems(): ReadonlySet<System> {
+    return this.systemRegistry.getSystems();
+  }
 
   constructor(options?: { headless?: boolean }) {
     this.world = createWorld();
@@ -86,18 +97,15 @@ export class State {
   }
 
   registerSystem(system: System): void {
-    if (!this.systems.has(system)) {
-      this.systems.add(system);
-    }
+    this.systemRegistry.add(system);
   }
 
   registerRecipe(recipe: Recipe): void {
-    this.recipes.set(recipe.name, recipe);
+    this.recipeRegistry.register(recipe);
   }
 
   registerComponent(name: string, component: Component): void {
-    const kebabName = toKebabCase(name);
-    this.components.set(kebabName, component);
+    this.componentRegistry.register(name, component);
   }
 
   registerConfig(config: Config): void {
@@ -109,51 +117,43 @@ export class State {
   }
 
   getRecipe(name: string): Recipe | undefined {
-    return this.recipes.get(name);
+    return this.recipeRegistry.get(name);
   }
 
   getComponent(name: string): Component | undefined {
-    return this.components.get(toKebabCase(name));
+    return this.componentRegistry.get(name);
   }
 
   hasRecipe(name: string): boolean {
-    return this.recipes.has(name);
+    return this.recipeRegistry.has(name);
   }
 
   getRecipeNames(): Set<string> {
-    return new Set(this.recipes.keys());
+    return this.recipeRegistry.getNames();
   }
 
   getComponentNames(): string[] {
-    return Array.from(this.components.keys());
+    return this.componentRegistry.getNames();
   }
 
   setEntityName(name: string, entity: number): void {
-    this.entityNames.set(name, entity);
+    this.entityRegistry.setName(name, entity);
   }
 
   getEntityByName(name: string): number | null {
-    return this.entityNames.get(name) ?? null;
+    return this.entityRegistry.getByName(name);
   }
 
   getEntityName(eid: number): string | undefined {
-    for (const [name, entity] of this.entityNames) {
-      if (entity === eid) return name;
-    }
-    return undefined;
+    return this.entityRegistry.getName(eid);
   }
 
   getNamedEntities(): Map<string, number> {
-    return new Map(this.entityNames);
+    return this.entityRegistry.getAll();
   }
 
   private getComponentName(component: Component): string | undefined {
-    for (const [name, comp] of this.components.entries()) {
-      if (comp === component) {
-        return name;
-      }
-    }
-    return undefined;
+    return this.componentRegistry.getName(component);
   }
 
   step(deltaTime = TIME_CONSTANTS.DEFAULT_DELTA): void {
@@ -215,7 +215,7 @@ export class State {
     for (const system of this.systems) {
       system.dispose?.(this);
     }
-    this.systems.clear();
+    this.systemRegistry.clear();
     this.isDisposed = true;
   }
 
