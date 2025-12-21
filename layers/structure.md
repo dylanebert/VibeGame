@@ -88,25 +88,39 @@ vibegame/
 │   │   ├── index.html
 │   │   ├── package.json
 │   │   └── vite.config.ts
-│   └── visualization/  # Blog-style visualization with sequencing
+│   ├── visualization/  # Blog-style visualization with sequencing
+│   │   ├── context.md
+│   │   ├── index.html       # Blog harness (includes content.html)
+│   │   ├── record.html      # Video recording page
+│   │   ├── vite.config.ts   # Build config with html-include plugin
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   │       ├── content.html     # World definition with entities
+│   │       ├── components.css   # Visualization styles
+│   │       ├── components.ts    # BreatheDriver component
+│   │       ├── systems.ts       # BreatheDriver systems
+│   │       ├── plugin.ts        # VisualizationPlugin
+│   │       ├── main.ts          # Blog entry point
+│   │       ├── record.ts        # Video recording entry point
+│   │       └── sequences/
+│   │           ├── index.ts     # Sequence loader + STEP_SEQUENCES map
+│   │           ├── step-0-1.xml # Camera sequences
+│   │           └── step-1-2.xml # Breathe sequences
+│   └── hello-tauri/  # Tauri native desktop app
 │       ├── context.md
-│       ├── index.html       # Blog harness (includes content.html)
-│       ├── record.html      # Video recording page
-│       ├── vite.config.ts   # Build config with html-include plugin
+│       ├── src/main.ts
+│       ├── src-tauri/           # Rust backend
+│       │   ├── src/main.rs
+│       │   ├── Cargo.toml       # Tauri v2 dependencies
+│       │   ├── tauri.conf.json  # Window configuration
+│       │   └── icons/           # App icons
+│       ├── .cargo/config.toml   # Cross-compile config
+│       ├── windows-build/       # Windows .exe output
+│       ├── index.html
 │       ├── package.json
 │       ├── tsconfig.json
-│       └── src/
-│           ├── content.html     # World definition with entities
-│           ├── components.css   # Visualization styles
-│           ├── components.ts    # BreatheDriver component
-│           ├── systems.ts       # BreatheDriver systems
-│           ├── plugin.ts        # VisualizationPlugin
-│           ├── main.ts          # Blog entry point
-│           ├── record.ts        # Video recording entry point
-│           └── sequences/
-│               ├── index.ts     # Sequence loader + STEP_SEQUENCES map
-│               ├── step-0-1.xml # Camera sequences
-│               └── step-1-2.xml # Breathe sequences
+│       └── vite.config.ts
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   ├── context-template.md  # Template for context files
