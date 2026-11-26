@@ -116,7 +116,7 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "bitecs": ">=0.3.40",
+    "bitecs": "^0.3.40",
     "three": ">=0.170.0"
   },
   "devDependencies": {
